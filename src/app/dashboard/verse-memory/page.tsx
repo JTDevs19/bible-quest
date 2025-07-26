@@ -1,16 +1,15 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const verses = [
   {
@@ -63,165 +62,114 @@ const verses = [
     text: 'The LORD is my shepherd, I shall not be in want.',
     version: 'NIV'
   },
-  {
-    reference: 'Joshua 1:9',
-    text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Isaiah 41:10',
-    text: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Psalm 46:1',
-    text: 'God is our refuge and strength, an ever-present help in trouble.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Romans 12:2',
-    text: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God’s will is—his good, pleasing and perfect will.',
-    version: 'NIV'
-  },
-  {
-    reference: 'John 14:6',
-    text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
-    version: 'NIV'
-  },
-    {
-    reference: 'Psalm 119:105',
-    text: 'Your word is a lamp for my feet, a light on my path.',
-    version: 'NIV',
-  },
-  {
-    reference: 'Hebrews 11:1',
-    text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
-    version: 'NIV',
-  },
-  {
-    reference: 'Matthew 28:19-20',
-    text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you.',
-    version: 'NIV',
-  },
-  {
-    reference: 'John 1:1',
-    text: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
-    version: 'NIV',
-  },
-  {
-    reference: 'Romans 3:23',
-    text: 'for all have sinned and fall short of the glory of God,',
-    version: 'NIV',
-  },
-    {
-    reference: '1 Corinthians 10:31',
-    text: 'So whether you eat or drink or whatever you do, do it all for the glory of God.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Psalm 19:14',
-    text: 'May these words of my mouth and this meditation of my heart be pleasing in your sight, LORD, my Rock and my Redeemer.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Colossians 3:23',
-    text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
-    version: 'NIV'
-  },
-  {
-    reference: 'Matthew 11:28',
-    text: 'Come to me, all you who are weary and burdened, and I will give you rest.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Isaiah 40:31',
-    text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
-    version: 'NIV'
-  }
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
 type VerseParts = (string | null)[];
+type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
-const MAX_CHECKS = 10;
+const MAX_LEVEL = 5;
+const STARS_PER_VERSE = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
 
+  const verseTextParts = verse.text.split(/(\s+|[.,;!?“”"])/);
+
   return (
     <div className="text-center font-serif italic text-lg leading-relaxed">
       <p>
-         {verseWithBlanks.map((part, index) => {
-            if (part === null) {
-              const currentBlankIndex = blankCounter;
-              blankCounter++;
-              const userInput = userInputs[currentBlankIndex];
-              const correctWord = missingWords[currentBlankIndex];
-              const isCorrect = userInput?.toLowerCase().trim() === correctWord?.toLowerCase().trim();
+        {verseWithBlanks.map((part, index) => {
+          if (part === null) {
+            const currentBlankIndex = blankCounter;
+            blankCounter++;
+            const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
+            const correctWord = missingWords[currentBlankIndex]?.trim() ?? '';
+            const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
 
-              if(isCorrect) {
-                return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400"> {correctWord} </strong> 
-              }
-              
-              return (
-                 <span key={`review-blank-${index}`} className="inline-block text-center mx-1">
-                    <span className="text-xs text-red-500 font-sans font-semibold">{correctWord}</span>
-                    <s className="text-red-500">{userInput || '...'}</s>
-                 </span>
-              )
+            if (isCorrect) {
+              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400"> {correctWord} </strong>;
             }
-            return <span key={`review-text-${index}`}> {part} </span>
-         })}
-      </p>
 
-       <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
+            return (
+              <span key={`review-blank-${index}`} className="inline-block text-center mx-1">
+                <span className="text-xs text-red-500 font-sans font-semibold">{correctWord}</span>
+                <s className="text-red-500">{userInput || '...'}</s>
+              </span>
+            );
+          }
+          return <span key={`review-text-${index}`}>{part}</span>;
+        })}
+      </p>
+      <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
     </div>
-  )
+  );
 }
 
+
 export default function VerseMemoryPage() {
+  const [isClient, setIsClient] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(1);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
+  const [verseScores, setVerseScores] = useState<VerseScores>({});
+  const [totalStars, setTotalStars] = useState(0);
+
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
-  const [checkAttempts, setCheckAttempts] = useState(MAX_CHECKS);
-  const [verseScores, setVerseScores] = useState<number[]>(new Array(verses.length).fill(0));
-  const [unlockedIndex, setUnlockedIndex] = useState(0);
+  const [checkAttempts, setCheckAttempts] = useState(10);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    const savedProgress = localStorage.getItem('verseMemoryProgress');
+    if (savedProgress) {
+      const { level, scores, stars } = JSON.parse(savedProgress);
+      setCurrentLevel(level);
+      setVerseScores(scores);
+      setTotalStars(stars);
+    }
   }, []);
 
+  const saveProgress = useCallback(() => {
+    const progress = {
+      level: currentLevel,
+      scores: verseScores,
+      stars: totalStars,
+    };
+    localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
+  }, [currentLevel, verseScores, totalStars]);
+
+  useEffect(() => {
+    if(isClient) saveProgress();
+  }, [isClient, saveProgress]);
+
+
   const currentVerse = verses[currentVerseIndex];
+  const wordsToBlankForCurrentLevel = currentLevel;
 
   useEffect(() => {
     if (!isClient) return;
 
-    const words = currentVerse.text.split(/(\s+)/); // Split by space, keeping the delimiter
+    const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
     const missing: string[] = [];
     const verseParts: VerseParts = [];
     
-    // Staged difficulty: +1 blank every 2 verses
-    const stage = Math.floor(currentVerseIndex / 2);
-    const wordsToBlank = Math.min(stage + 1, 5);
-
     const potentialBlankIndices = words
       .map((word, index) => ({ word, index }))
       .filter(item => item.word.length > 3 && item.word.trim() !== '')
       .map(item => item.index);
     
     const shuffled = potentialBlankIndices.sort(() => 0.5 - Math.random());
-    const blankIndices = new Set(shuffled.slice(0, wordsToBlank));
+    const blankIndices = new Set(shuffled.slice(0, wordsToBlankForCurrentLevel));
 
     words.forEach((word, index) => {
       if (blankIndices.has(index)) {
-        missing.push(word.replace(/[.,;!?]/g, ''));
+        missing.push(word.replace(/[.,;!?“”"]/g, ''));
         verseParts.push(null);
       } else {
         verseParts.push(word);
@@ -236,41 +184,30 @@ export default function VerseMemoryPage() {
     setGameState('playing');
     setEditingIndex(0);
     setAttemptScore(0);
-    setCheckAttempts(MAX_CHECKS);
-  }, [currentVerse, currentVerseIndex, isClient]);
+    setCheckAttempts(10);
+  }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel]);
 
-  const handleInputChange = (index: number, value: string) => {
-    const newInputs = [...userInputs];
-    newInputs[index] = value;
-    setUserInputs(newInputs);
-    if(gameState !== 'playing') setGameState('playing');
-  };
 
   const calculateScore = (inputs: string[]) => {
     if (missingWords.length === 0) return 0;
+    
     const correctCount = inputs.reduce((count, input, index) => {
-      return input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim() ? count + 1 : count;
+      const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
+      return isCorrect ? count + 1 : count;
     }, 0);
+    
     const accuracy = correctCount / missingWords.length;
-
+  
+    if (currentLevel === 1) {
+      return accuracy === 1 ? 3 : 0;
+    }
+  
     if (accuracy === 1) return 3;
     if (accuracy >= 0.5) return 2;
     if (accuracy > 0) return 1;
     return 0;
   };
-
-  const updateScoresAndUnlock = (newScore: number) => {
-    const newScores = [...verseScores];
-    if (newScore > newScores[currentVerseIndex]) {
-        newScores[currentVerseIndex] = newScore;
-        setVerseScores(newScores);
-    }
-    if (newScore >= 2 && currentVerseIndex === unlockedIndex) {
-      if (unlockedIndex < verses.length - 1) {
-         setUnlockedIndex(unlockedIndex + 1);
-      }
-    }
-  };
+  
 
   const handleSubmit = () => {
     if (checkAttempts <= 0) return;
@@ -278,7 +215,21 @@ export default function VerseMemoryPage() {
     setEditingIndex(null);
     const newScore = calculateScore(userInputs);
     setAttemptScore(newScore);
-    updateScoresAndUnlock(newScore);
+    
+    setVerseScores(prevScores => {
+        const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
+        const scoreDiff = Math.max(0, newScore - existingScore);
+        setTotalStars(s => s + scoreDiff);
+
+        return {
+            ...prevScores,
+            [currentLevel]: {
+                ...prevScores[currentLevel],
+                [currentVerseIndex]: Math.max(existingScore, newScore)
+            }
+        };
+    });
+
     setGameState('scored');
     setShowSummaryDialog(true);
   };
@@ -286,29 +237,32 @@ export default function VerseMemoryPage() {
   const handleNext = () => {
     setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
-       if (verseScores[currentVerseIndex] >= 2 || gameState === 'revealed') {
-         setCurrentVerseIndex(currentVerseIndex + 1);
-       } else {
-         // Optionally show a message that they need to score higher
-       }
+      setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
-      // End of game
-      setCurrentVerseIndex(0); 
-      setVerseScores(new Array(verses.length).fill(0));
-      setUnlockedIndex(0);
+       // Completed all verses for the current level
+       const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
+       if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
+          setCurrentLevel(l => l + 1);
+       }
+       setCurrentVerseIndex(0); 
     }
   };
   
   const handleReveal = () => {
-    const correctInputs = [...missingWords];
-    setUserInputs(correctInputs);
-    setAttemptScore(0); // No score for revealing
-    updateScoresAndUnlock(0);
+    setUserInputs([...missingWords]);
+    setAttemptScore(0);
     setGameState('revealed');
     setEditingIndex(null);
     setShowSummaryDialog(true);
   };
   
+  const handleInputChange = (index: number, value: string) => {
+    const newInputs = [...userInputs];
+    newInputs[index] = value;
+    setUserInputs(newInputs);
+    if(gameState !== 'playing') setGameState('playing');
+  };
+
   const handleLabelClick = (index: number) => {
     if (gameState === 'playing') {
       setEditingIndex(index);
@@ -341,7 +295,7 @@ export default function VerseMemoryPage() {
           );
         }
         
-        const isWrong = gameState === 'scored' && userInputs[currentIndex]?.toLowerCase().trim() !== missingWords[currentIndex]?.toLowerCase().trim();
+        const isWrong = gameState === 'scored' && userInputs[currentIndex]?.trim().toLowerCase() !== missingWords[currentIndex]?.trim().toLowerCase();
 
         return (
           <Label 
@@ -367,10 +321,12 @@ export default function VerseMemoryPage() {
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
       if (attemptScore === 3) return "Perfect score! You're a true scripture scholar!";
-      if (attemptScore >= 2) return "Great job! You've unlocked the next verse.";
+      if (attemptScore >= 2) return "Great job! Keep going!";
       if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
       return "Keep trying! Memorization is a journey. You can do it!";
   }
+
+  const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -386,10 +342,47 @@ export default function VerseMemoryPage() {
               <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
               <CardDescription>Fill in the missing words from the verse below.</CardDescription>
             </div>
-            <div className="flex items-center gap-1">
-              {Array.from({length: 3}).map((_, i) => (
-                <Star key={i} className={cn("h-6 w-6", i < verseScores[currentVerseIndex] ? "text-yellow-500 fill-yellow-500" : "text-gray-300")}/>
-              ))}
+            <div className="flex items-center gap-4">
+               <div className="text-right">
+                <div className="font-bold">Level {currentLevel}</div>
+                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-500"/> {totalStars}
+                </div>
+               </div>
+               <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                        <div className="text-center">
+                           <h4 className="font-medium leading-none font-headline">Verse Journey</h4>
+                           <p className="text-sm text-muted-foreground">Complete all levels to become a master!</p>
+                        </div>
+                        <div className="space-y-3">
+                           {Array.from({length: MAX_LEVEL}).map((_, i) => {
+                               const levelNum = i + 1;
+                               const requiredStars = levelNum * verses.length * STARS_PER_VERSE;
+                               const isUnlocked = levelNum === 1 || totalStars >= (levelNum - 1) * verses.length * STARS_PER_VERSE;
+                               const isCurrent = levelNum === currentLevel;
+                               return (
+                                 <div key={levelNum} className={cn("flex items-center gap-4 p-2 rounded-lg", isCurrent ? "bg-primary/10 border border-primary/20" : "")}>
+                                    <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                      {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">Level {levelNum}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                           {isUnlocked ? `${levelNum} Blank${levelNum > 1 ? 's' : ''}` : `Requires ${requiredStars - verses.length * STARS_PER_VERSE} stars`}
+                                        </p>
+                                    </div>
+                                 </div>
+                               )
+                           })}
+                        </div>
+                    </div>
+                  </PopoverContent>
+               </Popover>
             </div>
           </div>
         </CardHeader>
@@ -398,9 +391,9 @@ export default function VerseMemoryPage() {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
-            <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
-             <Button variant="secondary" onClick={handleNext} disabled={currentVerseIndex >= unlockedIndex}>
-              {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
+            <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
+             <Button variant="secondary" onClick={handleNext}>
+              {currentVerseIndex === verses.length - 1 ? 'Next Level' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -442,8 +435,10 @@ export default function VerseMemoryPage() {
             {gameState !== 'revealed' && attemptScore < 3 && (
                  <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Try Again</AlertDialogCancel>
             )}
-            <AlertDialogAction onClick={handleNext} disabled={currentVerseIndex >= unlockedIndex && gameState !== 'revealed'}>
-                Next Verse
+            <AlertDialogAction onClick={handleNext}>
+                {currentVerseIndex === verses.length - 1 ? (
+                    totalStars >= starsForNextLevel ? "Start Next Level!" : "Finish Level"
+                ) : "Next Verse"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
