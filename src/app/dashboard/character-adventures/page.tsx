@@ -1,59 +1,149 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw } from 'lucide-react';
+import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle, Map, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const triviaQuestions = [
-    {
-        question: "Who was known for his incredible strength, which was tied to his long hair?",
-        options: ["David", "Goliath", "Samson", "Gideon"],
-        answer: "Samson"
-    },
-    {
-        question: "Who was swallowed by a great fish after disobeying God?",
-        options: ["Jonah", "Daniel", "Elijah", "Peter"],
-        answer: "Jonah"
-    },
-    {
-        question: "Who led the Israelites out of slavery in Egypt?",
-        options: ["Joshua", "Abraham", "Moses", "Jacob"],
-        answer: "Moses"
-    },
-    {
-        question: "Who was the courageous queen who saved her people from a plot of destruction?",
-        options: ["Ruth", "Esther", "Mary", "Deborah"],
-        answer: "Esther"
-    },
-    {
-        question: "Who was the first king of Israel?",
-        options: ["David", "Solomon", "Saul", "Samuel"],
-        answer: "Saul"
-    },
-    {
-        question: "This disciple denied Jesus three times before the rooster crowed.",
-        options: ["Judas", "John", "Thomas", "Peter"],
-        answer: "Peter"
-    },
-    {
-        question: "Who was thrown into a den of lions but was protected by God?",
-        options: ["Daniel", "Joseph", "Jeremiah", "Shadrach"],
-        answer: "Daniel"
-    }
+const triviaLevels = [
+  // Level 1
+  [
+    { question: "Who was known for his incredible strength, which was tied to his long hair?", options: ["David", "Goliath", "Samson", "Gideon"], answer: "Samson" },
+    { question: "Who was swallowed by a great fish after disobeying God?", options: ["Jonah", "Daniel", "Elijah", "Peter"], answer: "Jonah" },
+    { question: "Who led the Israelites out of slavery in Egypt?", options: ["Joshua", "Abraham", "Moses", "Jacob"], answer: "Moses" },
+    { question: "Who was the courageous queen who saved her people from a plot of destruction?", options: ["Ruth", "Esther", "Mary", "Deborah"], answer: "Esther" },
+    { question: "Who was the first king of Israel?", options: ["David", "Solomon", "Saul", "Samuel"], answer: "Saul" },
+    { question: "This disciple denied Jesus three times before the rooster crowed.", options: ["Judas", "John", "Thomas", "Peter"], answer: "Peter" },
+    { question: "Who was thrown into a den of lions but was protected by God?", options: ["Daniel", "Joseph", "Jeremiah", "Shadrach"], answer: "Daniel" },
+    { question: "Who was the father of the twelve tribes of Israel?", options: ["Isaac", "Abraham", "Jacob", "Joseph"], answer: "Jacob" },
+    { question: "Who was David's best friend and the son of King Saul?", options: ["Joab", "Jonathan", "Absalom", "Nathan"], answer: "Jonathan" },
+    { question: "Who was a prophetess and the only female judge of Israel mentioned in the Bible?", options: ["Jael", "Miriam", "Huldah", "Deborah"], answer: "Deborah" },
+  ],
+  // Level 2
+  [
+    { question: "Who was the prophet that confronted King David after his sin with Bathsheba?", options: ["Elijah", "Isaiah", "Nathan", "Samuel"], answer: "Nathan" },
+    { question: "Who was the mother of John the Baptist?", options: ["Mary", "Elizabeth", "Anna", "Sarah"], answer: "Elizabeth" },
+    { question: "Who was sold into slavery by his brothers but became a powerful ruler in Egypt?", options: ["Esau", "Joseph", "Benjamin", "Reuben"], answer: "Joseph" },
+    { question: "Who was the tax collector that Jesus called to be one of His disciples?", options: ["Zacchaeus", "Nicodemus", "Matthew", "Bartholomew"], answer: "Matthew" },
+    { question: "Who was the first Christian martyr?", options: ["Paul", "Peter", "Stephen", "James"], answer: "Stephen" },
+    { question: "Who was the wife of Isaac and mother of Jacob and Esau?", options: ["Leah", "Rachel", "Rebekah", "Sarai"], answer: "Rebekah" },
+    { question: "Who led the Israelites in the battle of Jericho?", options: ["Moses", "Gideon", "Joshua", "Caleb"], answer: "Joshua" },
+    { question: "Who was the prophet taken up to heaven in a chariot of fire?", options: ["Elisha", "Elijah", "Enoch", "Isaiah"], answer: "Elijah" },
+    { question: "Who anointed both Saul and David as kings of Israel?", options: ["Nathan", "Samuel", "Eli", "Ahijah"], answer: "Samuel" },
+    { question: "Who was the apostle that replaced Judas Iscariot?", options: ["Barnabas", "Silas", "Timothy", "Matthias"], answer: "Matthias" },
+  ],
+  // Level 3
+  [
+    { question: "Who was the cupbearer to the Persian king Artaxerxes and helped rebuild Jerusalem's walls?", options: ["Ezra", "Zerubbabel", "Nehemiah", "Haggai"], answer: "Nehemiah" },
+    { question: "Who was the high priest of Jerusalem when Jesus was crucified?", options: ["Annas", "Caiaphas", "Eli", "Phinehas"], answer: "Caiaphas" },
+    { question: "Who was the wealthy Pharisee who helped bury Jesus?", options: ["Nicodemus", "Joseph of Arimathea", "Simon the Cyrene", "Lazarus"], answer: "Joseph of Arimathea" },
+    { question: "Who was the left-handed judge who delivered Israel from the Moabites?", options: ["Othniel", "Ehud", "Shamgar", "Gideon"], answer: "Ehud" },
+    { question: "Who was the wife of Uriah the Hittite, with whom David committed adultery?", options: ["Michal", "Abigail", "Bathsheba", "Tamar"], answer: "Bathsheba" },
+    { question: "Who was the prophetess who recognized the infant Jesus as the Messiah in the Temple?", options: ["Elizabeth", "Anna", "Phoebe", "Priscilla"], answer: "Anna" },
+    { question: "Who was the sorcerer in Samaria who tried to buy the power of the Holy Spirit?", options: ["Elymas", "Bar-Jesus", "Simon Magus", "Sceva"], answer: "Simon Magus" },
+    { question: "Who was Abraham's nephew, who chose to live in the city of Sodom?", options: ["Lot", "Laban", "Haran", "Nahor"], answer: "Lot" },
+    { question: "Who was the successor of the prophet Elijah?", options: ["Elisha", "Hosea", "Amos", "Obadiah"], answer: "Elisha" },
+    { question: "Who was the first Gentile convert to Christianity recorded in the book of Acts?", options: ["The Ethiopian Eunuch", "Cornelius", "Lydia", "Sergius Paulus"], answer: "Cornelius" },
+  ],
+    // Level 4
+  [
+    { question: "Who was the king of Judah known for his radical religious reforms and repentance?", options: ["Hezekiah", "Josiah", "Uzziah", "Manasseh"], answer: "Josiah" },
+    { question: "Who was the runaway slave whom Paul sent back to his master, Philemon?", options: ["Tychicus", "Epaphras", "Onesimus", "Archippus"], answer: "Onesimus" },
+    { question: "Who was the firstborn son of Jacob, who forfeited his birthright?", options: ["Simeon", "Levi", "Judah", "Reuben"], answer: "Reuben" },
+    { question: "Who was the prophet commanded by God to marry a prostitute as a symbol of Israel's unfaithfulness?", options: ["Jeremiah", "Hosea", "Ezekiel", "Amos"], answer: "Hosea" },
+    { question: "Who was the artisan, filled with the Spirit of God, who oversaw the construction of the Tabernacle?", options: ["Oholiab", "Huram-abi", "Bezalel", "Hiram of Tyre"], answer: "Bezalel" },
+    { question: "Who was the Roman governor who presided over the trial of Jesus?", options: ["Herod Antipas", "Felix", "Festus", "Pontius Pilate"], answer: "Pontius Pilate" },
+    { question: "Who was the mother of King Solomon?", options: ["Haggith", "Bathsheba", "Abishag", "Michal"], answer: "Bathsheba" },
+    { question: "Who was the man who had to be convinced of Jesus' resurrection by touching His wounds?", options: ["Philip", "Andrew", "Thomas", "Bartholomew"], answer: "Thomas" },
+    { question: "Who was the captain of the Syrian army, cured of leprosy by Elisha?", options: ["Naaman", "Ben-Hadad", "Hazael", "Ziba"], answer: "Naaman" },
+    { question: "Who was the seller of purple cloth from Thyatira who became a believer in Philippi?", options: ["Dorcas", "Chloe", "Lydia", "Phoebe"], answer: "Lydia" },
+  ],
+  // Level 5
+  [
+    { question: "Who was the grandfather of King David?", options: ["Jesse", "Boaz", "Obed", "Salmon"], answer: "Obed" },
+    { question: "Who was the priest and king of Salem who met Abraham with bread and wine?", options: ["Melchizedek", "Jethro", "Adonizedek", "Abimelech"], answer: "Melchizedek" },
+    { question: "Who was the prophet who saw a vision of a valley of dry bones coming to life?", options: ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"], answer: "Ezekiel" },
+    { question: "Who was the wicked queen of Israel, wife of Ahab, who promoted the worship of Baal?", options: ["Jezebel", "Athaliah", "Herodias", "Delilah"], answer: "Jezebel" },
+    { question: "Who was the Jewish official in the Persian court who foiled Haman's plot to kill the Jews?", options: ["Daniel", "Nehemiah", "Ezra", "Mordecai"], answer: "Mordecai" },
+    { question: "Who was the son of Jonathan, who was lame in his feet and shown kindness by David?", options: ["Mephibosheth", "Ish-Bosheth", "Adonijah", "Amnon"], answer: "Mephibosheth" },
+    { question: "Who were the couple who lied to the Holy Spirit about the sale of their property and died as a result?", options: ["Aquila and Priscilla", "Ananias and Sapphira", "Philemon and Apphia", "Andronicus and Junia"], answer: "Ananias and Sapphira" },
+    { question: "Who was the second king of the northern kingdom of Israel, known for the phrase 'the sins of... who caused Israel to sin'?", options: ["Ahab", "Omri", "Jeroboam", "Baasha"], answer: "Jeroboam" },
+    { question: "Who was the prophet from Tekoa who was a shepherd and a tender of sycamore-fig trees?", options: ["Micah", "Hosea", "Joel", "Amos"], answer: "Amos" },
+    { question: "Who was Paul's 'true son in the faith' to whom he wrote two epistles?", options: ["Titus", "Timothy", "Silas", "Luke"], answer: "Timothy" },
+  ]
 ];
 
+const LEVEL_PASS_SCORE = 7;
+const MAX_LEVEL = 5;
+
+type LevelScores = { [level: number]: number };
+
 export default function CharacterAdventuresPage() {
+    const [isClient, setIsClient] = useState(false);
+    const [currentLevel, setCurrentLevel] = useState(1);
+    const [levelScores, setLevelScores] = useState<LevelScores>({});
+    const [totalScore, setTotalScore] = useState(0);
+
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [score, setScore] = useState(0);
+    const [currentLevelScore, setCurrentLevelScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isAnswered, setIsAnswered] = useState(false);
     const [isGameFinished, setIsGameFinished] = useState(false);
+    const [popoverOpen, setPopoverOpen] = useState(false);
+    
+    // Load progress from localStorage
+    useEffect(() => {
+        setIsClient(true);
+        const savedProgress = localStorage.getItem('characterAdventuresProgress');
+        if (savedProgress) {
+            const { scores, total } = JSON.parse(savedProgress);
+            setLevelScores(scores);
+            setTotalScore(total);
+            
+            // Determine the highest unlocked level
+            let highestUnlocked = 1;
+            for (let i = 1; i <= MAX_LEVEL; i++) {
+                if(scores[i-1] >= LEVEL_PASS_SCORE) {
+                    highestUnlocked = i + 1;
+                } else {
+                    break;
+                }
+            }
+            setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
+        }
+    }, []);
 
+    // Save progress to localStorage
+    const saveProgress = useCallback(() => {
+        if (!isClient) return;
+        const progress = {
+            scores: levelScores,
+            total: totalScore,
+        };
+        localStorage.setItem('characterAdventuresProgress', JSON.stringify(progress));
+    }, [levelScores, totalScore, isClient]);
+
+    useEffect(() => {
+        saveProgress();
+    }, [saveProgress]);
+
+    const triviaQuestions = triviaLevels[currentLevel - 1] || [];
     const currentQuestion = triviaQuestions[currentQuestionIndex];
 
+    const startLevel = (level: number) => {
+        setCurrentLevel(level);
+        setCurrentQuestionIndex(0);
+        setCurrentLevelScore(0);
+        setSelectedAnswer(null);
+        setIsAnswered(false);
+        setIsGameFinished(false);
+        setPopoverOpen(false);
+    }
+    
     const handleAnswerSelect = (option: string) => {
         if (isAnswered) return;
 
@@ -61,7 +151,7 @@ export default function CharacterAdventuresPage() {
         setIsAnswered(true);
 
         if (option === currentQuestion.answer) {
-            setScore(prevScore => prevScore + 1);
+            setCurrentLevelScore(prevScore => prevScore + 1);
         }
     };
 
@@ -71,43 +161,65 @@ export default function CharacterAdventuresPage() {
             setIsAnswered(false);
             setSelectedAnswer(null);
         } else {
+            // Update scores after finishing a level
+            const oldLevelScore = levelScores[currentLevel] || 0;
+            if (currentLevelScore > oldLevelScore) {
+                setLevelScores(prev => ({ ...prev, [currentLevel]: currentLevelScore }));
+                setTotalScore(prev => prev - oldLevelScore + currentLevelScore);
+            }
             setIsGameFinished(true);
         }
     };
 
     const handleRestart = () => {
-        setCurrentQuestionIndex(0);
-        setScore(0);
-        setSelectedAnswer(null);
-        setIsAnswered(false);
-        setIsGameFinished(false);
+        startLevel(currentLevel);
     };
-    
+
+    const handleLevelSelect = (level: number) => {
+        const isUnlocked = level === 1 || (levelScores[level - 1] >= LEVEL_PASS_SCORE);
+        if (isUnlocked) {
+            startLevel(level);
+        }
+    }
+
     const cardVariants = {
         initial: { opacity: 0, scale: 0.9 },
         animate: { opacity: 1, scale: 1 },
         exit: { opacity: 0, scale: 0.9 }
     };
-
+    
+    if (!isClient) {
+        return <div>Loading...</div>;
+    }
+    
     if (isGameFinished) {
+        const canUnlockNext = currentLevel < MAX_LEVEL && currentLevelScore >= LEVEL_PASS_SCORE;
         return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
                  <motion.div initial="initial" animate="animate" variants={cardVariants}>
                     <Card className="max-w-md w-full">
                         <CardHeader>
                             <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
-                               <Users className="w-10 h-10 text-primary" />
+                               <Trophy className="w-10 h-10 text-primary" />
                             </div>
-                            <CardTitle className="font-headline text-3xl">Trivia Complete!</CardTitle>
+                            <CardTitle className="font-headline text-3xl">Level {currentLevel} Complete!</CardTitle>
                             <CardDescription>You've completed the challenge.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p className="text-xl font-semibold">Your Final Score:</p>
-                            <p className="text-5xl font-bold text-primary">{score} / {triviaQuestions.length}</p>
-                            <Button onClick={handleRestart} size="lg" className="mt-4">
-                                <RotateCcw className="mr-2"/>
-                                Play Again
-                            </Button>
+                            <p className="text-xl font-semibold">Your Score:</p>
+                            <p className="text-5xl font-bold text-primary">{currentLevelScore} / {triviaQuestions.length}</p>
+                             {currentLevelScore < LEVEL_PASS_SCORE && <p className="text-destructive">You need {LEVEL_PASS_SCORE} points to unlock the next level. Try again!</p>}
+                            <div className="flex gap-2 justify-center">
+                                <Button onClick={handleRestart} size="lg" variant="outline">
+                                    <RotateCcw className="mr-2"/>
+                                    Play Again
+                                </Button>
+                                {canUnlockNext && (
+                                    <Button onClick={() => startLevel(currentLevel + 1)} size="lg">
+                                        Next Level
+                                    </Button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                  </motion.div>
@@ -115,11 +227,71 @@ export default function CharacterAdventuresPage() {
         );
     }
 
+    if (!currentQuestion) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
+                <Card className="max-w-md w-full">
+                    <CardHeader>
+                        <CardTitle className="font-headline text-3xl">Loading Level...</CardTitle>
+                    </CardHeader>
+                </Card>
+            </div>
+        )
+    }
+
   return (
     <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-4">
             <h1 className="font-headline text-3xl font-bold">Bible Character Adventures</h1>
             <p className="text-muted-foreground">Test your knowledge with this character trivia!</p>
+        </div>
+
+        <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg">
+             <div className="font-bold text-lg">Level {currentLevel}</div>
+             <div className="text-center">
+                <div className="font-bold text-lg">Score: {currentLevelScore}</div>
+            </div>
+             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                        <div className="text-center">
+                           <h4 className="font-medium leading-none font-headline">Adventure Map</h4>
+                           <p className="text-sm text-muted-foreground">Complete levels to unlock the next!</p>
+                        </div>
+                        <div className="space-y-3">
+                           {Array.from({length: MAX_LEVEL}).map((_, i) => {
+                               const levelNum = i + 1;
+                               const isUnlocked = levelNum === 1 || (levelScores[levelNum - 1] >= LEVEL_PASS_SCORE);
+                               const isCurrent = levelNum === currentLevel;
+                               return (
+                                 <div 
+                                    key={levelNum} 
+                                    onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                                    className={cn(
+                                      "flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                      isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                      isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
+                                    )}
+                                  >
+                                    <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                      {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">Level {levelNum}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                           {isUnlocked ? `Best Score: ${levelScores[levelNum] || 0}/${triviaLevels[levelNum-1].length}` : `Locked`}
+                                        </p>
+                                    </div>
+                                 </div>
+                               )
+                           })}
+                        </div>
+                    </div>
+                  </PopoverContent>
+               </Popover>
         </div>
       
         <AnimatePresence mode="wait">
@@ -189,7 +361,6 @@ export default function CharacterAdventuresPage() {
                 </Card>
             </motion.div>
         </AnimatePresence>
-         <div className="text-center mt-4 font-bold text-lg">Score: {score}</div>
     </div>
   );
 }
