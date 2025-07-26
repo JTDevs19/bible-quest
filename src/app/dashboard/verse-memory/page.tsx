@@ -297,25 +297,24 @@ export default function VerseMemoryPage() {
       setVerseScores(prevScores => {
           const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
           const newTotalScore = Math.max(existingScore, newScore);
-          const scoreDiff = newTotalScore - existingScore;
-
-          if (scoreDiff > 0) {
-            setTotalStars(s => s + scoreDiff);
-          }
-
-          const updatedScores = {
-              ...prevScores,
-              [currentLevel]: {
-                  ...prevScores[currentLevel],
-                  [currentVerseIndex]: newTotalScore
-              }
-          };
           
-          if (newTotalScore === STARS_PER_VERSE) {
-            setIsVerseMastered(true);
-          }
+          if (newTotalScore > existingScore) {
+              const scoreDiff = newTotalScore - existingScore;
+              setTotalStars(s => s + scoreDiff);
 
-          return updatedScores;
+              const updatedScores = {
+                  ...prevScores,
+                  [currentLevel]: {
+                      ...(prevScores[currentLevel] || {}),
+                      [currentVerseIndex]: newTotalScore
+                  }
+              };
+               if (newTotalScore === STARS_PER_VERSE) {
+                setIsVerseMastered(true);
+              }
+              return updatedScores;
+          }
+          return prevScores;
       });
 
       setGameState('scored');
