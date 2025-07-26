@@ -310,13 +310,13 @@ export default function VerseMemoryPage() {
            <Carousel
             opts={{
               align: 'start',
-              slidesToScroll: 1,
+              slidesToScroll: 'auto',
             }}
             className="w-full"
           >
             <CarouselContent>
               {verses.map((_, index) => (
-                <CarouselItem key={index} className="basis-1/4 md:basis-1/6 lg:basis-1/8 flex flex-col items-center gap-2">
+                <CarouselItem key={index} className="basis-1/3 md:basis-1/5 lg:basis-1/8 flex flex-col items-center gap-2">
                    <Button
                       variant={index === currentVerseIndex ? 'default' : 'outline'}
                       size="icon"
@@ -392,5 +392,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
