@@ -21,6 +21,7 @@ import {
   TrendingUp,
   UserCircle,
   LogOut,
+  Cog,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -95,6 +96,14 @@ export default function DashboardLayout({
         <SidebarFooter>
           <div className="border-t border-border -mx-2 pt-2">
              <SidebarMenu>
+                <SidebarMenuItem>
+                  <Link href="/dashboard/admin">
+                    <SidebarMenuButton tooltip="Administration">
+                        <Cog/>
+                        <span>Administration</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
                     <LogOut/>
