@@ -93,17 +93,14 @@ const verses = [
 type GameState = 'playing' | 'scored' | 'revealed';
 type VerseParts = (string | null)[];
 
-const MAX_REVEALS = 10;
 const MAX_CHECKS = 10;
 
 export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
-  const [progress, setProgress] = useState(0);
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [score, setScore] = useState(0); // number of stars
-  const [revealCount, setRevealCount] = useState(MAX_REVEALS);
   const [checkAttempts, setCheckAttempts] = useState(MAX_CHECKS);
   const [completedVerses, setCompletedVerses] = useState<boolean[]>(new Array(verses.length).fill(false));
   const [unlockedIndex, setUnlockedIndex] = useState(0);
@@ -160,11 +157,6 @@ export default function VerseMemoryPage() {
     setCurrentVerseIndex(index);
   }
 
-  useEffect(() => {
-    const completedCount = completedVerses.filter(Boolean).length;
-    setProgress((completedCount / verses.length) * 100);
-  }, [completedVerses]);
-
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...userInputs];
     newInputs[index] = value;
@@ -213,8 +205,6 @@ export default function VerseMemoryPage() {
   };
   
   const handleReveal = () => {
-    if (revealCount <= 0) return;
-    setRevealCount(revealCount - 1);
     const correctInputs = [...missingWords];
     setUserInputs(correctInputs);
     const newScore = calculateScore(correctInputs);
@@ -310,7 +300,7 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
-            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal Answer ({revealCount})</Button>
+            <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
             <Button variant="secondary" onClick={handleNext} disabled={!isCurrentVerseCompleted && !completedVerses[currentVerseIndex]}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
