@@ -213,8 +213,8 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     if (!isClient) return;
-
-    const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
+    
+    const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
@@ -225,7 +225,7 @@ export default function VerseMemoryPage() {
     setCheckAttempts(10);
     
     if (isMastered) {
-        setVerseWithBlanks(words.filter(p => p.length > 0));
+        setVerseWithBlanks(words);
         setMissingWords([]);
         setUserInputs([]);
     } else {
@@ -259,7 +259,7 @@ export default function VerseMemoryPage() {
 
    useEffect(() => {
     setHintsRemaining(HINTS_PER_LEVEL);
-  }, [currentLevel]);
+  }, [currentLevel, currentVerseIndex]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -281,48 +281,47 @@ export default function VerseMemoryPage() {
 
   const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
-    
+
     setEditingIndex(null);
     setGameState('checking');
 
     const correctCount = userInputs.reduce((count, input, index) => {
-      const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
-      return isCorrect ? count + 1 : count;
+        const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
+        return isCorrect ? count + 1 : count;
     }, 0);
 
     if (correctCount === missingWords.length) {
-      const newScore = calculateScore(userInputs);
-      setAttemptScore(newScore);
-      
-      setVerseScores(prevScores => {
-          const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-          const newTotalScore = Math.max(existingScore, newScore);
-          
-          if (newTotalScore > existingScore) {
-              const scoreDiff = newTotalScore - existingScore;
-              setTotalStars(s => s + scoreDiff);
+        const newScore = calculateScore(userInputs);
+        setAttemptScore(newScore);
 
-              const updatedScores = {
-                  ...prevScores,
-                  [currentLevel]: {
-                      ...(prevScores[currentLevel] || {}),
-                      [currentVerseIndex]: newTotalScore
-                  }
-              };
-               if (newTotalScore === STARS_PER_VERSE) {
+        setVerseScores(prevScores => {
+            const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
+            const newTotalScore = Math.max(existingScore, newScore);
+
+            if (newTotalScore > existingScore) {
+                const scoreDiff = newTotalScore - existingScore;
+                setTotalStars(s => s + scoreDiff);
+            }
+
+            const updatedScores = {
+                ...prevScores,
+                [currentLevel]: {
+                    ...(prevScores[currentLevel] || {}),
+                    [currentVerseIndex]: newTotalScore
+                }
+            };
+            if (newTotalScore === STARS_PER_VERSE) {
                 setIsVerseMastered(true);
-              }
-              return updatedScores;
-          }
-          return prevScores;
-      });
+            }
+            return updatedScores;
+        });
 
-      setGameState('scored');
-      setShowSummaryDialog(true);
+        setGameState('scored');
+        setShowSummaryDialog(true);
     } else {
-      setCheckAttempts(prev => prev - 1);
+        setCheckAttempts(prev => prev - 1);
     }
-  };
+};
 
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -680,3 +679,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
