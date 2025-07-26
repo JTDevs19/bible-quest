@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -70,6 +70,7 @@ type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
 const MAX_LEVEL = 5;
 const STARS_PER_VERSE = 3;
+const HINTS_PER_LEVEL = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
@@ -119,6 +120,7 @@ export default function VerseMemoryPage() {
   const [checkAttempts, setCheckAttempts] = useState(10);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_LEVEL);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -162,7 +164,7 @@ export default function VerseMemoryPage() {
     
     const potentialBlankIndices = words
       .map((word, index) => ({ word, index }))
-      .filter(item => item.word.length > 3 && item.word.trim() !== '')
+      .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim())) // only blank actual words
       .map(item => item.index);
     
     const shuffled = potentialBlankIndices.sort(() => 0.5 - Math.random());
@@ -186,6 +188,10 @@ export default function VerseMemoryPage() {
     setAttemptScore(0);
     setCheckAttempts(10);
   }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel]);
+
+   useEffect(() => {
+    setHintsRemaining(HINTS_PER_LEVEL);
+  }, [currentLevel]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -286,6 +292,18 @@ export default function VerseMemoryPage() {
     setEditingIndex(null);
     setShowSummaryDialog(true);
   };
+
+  const handleHint = () => {
+    if (hintsRemaining > 0) {
+      const firstEmptyIndex = userInputs.findIndex(input => input === '');
+      if (firstEmptyIndex !== -1) {
+        const newInputs = [...userInputs];
+        newInputs[firstEmptyIndex] = missingWords[firstEmptyIndex];
+        setUserInputs(newInputs);
+        setHintsRemaining(h => h - 1);
+      }
+    }
+  };
   
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...userInputs];
@@ -319,7 +337,7 @@ export default function VerseMemoryPage() {
         const currentIndex = inputIndex;
         inputIndex++;
         
-        const isEditable = gameState === 'playing' || (gameState === 'checking' && editingIndex === currentIndex);
+        const isEditable = (gameState === 'playing' || gameState === 'checking') && editingIndex === currentIndex;
 
         if (isEditable) {
            return (
@@ -461,6 +479,10 @@ export default function VerseMemoryPage() {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
               {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+            </Button>
+            <Button variant="outline" onClick={handleHint} disabled={hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
+                <HelpCircle className="mr-2 h-4 w-4"/>
+                Hint ({hintsRemaining})
             </Button>
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
