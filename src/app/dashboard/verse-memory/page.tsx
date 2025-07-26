@@ -218,12 +218,12 @@ export default function VerseMemoryPage() {
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
-
-    setGameState(isMastered ? 'scored' : 'playing');
+    
+    setGameState('playing');
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setCheckAttempts(10);
-
+    
     if (isMastered) {
         setVerseWithBlanks(words.filter(p => p.length > 0));
         setMissingWords([]);
@@ -400,12 +400,16 @@ export default function VerseMemoryPage() {
   };
   
   const renderVerse = () => {
-    if (!isClient || verseWithBlanks.length === 0) {
+    if (!isClient) {
       return <div>Loading verse...</div>;
     }
-
+    
     if (isVerseMastered) {
       return <p className="font-serif italic text-lg leading-relaxed">"{currentVerse.text}"</p>;
+    }
+
+    if (verseWithBlanks.length === 0) {
+      return <div>Loading verse...</div>;
     }
 
     let inputIndex = 0;
@@ -581,7 +585,7 @@ export default function VerseMemoryPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will use one of your attempts. You can check your answers to see which are correct and then continue editing before submitting for a final score.
+                            This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -677,7 +681,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
-
-    
