@@ -10,6 +10,7 @@ import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle } from 'lucide-
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const verses = [
   {
@@ -60,6 +61,31 @@ const verses = [
   {
     reference: 'Psalm 23:1',
     text: 'The LORD is my shepherd, I shall not be in want.',
+    version: 'NIV'
+  },
+    {
+    reference: 'Isaiah 40:31',
+    text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Joshua 1:9',
+    text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
+    version: 'NIV'
+  },
+  {
+    reference: '1 Corinthians 10:13',
+    text: 'No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear. But when you are tempted, he will also provide a way out so that you can endure it.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 46:1',
+    text: 'God is our refuge and strength, an ever-present help in trouble.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Romans 12:2',
+    text: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God’s will is—his good, pleasing and perfect will.',
     version: 'NIV'
   }
 ];
@@ -280,32 +306,42 @@ export default function VerseMemoryPage() {
           <CardTitle>Verse Journey</CardTitle>
            <Progress value={progress} className="w-full" />
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            {verses.map((_, index) => (
-              <React.Fragment key={index}>
-                <Button
-                  variant={index === currentVerseIndex ? 'default' : 'outline'}
-                  size="icon"
-                  onClick={() => handleLevelSelect(index)}
-                  disabled={index > unlockedIndex}
-                  className={cn(
-                    "rounded-full",
-                    completedVerses[index] && "bg-green-500 hover:bg-green-600 text-white",
-                    index === currentVerseIndex && "ring-2 ring-offset-2 ring-primary"
-                  )}
-                  aria-label={
-                    index > unlockedIndex ? `Level ${index + 1} locked` :
-                    completedVerses[index] ? `Level ${index + 1} completed` :
-                    `Level ${index + 1}`
-                  }
-                >
-                  {index > unlockedIndex ? <Lock className="h-4 w-4"/> : completedVerses[index] ? <CheckCircle className="h-4 w-4"/> : index === currentVerseIndex ? <PlayCircle className="h-4 w-4"/> : index + 1}
-                </Button>
-                {index < verses.length - 1 && <div className="flex-1 h-1 bg-border mx-2 rounded-full" />}
-              </React.Fragment>
-            ))}
-          </div>
+        <CardContent className="px-10">
+           <Carousel
+            opts={{
+              align: 'start',
+              slidesToScroll: 1,
+            }}
+            className="w-full"
+          >
+            <CarouselContent>
+              {verses.map((_, index) => (
+                <CarouselItem key={index} className="basis-1/4 md:basis-1/6 lg:basis-1/8 flex flex-col items-center gap-2">
+                   <Button
+                      variant={index === currentVerseIndex ? 'default' : 'outline'}
+                      size="icon"
+                      onClick={() => handleLevelSelect(index)}
+                      disabled={index > unlockedIndex}
+                      className={cn(
+                        "rounded-full",
+                        completedVerses[index] && "bg-green-500 hover:bg-green-600 text-white",
+                        index === currentVerseIndex && "ring-2 ring-offset-2 ring-primary"
+                      )}
+                      aria-label={
+                        index > unlockedIndex ? `Level ${index + 1} locked` :
+                        completedVerses[index] ? `Level ${index + 1} completed` :
+                        `Level ${index + 1}`
+                      }
+                    >
+                      {index > unlockedIndex ? <Lock className="h-4 w-4"/> : completedVerses[index] ? <CheckCircle className="h-4 w-4"/> : index === currentVerseIndex ? <PlayCircle className="h-4 w-4"/> : index + 1}
+                    </Button>
+                    {index < verses.length -1 && <div className="w-full h-1 bg-border rounded-full" />}
+                 </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </CardContent>
       </Card>
 
@@ -356,3 +392,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
