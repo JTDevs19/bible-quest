@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -266,6 +266,18 @@ export default function VerseMemoryPage() {
        }
     }
   };
+
+  const handlePrevVerse = () => {
+    if (currentVerseIndex > 0) {
+      setCurrentVerseIndex(currentVerseIndex - 1);
+    }
+  };
+
+  const handleNextVerse = () => {
+    if (currentVerseIndex < verses.length - 1) {
+      setCurrentVerseIndex(currentVerseIndex + 1);
+    }
+  };
   
   const handleReveal = () => {
     setUserInputs([...missingWords]);
@@ -373,16 +385,24 @@ export default function VerseMemoryPage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                {currentVerse.reference} ({currentVerse.version})
-                <div className="flex">
-                  {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
-                    <Star key={i} className={cn("w-5 h-5", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-                  ))}
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
+                    <ChevronLeft className="w-5 h-5"/>
+                </Button>
+                <div>
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    {currentVerse.reference} ({currentVerse.version})
+                    <div className="flex">
+                    {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
+                        <Star key={i} className={cn("w-5 h-5", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                    ))}
+                    </div>
+                </CardTitle>
+                <CardDescription>Fill in the missing words from the verse below.</CardDescription>
                 </div>
-              </CardTitle>
-              <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+                 <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
+                    <ChevronRight className="w-5 h-5"/>
+                </Button>
             </div>
             <div className="flex items-center gap-4">
                <div className="text-right">
@@ -445,7 +465,7 @@ export default function VerseMemoryPage() {
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext}>
-              {currentVerseIndex === verses.length - 1 ? 'Next Level' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
+              {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -498,5 +518,4 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-
-    
+}
