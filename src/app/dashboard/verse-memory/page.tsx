@@ -296,10 +296,11 @@ export default function VerseMemoryPage() {
 
         setVerseScores(prevScores => {
             const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-            const newTotalScore = Math.max(existingScore, newScore);
+            const finalVerseScore = Math.max(existingScore, newScore);
 
-            if (newTotalScore > existingScore) {
-                const scoreDiff = newTotalScore - existingScore;
+            // Only update total stars if the score for this verse has increased.
+            if (finalVerseScore > existingScore) {
+                const scoreDiff = finalVerseScore - existingScore;
                 setTotalStars(s => s + scoreDiff);
             }
 
@@ -307,10 +308,11 @@ export default function VerseMemoryPage() {
                 ...prevScores,
                 [currentLevel]: {
                     ...(prevScores[currentLevel] || {}),
-                    [currentVerseIndex]: newTotalScore
+                    [currentVerseIndex]: finalVerseScore
                 }
             };
-            if (newTotalScore === STARS_PER_VERSE) {
+
+            if (finalVerseScore === STARS_PER_VERSE) {
                 setIsVerseMastered(true);
             }
             return updatedScores;
@@ -679,5 +681,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
