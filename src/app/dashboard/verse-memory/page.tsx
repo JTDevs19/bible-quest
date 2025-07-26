@@ -137,7 +137,32 @@ const verses = [
     reference: 'Matthew 28:19-20',
     text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. And surely I am with you always, to the very end of the age.',
     version: 'NIV'
-  }
+  },
+  {
+    reference: 'Hebrews 11:1',
+    text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
+    version: 'NIV',
+  },
+  {
+    reference: '1 John 4:19',
+    text: 'We love because he first loved us.',
+    version: 'NIV',
+  },
+  {
+    reference: 'Psalm 19:14',
+    text: 'May these words of my mouth and this meditation of my heart be pleasing in your sight, LORD, my Rock and my Redeemer.',
+    version: 'NIV',
+  },
+  {
+    reference: 'John 16:33',
+    text: 'I have told you these things, so that in me you may have peace. In this world you will have trouble. But take heart! I have overcome the world.',
+    version: 'NIV',
+  },
+  {
+    reference: 'Colossians 3:23',
+    text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
+    version: 'NIV',
+  },
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
@@ -355,6 +380,7 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
+            {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2 && gameState !== 'revealed'}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
@@ -398,3 +424,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
