@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, RefreshCw, XCircle, Star } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,8 @@ export default function VerseMemoryPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [score, setScore] = useState(0); // number of stars
   const [revealCount, setRevealCount] = useState(MAX_REVEALS);
+  const [completedVerses, setCompletedVerses] = useState<boolean[]>(new Array(verses.length).fill(false));
+  const [unlockedIndex, setUnlockedIndex] = useState(0);
 
   const currentVerse = verses[currentVerseIndex];
   const { verseWithBlanks, missingWords } = useMemo(() => {
@@ -79,6 +81,19 @@ export default function VerseMemoryPage() {
     return { verseWithBlanks: verseParts, missingWords: missing };
   }, [currentVerse]);
 
+  const resetVerse = (index: number) => {
+    setCurrentVerseIndex(index);
+    setUserInputs(new Array(missingWords.length).fill(''));
+    setGameState('playing');
+    setEditingIndex(0);
+    setScore(0);
+  }
+
+  useEffect(() => {
+    resetVerse(currentVerseIndex);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentVerseIndex]);
+
   useEffect(() => {
     setUserInputs(new Array(missingWords.length).fill(''));
     setGameState('playing');
@@ -87,8 +102,9 @@ export default function VerseMemoryPage() {
   }, [currentVerse, missingWords.length]);
   
   useEffect(() => {
-    setProgress((currentVerseIndex / verses.length) * 100);
-  }, [currentVerseIndex]);
+    const completedCount = completedVerses.filter(Boolean).length;
+    setProgress((completedCount / verses.length) * 100);
+  }, [completedVerses]);
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...userInputs];
@@ -113,6 +129,14 @@ export default function VerseMemoryPage() {
     const newScore = calculateScore(userInputs);
     setScore(newScore);
     setGameState('scored');
+    if (newScore >= 2) {
+      const newCompleted = [...completedVerses];
+      newCompleted[currentVerseIndex] = true;
+      setCompletedVerses(newCompleted);
+      if(currentVerseIndex === unlockedIndex) {
+        setUnlockedIndex(unlockedIndex + 1);
+      }
+    }
   };
 
   const handleNext = () => {
@@ -121,6 +145,8 @@ export default function VerseMemoryPage() {
     } else {
       // End of game
       setCurrentVerseIndex(0); // Restart for now
+      setCompletedVerses(new Array(verses.length).fill(false));
+      setUnlockedIndex(0);
     }
   };
   
@@ -133,6 +159,14 @@ export default function VerseMemoryPage() {
     setScore(newScore);
     setGameState('revealed');
     setEditingIndex(null);
+     if (newScore >= 2) {
+      const newCompleted = [...completedVerses];
+      newCompleted[currentVerseIndex] = true;
+      setCompletedVerses(newCompleted);
+      if(currentVerseIndex === unlockedIndex) {
+        setUnlockedIndex(unlockedIndex + 1);
+      }
+    }
   };
   
   const handleLabelClick = (index: number) => {
@@ -140,6 +174,14 @@ export default function VerseMemoryPage() {
       setEditingIndex(index);
     }
   };
+  
+  const handleLevelSelect = (index: number) => {
+    if(index <= unlockedIndex) {
+      resetVerse(index);
+    }
+  }
+  
+  const isCurrentVerseCompleted = score >= 2;
 
   const renderVerse = () => {
     let inputIndex = 0;
@@ -189,12 +231,45 @@ export default function VerseMemoryPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-       <div className="space-y-2">
+       <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
         <p className="text-muted-foreground">Fill in the blanks to complete the verse. You have {revealCount} reveals left.</p>
       </div>
 
-      <Progress value={progress} className="w-full" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Verse Journey</CardTitle>
+           <Progress value={progress} className="w-full" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            {verses.map((_, index) => (
+              <React.Fragment key={index}>
+                <Button
+                  variant={index === currentVerseIndex ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={() => handleLevelSelect(index)}
+                  disabled={index > unlockedIndex}
+                  className={cn(
+                    "rounded-full",
+                    completedVerses[index] && "bg-green-500 hover:bg-green-600 text-white",
+                    index === currentVerseIndex && "ring-2 ring-offset-2 ring-primary"
+                  )}
+                  aria-label={
+                    index > unlockedIndex ? `Level ${index + 1} locked` :
+                    completedVerses[index] ? `Level ${index + 1} completed` :
+                    `Level ${index + 1}`
+                  }
+                >
+                  {index > unlockedIndex ? <Lock className="h-4 w-4"/> : completedVerses[index] ? <CheckCircle className="h-4 w-4"/> : index === currentVerseIndex ? <PlayCircle className="h-4 w-4"/> : index + 1}
+                </Button>
+                {index < verses.length - 1 && <div className="flex-1 h-1 bg-border mx-2 rounded-full" />}
+              </React.Fragment>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader>
@@ -206,7 +281,7 @@ export default function VerseMemoryPage() {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing'}>Check My Answer</Button>
             <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal ({revealCount} left)</Button>
-            <Button variant="secondary" onClick={handleNext}>
+            <Button variant="secondary" onClick={handleNext} disabled={!isCurrentVerseCompleted && !completedVerses[currentVerseIndex]}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -223,7 +298,7 @@ export default function VerseMemoryPage() {
                  </div>
               </AlertTitle>
               <AlertDescription className="text-yellow-700 dark:text-yellow-400">
-                {score === 3 ? "Perfect! You're a star!" : score > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
+                {score === 3 ? "Perfect! You're a star!" : score >= 2 ? "Great job! You've unlocked the next verse." : score > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
               </AlertDescription>
             </Alert>
           )}
@@ -234,7 +309,7 @@ export default function VerseMemoryPage() {
               <AlertTitle className="text-blue-800 dark:text-blue-300">Answer Revealed</AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-400">
                 The correct words are filled in. Study it, then try the next verse!
-              </Aler tDescription>
+              </AlertDescription>
             </Alert>
           )}
         </CardContent>
