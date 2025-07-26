@@ -147,7 +147,7 @@ const triviaLevelsFilipino = [
   ]
 ];
 
-const LEVEL_PASS_SCORE = 7;
+const LEVEL_PASS_SCORE = 6;
 const MAX_LEVEL = 5;
 
 type LevelScores = { [level: number]: number };
