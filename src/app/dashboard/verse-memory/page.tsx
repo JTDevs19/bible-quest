@@ -179,6 +179,15 @@ export default function VerseMemoryPage() {
     saveProgress();
   }, [saveProgress]);
 
+  const resetProgress = () => {
+    if (!isClient) return;
+    localStorage.removeItem('verseMemoryProgress');
+    setCurrentLevel(1);
+    setCurrentVerseIndex(0);
+    setVerseScores({});
+    setTotalStars(0);
+    setPopoverOpen(false);
+  };
 
   const currentVerse = verses[currentVerseIndex];
   const wordsToBlankForCurrentLevel = currentLevel;
@@ -188,25 +197,22 @@ export default function VerseMemoryPage() {
 
     const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+    const isMastered = currentVerseScore === STARS_PER_VERSE;
+    setIsVerseMastered(isMastered);
 
     // Resetting states for the new verse
-    setUserInputs([]);
-    setVerseWithBlanks([]);
-    setMissingWords([]);
-    setGameState('playing');
-    setEditingIndex(0);
+    setGameState(isMastered ? 'scored' : 'playing');
+    setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setCheckAttempts(10);
-    setIsVerseMastered(currentVerseScore === STARS_PER_VERSE);
 
-    if (currentVerseScore === STARS_PER_VERSE) {
+    if (isMastered) {
         setVerseWithBlanks(words);
         setMissingWords([]);
         setUserInputs([]);
-        setGameState('scored');
-        setEditingIndex(null);
     } else {
         // If verse is not mastered, create blanks
+        setUserInputs([]);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
@@ -382,7 +388,7 @@ export default function VerseMemoryPage() {
     }
 
     if (isVerseMastered) {
-      return verseWithBlanks.join('');
+      return <p className="font-serif italic text-lg leading-relaxed">"{currentVerse.text}"</p>;
     }
 
     let inputIndex = 0;
@@ -524,6 +530,9 @@ export default function VerseMemoryPage() {
                                )
                            })}
                         </div>
+                        <Button variant="outline" className="w-full" onClick={resetProgress}>
+                          <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                        </Button>
                     </div>
                   </PopoverContent>
                </Popover>
