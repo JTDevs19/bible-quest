@@ -306,7 +306,7 @@ export default function VerseMemoryPage() {
           <CardTitle>Verse Journey</CardTitle>
            <Progress value={progress} className="w-full" />
         </CardHeader>
-        <CardContent className="px-10">
+        <CardContent>
            <Carousel
             opts={{
               align: 'start',
