@@ -10,6 +10,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -36,12 +37,30 @@ const navItems = [
   { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
 ];
 
+function DashboardNav() {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+  return (
+     <SidebarMenu>
+      {navItems.map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <Link href={item.href} passHref>
+            <SidebarMenuButton isActive={pathname === item.href} tooltip={item.label} onClick={() => setOpenMobile(false)}>
+              <item.icon />
+              <span>{item.label}</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  )
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<OnboardingData | null>(null);
 
@@ -71,18 +90,7 @@ export default function DashboardLayout({
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
-                  <SidebarMenuButton isActive={pathname === item.href} tooltip={item.label}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+         <DashboardNav />
         </SidebarContent>
         <SidebarFooter>
           <div className="border-t border-border -mx-2 pt-2">
