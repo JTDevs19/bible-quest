@@ -116,13 +116,13 @@ export default function VerseMemoryPage() {
             type="text"
             value={userInputs[currentIndex] || ''}
             onChange={(e) => handleInputChange(currentIndex, e.target.value)}
-            className="inline-block w-32 h-8 mx-1 text-base"
-            style={{ width: `${Math.max(missingWords[currentIndex].length, 5)}ch` }}
+            className="w-32 h-8 text-base shrink-0"
+            style={{ width: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch` }}
             disabled={gameState === 'revealed'}
           />
         );
       }
-      return <span key={`word-${index}`}> {part} </span>;
+      return <span key={`word-${index}`}>{part}</span>;
     });
   };
 
@@ -141,7 +141,7 @@ export default function VerseMemoryPage() {
           <CardDescription>Fill in the missing words from the verse below.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-lg leading-loose text-justify">{renderVerse()}</div>
+          <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState === 'revealed'}>Check My Answer</Button>
             <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
