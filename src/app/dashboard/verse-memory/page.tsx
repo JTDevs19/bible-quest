@@ -475,7 +475,7 @@ export default function VerseMemoryPage() {
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6">
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
         <p className="text-muted-foreground">Fill in the blanks to complete the verse.</p>
