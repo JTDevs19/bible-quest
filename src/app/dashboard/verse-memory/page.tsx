@@ -64,7 +64,7 @@ const verses = [
   },
 ];
 
-type GameState = 'playing' | 'scored' | 'revealed';
+type GameState = 'playing' | 'checking' | 'scored' | 'revealed';
 type VerseParts = (string | null)[];
 type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
@@ -211,31 +211,42 @@ export default function VerseMemoryPage() {
 
   const handleSubmit = () => {
     if (checkAttempts <= 0) return;
-    setCheckAttempts(prev => prev - 1);
-    setEditingIndex(null);
-    const newScore = calculateScore(userInputs);
-    setAttemptScore(newScore);
     
-    setVerseScores(prevScores => {
-        const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-        const newTotalScore = Math.max(existingScore, newScore);
-        const scoreDiff = newTotalScore - existingScore;
+    setEditingIndex(null);
+    setGameState('checking');
 
-        if (scoreDiff > 0) {
-          setTotalStars(s => s + scoreDiff);
-        }
+    const correctCount = userInputs.reduce((count, input, index) => {
+      const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
+      return isCorrect ? count + 1 : count;
+    }, 0);
 
-        return {
-            ...prevScores,
-            [currentLevel]: {
-                ...prevScores[currentLevel],
-                [currentVerseIndex]: newTotalScore
-            }
-        };
-    });
+    if (correctCount === missingWords.length) {
+      const newScore = calculateScore(userInputs);
+      setAttemptScore(newScore);
+      
+      setVerseScores(prevScores => {
+          const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
+          const newTotalScore = Math.max(existingScore, newScore);
+          const scoreDiff = newTotalScore - existingScore;
 
-    setGameState('scored');
-    setShowSummaryDialog(true);
+          if (scoreDiff > 0) {
+            setTotalStars(s => s + scoreDiff);
+          }
+
+          return {
+              ...prevScores,
+              [currentLevel]: {
+                  ...prevScores[currentLevel],
+                  [currentVerseIndex]: newTotalScore
+              }
+          };
+      });
+
+      setGameState('scored');
+      setShowSummaryDialog(true);
+    } else {
+      setCheckAttempts(prev => prev - 1);
+    }
   };
 
   const handleNext = () => {
@@ -268,11 +279,11 @@ export default function VerseMemoryPage() {
     const newInputs = [...userInputs];
     newInputs[index] = value;
     setUserInputs(newInputs);
-    if(gameState !== 'playing') setGameState('playing');
+    if(gameState === 'checking') setGameState('playing');
   };
 
   const handleLabelClick = (index: number) => {
-    if (gameState === 'playing') {
+    if (gameState === 'playing' || gameState === 'checking') {
       setEditingIndex(index);
     }
   };
@@ -296,7 +307,8 @@ export default function VerseMemoryPage() {
         const currentIndex = inputIndex;
         inputIndex++;
         
-        const isEditable = gameState === 'playing' && editingIndex === currentIndex;
+        const isEditable = gameState === 'playing' || (gameState === 'checking' && editingIndex === currentIndex);
+
         if (isEditable) {
            return (
             <Input
@@ -312,7 +324,11 @@ export default function VerseMemoryPage() {
           );
         }
         
-        const isWrong = gameState === 'scored' && userInputs[currentIndex]?.trim().toLowerCase() !== missingWords[currentIndex]?.trim().toLowerCase();
+        const userInput = userInputs[currentIndex]?.trim().toLowerCase();
+        const correctWord = missingWords[currentIndex]?.trim().toLowerCase();
+        const isCorrect = userInput === correctWord;
+        const isWrong = gameState === 'checking' && !isCorrect;
+        const isCheckingAndCorrect = gameState === 'checking' && isCorrect;
 
         return (
           <Label 
@@ -321,8 +337,9 @@ export default function VerseMemoryPage() {
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
                userInputs[currentIndex] ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
-              gameState !== 'playing' ? 'cursor-default' : '',
+              gameState === 'scored' || gameState === 'revealed' ? 'cursor-default' : '',
               isWrong ? 'bg-destructive/20 border-destructive' : '',
+              isCheckingAndCorrect ? 'bg-green-500/20 border-green-500' : '',
               gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : ''
             )}
             style={{ minWidth: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch`}}
@@ -422,7 +439,9 @@ export default function VerseMemoryPage() {
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
+            <Button onClick={handleSubmit} disabled={gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
+              {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+            </Button>
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext}>
@@ -465,8 +484,8 @@ export default function VerseMemoryPage() {
              </CardContent>
           </Card>
           <AlertDialogFooter>
-            {gameState !== 'revealed' && attemptScore < 3 && (
-                 <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Try Again</AlertDialogCancel>
+            {gameState === 'scored' && attemptScore < 3 && (
+                 <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Continue Practicing</AlertDialogCancel>
             )}
             <AlertDialogAction onClick={handleNext}>
                 {currentVerseIndex === verses.length - 1 ? (
@@ -479,4 +498,5 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-}
+
+    
