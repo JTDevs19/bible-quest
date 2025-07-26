@@ -303,51 +303,6 @@ export default function VerseMemoryPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Verse Journey</CardTitle>
-           <Progress value={progress} className="w-full" />
-        </CardHeader>
-        <CardContent>
-           <Carousel
-            opts={{
-              align: 'start',
-              slidesToScroll: 'auto',
-            }}
-            className="w-full"
-          >
-            <CarouselContent>
-              {verses.map((_, index) => (
-                <CarouselItem key={index} className="basis-1/3 md:basis-1/5 lg:basis-1/8 flex flex-col items-center gap-2">
-                   <Button
-                      variant={index === currentVerseIndex ? 'default' : 'outline'}
-                      size="icon"
-                      onClick={() => handleLevelSelect(index)}
-                      disabled={index > unlockedIndex}
-                      className={cn(
-                        "rounded-full",
-                        completedVerses[index] && "bg-green-500 hover:bg-green-600 text-white",
-                        index === currentVerseIndex && "ring-2 ring-offset-2 ring-primary"
-                      )}
-                      aria-label={
-                        index > unlockedIndex ? `Level ${index + 1} locked` :
-                        completedVerses[index] ? `Level ${index + 1} completed` :
-                        `Level ${index + 1}`
-                      }
-                    >
-                      {index > unlockedIndex ? <Lock className="h-4 w-4"/> : completedVerses[index] ? <CheckCircle className="h-4 w-4"/> : index === currentVerseIndex ? <PlayCircle className="h-4 w-4"/> : index + 1}
-                    </Button>
-                    {index < verses.length -1 && <div className="w-full h-1 bg-border rounded-full" />}
-                 </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
-        </CardContent>
-      </Card>
-
-
-      <Card>
-        <CardHeader>
           <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
           <CardDescription>Fill in the missing words from the verse below.</CardDescription>
         </CardHeader>
