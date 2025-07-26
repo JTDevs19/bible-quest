@@ -74,6 +74,8 @@ const HINTS_PER_LEVEL = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
+  let wordCounter = 0;
+  const originalWords = verse.text.split(/(\s+|[.,;!?“”"])/);
 
   return (
     <div className="text-center font-serif italic text-lg leading-relaxed">
@@ -82,21 +84,38 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
           if (part === null) {
             const currentBlankIndex = blankCounter;
             blankCounter++;
+
+            // Find the original word including punctuation
+            let originalWord = '';
+            while(wordCounter < originalWords.length) {
+              const word = originalWords[wordCounter];
+              wordCounter++;
+              if (word.trim().length > 0) {
+                 if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex].toLowerCase()) {
+                    originalWord = word;
+                    break;
+                 }
+              }
+            }
+            if (!originalWord) originalWord = missingWords[currentBlankIndex];
+
+
             const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
             const correctWord = missingWords[currentBlankIndex]?.trim() ?? '';
             const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
 
             if (isCorrect) {
-              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400"> {correctWord} </strong>;
+              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{originalWord}</strong>;
             }
 
             return (
-              <span key={`review-blank-${index}`} className="inline-block text-center mx-1">
-                <span className="text-xs text-red-500 font-sans font-semibold">{correctWord}</span>
+              <span key={`review-blank-${index}`} className="inline-block text-center mx-1 relative -top-2">
+                <span className="text-xs text-red-500 font-sans font-semibold block">{correctWord}</span>
                 <s className="text-red-500">{userInput || '...'}</s>
               </span>
             );
           }
+          wordCounter++;
           return <span key={`review-text-${index}`}>{part}</span>;
         })}
       </p>
@@ -121,6 +140,7 @@ export default function VerseMemoryPage() {
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_LEVEL);
+  const [isVerseMastered, setIsVerseMastered] = useState(false);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -158,6 +178,8 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     if (!isClient) return;
 
+    const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+    
     const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
     const missing: string[] = [];
     const verseParts: VerseParts = [];
@@ -182,12 +204,21 @@ export default function VerseMemoryPage() {
     setVerseWithBlanks(verseParts);
     setMissingWords(missing);
     
-    setUserInputs(new Array(missing.length).fill(''));
-    setGameState('playing');
-    setEditingIndex(0);
-    setAttemptScore(0);
-    setCheckAttempts(10);
-  }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel]);
+    if (currentVerseScore === STARS_PER_VERSE) {
+        setUserInputs(missing);
+        setIsVerseMastered(true);
+        setGameState('scored');
+        setEditingIndex(null);
+    } else {
+        setUserInputs(new Array(missing.length).fill(''));
+        setIsVerseMastered(false);
+        setGameState('playing');
+        setEditingIndex(0);
+        setAttemptScore(0);
+        setCheckAttempts(10);
+    }
+
+  }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel, verseScores]);
 
    useEffect(() => {
     setHintsRemaining(HINTS_PER_LEVEL);
@@ -216,7 +247,7 @@ export default function VerseMemoryPage() {
   
 
   const handleSubmit = () => {
-    if (checkAttempts <= 0) return;
+    if (checkAttempts <= 0 || isVerseMastered) return;
     
     setEditingIndex(null);
     setGameState('checking');
@@ -247,6 +278,10 @@ export default function VerseMemoryPage() {
               }
           };
       });
+
+      if (newScore === STARS_PER_VERSE) {
+        setIsVerseMastered(true);
+      }
 
       setGameState('scored');
       setShowSummaryDialog(true);
@@ -286,6 +321,7 @@ export default function VerseMemoryPage() {
   };
   
   const handleReveal = () => {
+    if (isVerseMastered) return;
     setUserInputs([...missingWords]);
     setAttemptScore(0);
     setGameState('revealed');
@@ -294,7 +330,7 @@ export default function VerseMemoryPage() {
   };
 
   const handleHint = () => {
-    if (hintsRemaining > 0) {
+    if (hintsRemaining > 0 && !isVerseMastered) {
       const firstEmptyIndex = userInputs.findIndex(input => input === '');
       if (firstEmptyIndex !== -1) {
         const newInputs = [...userInputs];
@@ -313,6 +349,7 @@ export default function VerseMemoryPage() {
   };
 
   const handleLabelClick = (index: number) => {
+    if (isVerseMastered) return;
     if (gameState === 'playing' || gameState === 'checking') {
       setEditingIndex(index);
     }
@@ -337,7 +374,7 @@ export default function VerseMemoryPage() {
         const currentIndex = inputIndex;
         inputIndex++;
         
-        const isEditable = (gameState === 'playing' || gameState === 'checking') && editingIndex === currentIndex;
+        const isEditable = (gameState === 'playing' || gameState === 'checking') && editingIndex === currentIndex && !isVerseMastered;
 
         if (isEditable) {
            return (
@@ -350,6 +387,7 @@ export default function VerseMemoryPage() {
               autoFocus
               className="w-32 h-8 text-base shrink-0 inline-block"
               style={{ width: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch` }}
+              disabled={isVerseMastered}
             />
           );
         }
@@ -367,10 +405,11 @@ export default function VerseMemoryPage() {
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
                userInputs[currentIndex] ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
-              gameState === 'scored' || gameState === 'revealed' ? 'cursor-default' : '',
+              (gameState === 'scored' || gameState === 'revealed' || isVerseMastered) ? 'cursor-default' : '',
               isWrong ? 'bg-destructive/20 border-destructive' : '',
               isCheckingAndCorrect ? 'bg-green-500/20 border-green-500' : '',
-              gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : ''
+              gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : '',
+              isVerseMastered ? 'bg-green-500/20 border-green-500 !cursor-default' : ''
             )}
             style={{ minWidth: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch`}}
           >
@@ -477,15 +516,15 @@ export default function VerseMemoryPage() {
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button onClick={handleSubmit} disabled={gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
+            <Button onClick={handleSubmit} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
               {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
             </Button>
-            <Button variant="outline" onClick={handleHint} disabled={hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
+            <Button variant="outline" onClick={handleHint} disabled={isVerseMastered || hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
                 <HelpCircle className="mr-2 h-4 w-4"/>
                 Hint ({hintsRemaining})
             </Button>
-            {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
-            <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
+            {gameState === 'scored' && !isVerseMastered && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
+            <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext}>
               {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
