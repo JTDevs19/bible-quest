@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
@@ -112,6 +112,31 @@ const verses = [
     reference: 'Romans 10:9',
     text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
     version: 'NIV'
+  },
+  {
+    reference: 'Hebrews 4:12',
+    text: 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.',
+    version: 'NIV'
+  },
+  {
+    reference: '2 Corinthians 5:17',
+    text: 'Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 1:1-2',
+    text: 'Blessed is the one who does not walk in step with the wicked or stand in the way that sinners take or sit in the company of mockers, but whose delight is in the law of the LORD, and who meditates on his law day and night.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Proverbs 4:23',
+    text: 'Above all else, guard your heart, for everything you do flows from it.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Matthew 28:19-20',
+    text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. And surely I am with you always, to the very end of the age.',
+    version: 'NIV'
   }
 ];
 
@@ -129,6 +154,7 @@ export default function VerseMemoryPage() {
   const [checkAttempts, setCheckAttempts] = useState(MAX_CHECKS);
   const [verseScores, setVerseScores] = useState<number[]>(new Array(verses.length).fill(0));
   const [unlockedIndex, setUnlockedIndex] = useState(0);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
@@ -177,11 +203,6 @@ export default function VerseMemoryPage() {
     setCheckAttempts(MAX_CHECKS);
   }, [currentVerse, isClient]);
 
-
-  const resetVerse = (index: number) => {
-    setCurrentVerseIndex(index);
-  }
-
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...userInputs];
     newInputs[index] = value;
@@ -220,9 +241,11 @@ export default function VerseMemoryPage() {
     setAttemptScore(newScore);
     updateScoresAndUnlock(newScore);
     setGameState('scored');
+    setShowSummaryDialog(true);
   };
 
   const handleNext = () => {
+    setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
@@ -241,6 +264,7 @@ export default function VerseMemoryPage() {
     updateScoresAndUnlock(newScore);
     setGameState('revealed');
     setEditingIndex(null);
+    setShowSummaryDialog(true);
   };
   
   const handleLabelClick = (index: number) => {
@@ -298,6 +322,14 @@ export default function VerseMemoryPage() {
     });
   };
 
+  const getDialogMessage = () => {
+      if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
+      if (attemptScore === 3) return "Perfect score! You're a true scripture scholar!";
+      if (attemptScore >= 2) return "Great job! You've unlocked the next verse.";
+      if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
+      return "Keep trying! Memorization is a journey. You can do it!";
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
        <div className="space-y-2 text-center">
@@ -324,41 +356,45 @@ export default function VerseMemoryPage() {
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
             <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
-            <Button variant="secondary" onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2}>
+             <Button variant="secondary" onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2 && gameState !== 'revealed'}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
-          
-          {gameState === 'scored' && (
-            <Alert variant="default" className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500">
-               <Star className="h-4 w-4 text-yellow-600" />
-               <AlertTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-300">
-                 Your Score: 
-                 <div className="flex">
-                  {Array.from({length: 3}).map((_, i) => (
-                    <Star key={i} className={cn("h-5 w-5", i < attemptScore ? "text-yellow-500 fill-yellow-500" : "text-yellow-500/50")}/>
-                  ))}
-                 </div>
-              </AlertTitle>
-              <AlertDescription className="text-yellow-700 dark:text-yellow-400">
-                {attemptScore === 3 ? "Perfect! You're a star!" : attemptScore >= 2 ? "Great job! You've unlocked the next verse." : attemptScore > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
-              </AlertDescription>
-            </Alert>
-          )}
-
-           {gameState === 'revealed' && (
-            <Alert variant="default" className="bg-blue-100 dark:bg-blue-900/30 border-blue-500">
-              <CheckCircle className="h-4 w-4 text-blue-600" />
-              <AlertTitle className="text-blue-800 dark:text-blue-300">Answer Revealed</AlertTitle>
-              <AlertDescription className="text-blue-700 dark:text-blue-400">
-                The correct words are filled in. Study it, then try the next verse!
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-headline text-2xl text-center">
+              {gameState === 'revealed' ? "Verse Revealed" : "Rating"}
+            </AlertDialogTitle>
+            <div className="flex justify-center py-4">
+              {Array.from({length: 3}).map((_, i) => (
+                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300")}/>
+              ))}
+            </div>
+            <AlertDialogDescription className="text-center text-base">
+                {getDialogMessage()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Card className="bg-muted/50">
+             <CardContent className="p-4">
+               <p className="text-center font-serif italic">"{currentVerse.text}"</p>
+               <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+             </CardContent>
+          </Card>
+          <AlertDialogFooter>
+            {gameState !== 'revealed' && attemptScore < 3 && (
+                 <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Try Again</AlertDialogCancel>
+            )}
+            <AlertDialogAction onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2 && gameState !== 'revealed'}>
+                Next Verse
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
-
-    
