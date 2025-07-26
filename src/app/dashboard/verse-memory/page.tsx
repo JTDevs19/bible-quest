@@ -280,7 +280,7 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing'}>Check My Answer</Button>
-            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal ({revealCount} left)</Button>
+            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal</Button>
             <Button variant="secondary" onClick={handleNext} disabled={!isCurrentVerseCompleted && !completedVerses[currentVerseIndex]}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
