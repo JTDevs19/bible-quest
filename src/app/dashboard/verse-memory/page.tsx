@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, RefreshCw, XCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 const verses = [
   {
@@ -38,6 +40,7 @@ export default function VerseMemoryPage() {
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
   const [progress, setProgress] = useState(0);
+  const [editingIndex, setEditingIndex] = useState<number | null>(0); // Start with the first input focused
 
   const currentVerse = verses[currentVerseIndex];
   const { verseWithBlanks, missingWords } = useMemo(() => {
@@ -70,6 +73,7 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     setUserInputs(new Array(missingWords.length).fill(''));
     setGameState('playing');
+    setEditingIndex(0); // Focus the first input on new verse
   }, [currentVerse, missingWords.length]);
   
   useEffect(() => {
@@ -84,6 +88,7 @@ export default function VerseMemoryPage() {
   };
 
   const handleSubmit = () => {
+    setEditingIndex(null); // Remove focus from any input
     const isCorrect = userInputs.every(
       (input, index) => input.toLowerCase().trim() === missingWords[index].toLowerCase().trim()
     );
@@ -102,7 +107,15 @@ export default function VerseMemoryPage() {
   const handleReveal = () => {
     setUserInputs([...missingWords]);
     setGameState('revealed');
+    setEditingIndex(null);
   };
+  
+  const handleLabelClick = (index: number) => {
+    if (gameState !== 'revealed') {
+      setEditingIndex(index);
+    }
+  };
+
 
   const renderVerse = () => {
     let inputIndex = 0;
@@ -110,17 +123,39 @@ export default function VerseMemoryPage() {
       if (part === null) {
         const currentIndex = inputIndex;
         inputIndex++;
+        
+        if (editingIndex === currentIndex && gameState !== 'revealed') {
+           return (
+            <Input
+              key={`input-${currentIndex}`}
+              type="text"
+              value={userInputs[currentIndex] || ''}
+              onChange={(e) => handleInputChange(currentIndex, e.target.value)}
+              onBlur={() => setEditingIndex(null)}
+              autoFocus
+              className="w-32 h-8 text-base shrink-0"
+              style={{ width: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch` }}
+              disabled={gameState === 'revealed'}
+            />
+          );
+        }
+
+        const isFilled = userInputs[currentIndex] && userInputs[currentIndex].length > 0;
         return (
-          <Input
-            key={`input-${currentIndex}`}
-            type="text"
-            value={userInputs[currentIndex] || ''}
-            onChange={(e) => handleInputChange(currentIndex, e.target.value)}
-            className="w-32 h-8 text-base shrink-0"
-            style={{ width: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch` }}
-            disabled={gameState === 'revealed'}
-          />
-        );
+          <Label 
+            key={`label-${currentIndex}`}
+            onClick={() => handleLabelClick(currentIndex)}
+            className={cn(
+              "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
+              isFilled ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
+              gameState === 'revealed' ? "cursor-default text-foreground bg-transparent border-b-0" : "",
+              userInputs[currentIndex]?.toLowerCase().trim() !== missingWords[currentIndex]?.toLowerCase().trim() && (gameState === 'correct' || gameState === 'incorrect') ? 'bg-destructive/20 border-destructive' : ''
+            )}
+            style={{ minWidth: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch`}}
+          >
+            {userInputs[currentIndex] || '...'}
+          </Label>
+        )
       }
       return <span key={`word-${index}`}>{part}</span>;
     });
@@ -174,7 +209,7 @@ export default function VerseMemoryPage() {
               <AlertTitle className="text-blue-800 dark:text-blue-300">Answer Revealed</AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-400">
                 The correct words are filled in. Study it, then try the next verse!
-              </AlertDescription>
+              </Aler tDescription>
             </Alert>
           )}
         </CardContent>
