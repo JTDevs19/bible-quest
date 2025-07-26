@@ -88,6 +88,31 @@ const verses = [
     text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
     version: 'NIV'
   },
+    {
+    reference: 'Psalm 119:105',
+    text: 'Your word is a lamp for my feet, a light on my path.',
+    version: 'NIV',
+  },
+  {
+    reference: 'Hebrews 11:1',
+    text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
+    version: 'NIV',
+  },
+  {
+    reference: 'Matthew 28:19-20',
+    text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you.',
+    version: 'NIV',
+  },
+  {
+    reference: 'John 1:1',
+    text: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
+    version: 'NIV',
+  },
+  {
+    reference: 'Romans 3:23',
+    text: 'for all have sinned and fall short of the glory of God,',
+    version: 'NIV',
+  },
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
@@ -232,6 +257,7 @@ export default function VerseMemoryPage() {
       return input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim() ? count + 1 : count;
     }, 0);
     const accuracy = correctCount / missingWords.length;
+
     if (accuracy === 1) return 3;
     if (accuracy >= 0.5) return 2;
     if (accuracy > 0) return 1;
@@ -430,5 +456,4 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-
-    
+}
