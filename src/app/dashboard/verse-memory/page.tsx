@@ -209,7 +209,7 @@ export default function VerseMemoryPage() {
               <AlertTitle className="text-blue-800 dark:text-blue-300">Answer Revealed</AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-400">
                 The correct words are filled in. Study it, then try the next verse!
-              </Aler tDescription>
+              </AlertDescription>
             </Alert>
           )}
         </CardContent>
