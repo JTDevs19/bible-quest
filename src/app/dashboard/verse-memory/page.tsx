@@ -39,6 +39,7 @@ const verses = [
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
+type VerseParts = (string | null)[];
 
 const MAX_REVEALS = 10;
 
@@ -53,11 +54,20 @@ export default function VerseMemoryPage() {
   const [completedVerses, setCompletedVerses] = useState<boolean[]>(new Array(verses.length).fill(false));
   const [unlockedIndex, setUnlockedIndex] = useState(0);
 
+  const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
+  const [missingWords, setMissingWords] = useState<string[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const currentVerse = verses[currentVerseIndex];
-  const { verseWithBlanks, missingWords } = useMemo(() => {
+
+  useEffect(() => {
     const words = currentVerse.text.split(' ');
     const missing: string[] = [];
-    const verseParts: (string | null)[] = [];
+    const verseParts: VerseParts = [];
     
     // Select ~25% of words to be blanks, favoring longer words.
     const wordsToBlank = Math.floor(words.length * 0.25) || 1; // Ensure at least one blank
@@ -78,29 +88,21 @@ export default function VerseMemoryPage() {
       }
     });
 
-    return { verseWithBlanks: verseParts, missingWords: missing };
+    setVerseWithBlanks(verseParts);
+    setMissingWords(missing);
+    
+    // Reset state for the new verse
+    setUserInputs(new Array(missing.length).fill(''));
+    setGameState('playing');
+    setEditingIndex(0);
+    setScore(0);
   }, [currentVerse]);
+
 
   const resetVerse = (index: number) => {
     setCurrentVerseIndex(index);
-    setUserInputs(new Array(missingWords.length).fill(''));
-    setGameState('playing');
-    setEditingIndex(0);
-    setScore(0);
   }
 
-  useEffect(() => {
-    resetVerse(currentVerseIndex);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentVerseIndex]);
-
-  useEffect(() => {
-    setUserInputs(new Array(missingWords.length).fill(''));
-    setGameState('playing');
-    setEditingIndex(0);
-    setScore(0);
-  }, [currentVerse, missingWords.length]);
-  
   useEffect(() => {
     const completedCount = completedVerses.filter(Boolean).length;
     setProgress((completedCount / verses.length) * 100);
@@ -114,8 +116,9 @@ export default function VerseMemoryPage() {
   };
 
   const calculateScore = (inputs: string[]) => {
+    if (missingWords.length === 0) return 0;
     const correctCount = inputs.reduce((count, input, index) => {
-      return input.toLowerCase().trim() === missingWords[index].toLowerCase().trim() ? count + 1 : count;
+      return input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim() ? count + 1 : count;
     }, 0);
     const accuracy = correctCount / missingWords.length;
     if (accuracy === 1) return 3;
@@ -184,6 +187,9 @@ export default function VerseMemoryPage() {
   const isCurrentVerseCompleted = score >= 2;
 
   const renderVerse = () => {
+    if (!isClient) {
+      return <div>Loading verse...</div>;
+    }
     let inputIndex = 0;
     return verseWithBlanks.map((part, index) => {
       if (part === null) {
@@ -201,7 +207,7 @@ export default function VerseMemoryPage() {
               onBlur={() => setEditingIndex(null)}
               autoFocus
               className="w-32 h-8 text-base shrink-0"
-              style={{ width: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch` }}
+              style={{ width: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch` }}
             />
           );
         }
@@ -219,13 +225,13 @@ export default function VerseMemoryPage() {
               isWrong ? 'bg-destructive/20 border-destructive' : '',
               gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : ''
             )}
-            style={{ minWidth: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch`}}
+            style={{ minWidth: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch`}}
           >
             {userInputs[currentIndex] || '...'}
           </Label>
         )
       }
-      return <span key={`word-${index}`}>{part}</span>;
+      return <span key={`word-${index}`}>{part} </span>;
     });
   };
 
@@ -233,7 +239,7 @@ export default function VerseMemoryPage() {
     <div className="max-w-4xl mx-auto space-y-6">
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
-        <p className="text-muted-foreground">Fill in the blanks to complete the verse. You have {revealCount} reveals left.</p>
+        <p className="text-muted-foreground">You have {revealCount} reveals left.</p>
       </div>
 
       <Card>
@@ -280,7 +286,7 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing'}>Check My Answer</Button>
-            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal</Button>
+            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal Answer</Button>
             <Button variant="secondary" onClick={handleNext} disabled={!isCurrentVerseCompleted && !completedVerses[currentVerseIndex]}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
