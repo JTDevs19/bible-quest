@@ -63,106 +63,6 @@ const verses = [
     text: 'The LORD is my shepherd, I shall not be in want.',
     version: 'NIV'
   },
-    {
-    reference: 'Isaiah 40:31',
-    text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Joshua 1:9',
-    text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
-    version: 'NIV'
-  },
-  {
-    reference: '1 Corinthians 10:13',
-    text: 'No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear. But when you are tempted, he will also provide a way out so that you can endure it.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Psalm 46:1',
-    text: 'God is our refuge and strength, an ever-present help in trouble.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Romans 12:2',
-    text: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God’s will is—his good, pleasing and perfect will.',
-    version: 'NIV'
-  },
-    {
-    reference: 'Isaiah 41:10',
-    text: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Psalm 119:105',
-    text: 'Your word is a lamp for my feet, a light on my path.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Matthew 11:28-30',
-    text: 'Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls. For my yoke is easy and my burden is light.',
-    version: 'NIV'
-  },
-  {
-    reference: 'John 14:6',
-    text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
-    version: 'NIV'
-  },
-  {
-    reference: 'Romans 10:9',
-    text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Hebrews 4:12',
-    text: 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.',
-    version: 'NIV'
-  },
-  {
-    reference: '2 Corinthians 5:17',
-    text: 'Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!',
-    version: 'NIV'
-  },
-  {
-    reference: 'Psalm 1:1-2',
-    text: 'Blessed is the one who does not walk in step with the wicked or stand in the way that sinners take or sit in the company of mockers, but whose delight is in the law of the LORD, and who meditates on his law day and night.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Proverbs 4:23',
-    text: 'Above all else, guard your heart, for everything you do flows from it.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Matthew 28:19-20',
-    text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you. And surely I am with you always, to the very end of the age.',
-    version: 'NIV'
-  },
-  {
-    reference: 'Hebrews 11:1',
-    text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
-    version: 'NIV',
-  },
-  {
-    reference: '1 John 4:19',
-    text: 'We love because he first loved us.',
-    version: 'NIV',
-  },
-  {
-    reference: 'Psalm 19:14',
-    text: 'May these words of my mouth and this meditation of my heart be pleasing in your sight, LORD, my Rock and my Redeemer.',
-    version: 'NIV',
-  },
-  {
-    reference: 'John 16:33',
-    text: 'I have told you these things, so that in me you may have peace. In this world you will have trouble. But take heart! I have overcome the world.',
-    version: 'NIV',
-  },
-  {
-    reference: 'Colossians 3:23',
-    text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
-    version: 'NIV',
-  },
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
@@ -175,7 +75,7 @@ export default function VerseMemoryPage() {
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
-  const [attemptScore, setAttemptScore] = useState(0); // number of stars for the current attempt
+  const [attemptScore, setAttemptScore] = useState(0);
   const [checkAttempts, setCheckAttempts] = useState(MAX_CHECKS);
   const [verseScores, setVerseScores] = useState<number[]>(new Array(verses.length).fill(0));
   const [unlockedIndex, setUnlockedIndex] = useState(0);
@@ -198,8 +98,10 @@ export default function VerseMemoryPage() {
     const missing: string[] = [];
     const verseParts: VerseParts = [];
     
-    // Select ~25% of words to be blanks, favoring longer words.
-    const wordsToBlank = Math.floor(words.length * 0.25) || 1; // Ensure at least one blank
+    // Staged difficulty: +1 blank every 2 verses
+    const stage = Math.floor(currentVerseIndex / 2);
+    const wordsToBlank = Math.min(stage + 1, 5);
+
     const potentialBlankIndices = words
       .map((word, index) => ({ word, index }))
       .filter(item => item.word.length > 3)
@@ -226,7 +128,7 @@ export default function VerseMemoryPage() {
     setEditingIndex(0);
     setAttemptScore(0);
     setCheckAttempts(MAX_CHECKS);
-  }, [currentVerse, isClient]);
+  }, [currentVerse, currentVerseIndex, isClient]);
 
   const handleInputChange = (index: number, value: string) => {
     const newInputs = [...userInputs];
@@ -254,7 +156,9 @@ export default function VerseMemoryPage() {
         setVerseScores(newScores);
     }
     if (newScore >= 2 && currentVerseIndex === unlockedIndex) {
-      setUnlockedIndex(unlockedIndex + 1);
+      if (unlockedIndex < verses.length - 1) {
+         setUnlockedIndex(unlockedIndex + 1);
+      }
     }
   };
 
@@ -272,10 +176,14 @@ export default function VerseMemoryPage() {
   const handleNext = () => {
     setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex + 1);
+       if (verseScores[currentVerseIndex] >= 2 || gameState === 'revealed') {
+         setCurrentVerseIndex(currentVerseIndex + 1);
+       } else {
+         // Optionally show a message that they need to score higher
+       }
     } else {
       // End of game
-      setCurrentVerseIndex(0); // Restart for now
+      setCurrentVerseIndex(0); 
       setVerseScores(new Array(verses.length).fill(0));
       setUnlockedIndex(0);
     }
@@ -284,9 +192,8 @@ export default function VerseMemoryPage() {
   const handleReveal = () => {
     const correctInputs = [...missingWords];
     setUserInputs(correctInputs);
-    const newScore = calculateScore(correctInputs);
-    setAttemptScore(newScore);
-    updateScoresAndUnlock(newScore);
+    setAttemptScore(0); // No score for revealing
+    updateScoresAndUnlock(0);
     setGameState('revealed');
     setEditingIndex(null);
     setShowSummaryDialog(true);
@@ -299,7 +206,7 @@ export default function VerseMemoryPage() {
   };
   
   const renderVerse = () => {
-    if (!isClient) {
+    if (!isClient || verseWithBlanks.length === 0) {
       return <div>Loading verse...</div>;
     }
     let inputIndex = 0;
@@ -382,7 +289,7 @@ export default function VerseMemoryPage() {
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
-             <Button variant="secondary" onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2 && gameState !== 'revealed'}>
+             <Button variant="secondary" onClick={handleNext} disabled={currentVerseIndex >= unlockedIndex}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -414,7 +321,7 @@ export default function VerseMemoryPage() {
             {gameState !== 'revealed' && attemptScore < 3 && (
                  <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Try Again</AlertDialogCancel>
             )}
-            <AlertDialogAction onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2 && gameState !== 'revealed'}>
+            <AlertDialogAction onClick={handleNext} disabled={currentVerseIndex >= unlockedIndex && gameState !== 'revealed'}>
                 Next Verse
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -424,5 +331,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
