@@ -5,11 +5,13 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 const verses = [
   {
@@ -74,8 +76,8 @@ const HINTS_PER_LEVEL = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
-  let wordCounter = 0;
-  const originalWords = verse.text.split(/(\s+|[.,;!?“”"])/);
+  const originalWordsWithPunctuation = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+  let originalWordIndex = 0;
 
   return (
     <div className="text-center font-serif italic text-lg leading-relaxed">
@@ -85,45 +87,38 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
             const currentBlankIndex = blankCounter;
             blankCounter++;
 
-            // Find the original word including punctuation
-            let originalWord = '';
-            let tempCounter = wordCounter;
-            while(tempCounter < originalWords.length) {
-              const word = originalWords[tempCounter];
-               if (word.trim().length > 0 && /^[a-zA-Z]+$/.test(word.trim())) {
-                 if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex]?.toLowerCase()) {
-                    originalWord = word;
-                    wordCounter = tempCounter + 1;
+            let correctWordWithPunctuation = missingWords[currentBlankIndex];
+            for (let i = originalWordIndex; i < originalWordsWithPunctuation.length; i++) {
+                const word = originalWordsWithPunctuation[i];
+                if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex].toLowerCase()) {
+                    correctWordWithPunctuation = word;
+                    originalWordIndex = i + 1;
                     break;
-                 }
-              }
-              tempCounter++;
+                }
             }
-            if (!originalWord) originalWord = missingWords[currentBlankIndex];
-
 
             const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
-            const correctWord = missingWords[currentBlankIndex]?.trim() ?? '';
-            const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
+            const isCorrect = userInput.toLowerCase() === missingWords[currentBlankIndex].toLowerCase();
 
             if (isCorrect) {
-              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{originalWord}</strong>;
+              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{correctWordWithPunctuation}</strong>;
             }
 
             return (
               <span key={`review-blank-${index}`} className="inline-block text-center mx-1 relative -top-2">
-                <span className="text-xs text-red-500 font-sans font-semibold block">{correctWord}</span>
+                <span className="text-xs text-red-500 font-sans font-semibold block">{correctWordWithPunctuation}</span>
                 <s className="text-red-500">{userInput || '...'}</s>
               </span>
             );
           }
           
-          let found = false;
-          if (originalWords[wordCounter] === part) {
-            wordCounter++;
-            found = true;
+          for (let i = originalWordIndex; i < originalWordsWithPunctuation.length; i++) {
+              if (originalWordsWithPunctuation[i] === part) {
+                  originalWordIndex = i + 1;
+                  break;
+              }
           }
-          
+
           return <span key={`review-text-${index}`}>{part}</span>;
         })}
       </p>
@@ -149,6 +144,7 @@ export default function VerseMemoryPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_LEVEL);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -178,8 +174,8 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     saveProgress();
   }, [saveProgress]);
-
-  const resetProgress = () => {
+  
+  const resetAllProgress = () => {
     if (!isClient) return;
     localStorage.removeItem('verseMemoryProgress');
     setCurrentLevel(1);
@@ -187,7 +183,30 @@ export default function VerseMemoryPage() {
     setVerseScores({});
     setTotalStars(0);
     setPopoverOpen(false);
+    setShowResetConfirm(null);
   };
+  
+  const resetCurrentLevelProgress = () => {
+      if (!isClient) return;
+
+      const starsForCurrentLevel = Object.values(verseScores[currentLevel] || {}).reduce((sum, score) => sum + score, 0);
+      const newTotalStars = totalStars - starsForCurrentLevel;
+
+      const newScores = { ...verseScores };
+      delete newScores[currentLevel];
+      
+      setTotalStars(newTotalStars);
+      setVerseScores(newScores);
+      setCurrentVerseIndex(0);
+      
+      const progress = {
+          level: currentLevel,
+          scores: newScores,
+          stars: newTotalStars,
+      };
+      localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
+      setShowResetConfirm(null);
+  }
 
   const currentVerse = verses[currentVerseIndex];
   const wordsToBlankForCurrentLevel = currentLevel;
@@ -530,9 +549,21 @@ export default function VerseMemoryPage() {
                                )
                            })}
                         </div>
-                        <Button variant="outline" className="w-full" onClick={resetProgress}>
-                          <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
-                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="w-full">
+                                    <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56">
+                                <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
+                                    Reset Current Level
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
+                                    Reset All Progress
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                   </PopoverContent>
                </Popover>
@@ -602,7 +633,33 @@ export default function VerseMemoryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <AlertDialog open={showResetConfirm !== null} onOpenChange={(open) => !open && setShowResetConfirm(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {showResetConfirm === 'current'
+                            ? "This will reset all your scores and stars for the current level. This action cannot be undone."
+                            : "This will permanently delete all your progress, including all scores and stars across all levels. This action cannot be undone."
+                        }
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setShowResetConfirm(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={showResetConfirm === 'current' ? resetCurrentLevelProgress : resetAllProgress}
+                      className={cn(showResetConfirm === 'all' && 'bg-destructive text-destructive-foreground hover:bg-destructive/90')}
+                    >
+                        Confirm
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
 
     </div>
   );
 }
+
+    
