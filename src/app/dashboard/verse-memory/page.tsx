@@ -14,22 +14,27 @@ const verses = [
   {
     reference: 'John 3:16',
     text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+    version: 'NIV'
   },
   {
     reference: 'Proverbs 3:5-6',
     text: 'Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.',
+    version: 'NIV'
   },
   {
     reference: 'Philippians 4:13',
     text: 'I can do all this through him who gives me strength.',
+    version: 'NIV'
   },
   {
     reference: 'Romans 8:28',
     text: 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.',
+    version: 'NIV'
   },
   {
     reference: 'Jeremiah 29:11',
     text: 'For I know the plans I have for you,” declares the LORD, “plans to prosper you and not to harm you, plans to give you hope and a future.',
+    version: 'NIV'
   },
 ];
 
@@ -172,7 +177,7 @@ export default function VerseMemoryPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">{currentVerse.reference}</CardTitle>
+          <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
           <CardDescription>Fill in the missing words from the verse below.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
