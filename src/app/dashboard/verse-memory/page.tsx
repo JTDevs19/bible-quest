@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, RefreshCw, XCircle } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -38,14 +38,18 @@ const verses = [
   },
 ];
 
-type GameState = 'playing' | 'correct' | 'incorrect' | 'revealed';
+type GameState = 'playing' | 'scored' | 'revealed';
+
+const MAX_REVEALS = 10;
 
 export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
   const [progress, setProgress] = useState(0);
-  const [editingIndex, setEditingIndex] = useState<number | null>(0); // Start with the first input focused
+  const [editingIndex, setEditingIndex] = useState<number | null>(0);
+  const [score, setScore] = useState(0); // number of stars
+  const [revealCount, setRevealCount] = useState(MAX_REVEALS);
 
   const currentVerse = verses[currentVerseIndex];
   const { verseWithBlanks, missingWords } = useMemo(() => {
@@ -54,7 +58,7 @@ export default function VerseMemoryPage() {
     const verseParts: (string | null)[] = [];
     
     // Select ~25% of words to be blanks, favoring longer words.
-    const wordsToBlank = Math.floor(words.length * 0.25);
+    const wordsToBlank = Math.floor(words.length * 0.25) || 1; // Ensure at least one blank
     const potentialBlankIndices = words
       .map((word, index) => ({ word, index }))
       .filter(item => item.word.length > 3)
@@ -78,7 +82,8 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     setUserInputs(new Array(missingWords.length).fill(''));
     setGameState('playing');
-    setEditingIndex(0); // Focus the first input on new verse
+    setEditingIndex(0);
+    setScore(0);
   }, [currentVerse, missingWords.length]);
   
   useEffect(() => {
@@ -92,12 +97,22 @@ export default function VerseMemoryPage() {
     if(gameState !== 'playing') setGameState('playing');
   };
 
+  const calculateScore = (inputs: string[]) => {
+    const correctCount = inputs.reduce((count, input, index) => {
+      return input.toLowerCase().trim() === missingWords[index].toLowerCase().trim() ? count + 1 : count;
+    }, 0);
+    const accuracy = correctCount / missingWords.length;
+    if (accuracy === 1) return 3;
+    if (accuracy >= 0.5) return 2;
+    if (accuracy > 0) return 1;
+    return 0;
+  };
+
   const handleSubmit = () => {
-    setEditingIndex(null); // Remove focus from any input
-    const isCorrect = userInputs.every(
-      (input, index) => input.toLowerCase().trim() === missingWords[index].toLowerCase().trim()
-    );
-    setGameState(isCorrect ? 'correct' : 'incorrect');
+    setEditingIndex(null);
+    const newScore = calculateScore(userInputs);
+    setScore(newScore);
+    setGameState('scored');
   };
 
   const handleNext = () => {
@@ -110,17 +125,21 @@ export default function VerseMemoryPage() {
   };
   
   const handleReveal = () => {
-    setUserInputs([...missingWords]);
+    if (revealCount <= 0) return;
+    setRevealCount(revealCount - 1);
+    const correctInputs = [...missingWords];
+    setUserInputs(correctInputs);
+    const newScore = calculateScore(correctInputs);
+    setScore(newScore);
     setGameState('revealed');
     setEditingIndex(null);
   };
   
   const handleLabelClick = (index: number) => {
-    if (gameState !== 'revealed') {
+    if (gameState === 'playing') {
       setEditingIndex(index);
     }
   };
-
 
   const renderVerse = () => {
     let inputIndex = 0;
@@ -129,7 +148,8 @@ export default function VerseMemoryPage() {
         const currentIndex = inputIndex;
         inputIndex++;
         
-        if (editingIndex === currentIndex && gameState !== 'revealed') {
+        const isEditable = gameState === 'playing' && editingIndex === currentIndex;
+        if (isEditable) {
            return (
             <Input
               key={`input-${currentIndex}`}
@@ -140,21 +160,22 @@ export default function VerseMemoryPage() {
               autoFocus
               className="w-32 h-8 text-base shrink-0"
               style={{ width: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch` }}
-              disabled={gameState === 'revealed'}
             />
           );
         }
+        
+        const isWrong = gameState === 'scored' && userInputs[currentIndex]?.toLowerCase().trim() !== missingWords[currentIndex]?.toLowerCase().trim();
 
-        const isFilled = userInputs[currentIndex] && userInputs[currentIndex].length > 0;
         return (
           <Label 
             key={`label-${currentIndex}`}
             onClick={() => handleLabelClick(currentIndex)}
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
-              isFilled ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
-              gameState === 'revealed' ? "cursor-default text-foreground bg-transparent border-b-0" : "",
-              userInputs[currentIndex]?.toLowerCase().trim() !== missingWords[currentIndex]?.toLowerCase().trim() && (gameState === 'correct' || gameState === 'incorrect') ? 'bg-destructive/20 border-destructive' : ''
+               userInputs[currentIndex] ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
+              gameState !== 'playing' ? 'cursor-default' : '',
+              isWrong ? 'bg-destructive/20 border-destructive' : '',
+              gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : ''
             )}
             style={{ minWidth: `${Math.max(missingWords[currentIndex].length, 5) + 2}ch`}}
           >
@@ -170,7 +191,7 @@ export default function VerseMemoryPage() {
     <div className="max-w-4xl mx-auto space-y-6">
        <div className="space-y-2">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
-        <p className="text-muted-foreground">Fill in the blanks to complete the verse.</p>
+        <p className="text-muted-foreground">Fill in the blanks to complete the verse. You have {revealCount} reveals left.</p>
       </div>
 
       <Progress value={progress} className="w-full" />
@@ -183,38 +204,37 @@ export default function VerseMemoryPage() {
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button onClick={handleSubmit} disabled={gameState === 'revealed'}>Check My Answer</Button>
-            <Button variant="outline" onClick={handleReveal}>Reveal Answer</Button>
+            <Button onClick={handleSubmit} disabled={gameState !== 'playing'}>Check My Answer</Button>
+            <Button variant="outline" onClick={handleReveal} disabled={revealCount <= 0 || gameState !== 'playing'}>Reveal ({revealCount} left)</Button>
             <Button variant="secondary" onClick={handleNext}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
           
-          {gameState === 'correct' && (
-            <Alert variant="default" className="bg-green-100 dark:bg-green-900/30 border-green-500">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800 dark:text-green-300">Correct!</AlertTitle>
-              <AlertDescription className="text-green-700 dark:text-green-400">
-                Excellent! You've got it right. Keep going!
+          {gameState === 'scored' && (
+            <Alert variant="default" className="bg-yellow-100 dark:bg-yellow-900/30 border-yellow-500">
+               <Star className="h-4 w-4 text-yellow-600" />
+               <AlertTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-300">
+                 Your Score: 
+                 <div className="flex">
+                  {Array.from({length: 3}).map((_, i) => (
+                    <Star key={i} className={cn("h-5 w-5", i < score ? "text-yellow-500 fill-yellow-500" : "text-yellow-500/50")}/>
+                  ))}
+                 </div>
+              </AlertTitle>
+              <AlertDescription className="text-yellow-700 dark:text-yellow-400">
+                {score === 3 ? "Perfect! You're a star!" : score > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
               </AlertDescription>
             </Alert>
           )}
-          {gameState === 'incorrect' && (
-            <Alert variant="destructive">
-              <XCircle className="h-4 w-4" />
-              <AlertTitle>Not Quite</AlertTitle>
-              <AlertDescription>
-                Some words are incorrect. Give it another try!
-              </AlertDescription>
-            </Alert>
-          )}
+
            {gameState === 'revealed' && (
             <Alert variant="default" className="bg-blue-100 dark:bg-blue-900/30 border-blue-500">
               <CheckCircle className="h-4 w-4 text-blue-600" />
               <AlertTitle className="text-blue-800 dark:text-blue-300">Answer Revealed</AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-400">
                 The correct words are filled in. Study it, then try the next verse!
-              </AlertDescription>
+              </Aler tDescription>
             </Alert>
           )}
         </CardContent>
