@@ -219,25 +219,23 @@ export default function VerseMemoryPage() {
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
 
-    // Resetting states for the new verse
     setGameState(isMastered ? 'scored' : 'playing');
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setCheckAttempts(10);
 
     if (isMastered) {
-        setVerseWithBlanks(words);
+        setVerseWithBlanks(words.filter(p => p.length > 0));
         setMissingWords([]);
         setUserInputs([]);
     } else {
-        // If verse is not mastered, create blanks
         setUserInputs([]);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
         const potentialBlankIndices = words
             .map((word, index) => ({ word, index }))
-            .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim())) // only blank actual words
+            .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim()))
             .map(item => item.index);
         
         const shuffled = [...potentialBlankIndices].sort(() => 0.5 - Math.random());
@@ -475,7 +473,7 @@ export default function VerseMemoryPage() {
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 md:px-0 px-4">
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
         <p className="text-muted-foreground">Fill in the blanks to complete the verse.</p>
@@ -573,9 +571,27 @@ export default function VerseMemoryPage() {
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button onClick={handleSubmit} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
-              {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
-            </Button>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
+                        {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will use one of your attempts. You can check your answers to see which are correct and then continue editing before submitting for a final score.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSubmit}>
+                            Yes, Check Answer
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <Button variant="outline" onClick={handleHint} disabled={isVerseMastered || hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
                 <HelpCircle className="mr-2 h-4 w-4"/>
                 Hint ({hintsRemaining})
@@ -661,5 +677,7 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
 
     
