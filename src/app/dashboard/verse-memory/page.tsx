@@ -179,46 +179,60 @@ export default function VerseMemoryPage() {
     if (!isClient) return;
 
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-    
     const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
-    const missing: string[] = [];
-    const verseParts: VerseParts = [];
-    
-    const potentialBlankIndices = words
-      .map((word, index) => ({ word, index }))
-      .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim())) // only blank actual words
-      .map(item => item.index);
-    
-    const shuffled = potentialBlankIndices.sort(() => 0.5 - Math.random());
-    const blankIndices = new Set(shuffled.slice(0, wordsToBlankForCurrentLevel));
 
-    words.forEach((word, index) => {
-      if (blankIndices.has(index)) {
-        missing.push(word.replace(/[.,;!?“”"]/g, ''));
-        verseParts.push(null);
-      } else {
-        verseParts.push(word);
-      }
-    });
+    // Resetting states for the new verse
+    setUserInputs([]);
+    setVerseWithBlanks([]);
+    setMissingWords([]);
+    setIsVerseMastered(false);
+    setGameState('playing');
+    setEditingIndex(0);
+    setAttemptScore(0);
+    setCheckAttempts(10);
 
-    setVerseWithBlanks(verseParts);
-    setMissingWords(missing);
-    
     if (currentVerseScore === STARS_PER_VERSE) {
-        setUserInputs(missing);
+        // If verse is mastered, show the full verse
+        const fullVerseParts = words.map(word => word);
+        const fullVerseWords = words.filter(word => word.trim().length > 0 && /^[a-zA-Z]+$/.test(word.trim()));
+        
+        setVerseWithBlanks(fullVerseParts);
+        // We set missingWords and userInputs to be identical to show filled-in text
+        setMissingWords(fullVerseWords);
+        setUserInputs(fullVerseWords);
+        
         setIsVerseMastered(true);
         setGameState('scored');
         setEditingIndex(null);
     } else {
+        // If verse is not mastered, create blanks
+        const missing: string[] = [];
+        const verseParts: VerseParts = [];
+        
+        const potentialBlankIndices = words
+            .map((word, index) => ({ word, index }))
+            .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim())) // only blank actual words
+            .map(item => item.index);
+        
+        const shuffled = [...potentialBlankIndices].sort(() => 0.5 - Math.random());
+        const blankIndices = new Set(shuffled.slice(0, wordsToBlankForCurrentLevel));
+
+        words.forEach((word, index) => {
+            if (blankIndices.has(index)) {
+                missing.push(word.replace(/[.,;!?“”"]/g, ''));
+                verseParts.push(null);
+            } else {
+                verseParts.push(word);
+            }
+        });
+
+        setVerseWithBlanks(verseParts);
+        setMissingWords(missing);
         setUserInputs(new Array(missing.length).fill(''));
         setIsVerseMastered(false);
-        setGameState('playing');
-        setEditingIndex(0);
-        setAttemptScore(0);
-        setCheckAttempts(10);
     }
 
-  }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel, verseScores]);
+}, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel, JSON.stringify(verseScores)]);
 
    useEffect(() => {
     setHintsRemaining(HINTS_PER_LEVEL);
@@ -234,10 +248,6 @@ export default function VerseMemoryPage() {
     }, 0);
     
     const accuracy = correctCount / missingWords.length;
-  
-    if (currentLevel === 1) {
-       return accuracy === 1 ? 3 : 0;
-    }
   
     if (accuracy === 1) return 3;
     if (accuracy >= 0.5) return 2;
@@ -368,6 +378,11 @@ export default function VerseMemoryPage() {
     if (!isClient || verseWithBlanks.length === 0) {
       return <div>Loading verse...</div>;
     }
+
+    if (isVerseMastered) {
+      return verseWithBlanks.join('');
+    }
+
     let inputIndex = 0;
     return verseWithBlanks.map((part, index) => {
       if (part === null) {
