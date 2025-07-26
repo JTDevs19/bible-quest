@@ -37,6 +37,31 @@ const verses = [
     text: 'For I know the plans I have for you,” declares the LORD, “plans to prosper you and not to harm you, plans to give you hope and a future.',
     version: 'NIV'
   },
+  {
+    reference: 'Matthew 6:33',
+    text: 'But seek first his kingdom and his righteousness, and all these things will be given to you as well.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Galatians 5:22-23',
+    text: 'But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control. Against such things there is no law.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Ephesians 2:8-9',
+    text: 'For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God— not by works, so that no one can boast.',
+    version: 'NIV'
+  },
+  {
+    reference: '2 Timothy 3:16-17',
+    text: 'All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness, so that the servant of God may be thoroughly equipped for every good work.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 23:1',
+    text: 'The LORD is my shepherd, I shall not be in want.',
+    version: 'NIV'
+  }
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
