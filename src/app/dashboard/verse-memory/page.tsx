@@ -63,12 +63,101 @@ const verses = [
     text: 'The LORD is my shepherd, I shall not be in want.',
     version: 'NIV'
   },
+  {
+    reference: 'Joshua 1:9',
+    text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Isaiah 41:10',
+    text: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 46:1',
+    text: 'God is our refuge and strength, an ever-present help in trouble.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Romans 12:2',
+    text: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God’s will is—his good, pleasing and perfect will.',
+    version: 'NIV'
+  },
+  {
+    reference: 'John 14:6',
+    text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
+    version: 'NIV'
+  },
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
 type VerseParts = (string | null)[];
 
 const MAX_CHECKS = 10;
+
+
+function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
+  const words = verse.text.split(' ');
+  let blankCounter = 0;
+
+  return (
+    <div className="text-center font-serif italic text-lg leading-relaxed">
+      "{words.map((word, index) => {
+        const correspondingBlank = verseWithBlanks.findIndex((part, i) => {
+            // This is a naive way to find the corresponding blank index, might need refinement
+            const textUpToThisPoint = words.slice(0, index + 1).join(' ');
+            const versePartsText = verseWithBlanks.slice(0, i + 1).filter(p => p !== null).join(' ');
+            return part === null && textUpToThisPoint.startsWith(versePartsText)
+        });
+        
+        let isBlank = false;
+        let blankIndex = -1;
+
+        // A better check to see if the current word is a blank
+        if(verseWithBlanks[index] === null || (verseWithBlanks[index] === ' ' && verseWithBlanks[index-1] == null)) {
+            // this is complex because indices dont match up
+        }
+
+        const originalWord = word.replace(/[.,;!?]/g, '');
+        const missingWordIndex = missingWords.indexOf(originalWord);
+        const wasThisWordABlank = missingWordIndex !== -1 && missingWords.filter(w => w === originalWord).length > 0;
+
+        if (wasThisWordABlank) {
+             const indices = missingWords.map((w, i) => w === originalWord ? i : -1).filter(i => i !== -1);
+             // This logic is getting complicated. A simpler way is to reconstruct based on `verseWithBlanks`
+        }
+      })}
+
+      <p>
+         {verseWithBlanks.map((part, index) => {
+            if (part === null) {
+              const currentBlankIndex = blankCounter;
+              blankCounter++;
+              const userInput = userInputs[currentBlankIndex];
+              const correctWord = missingWords[currentBlankIndex];
+              const isCorrect = userInput?.toLowerCase().trim() === correctWord?.toLowerCase().trim();
+
+              if(isCorrect) {
+                return <strong key={index} className="text-green-600 dark:text-green-400"> {correctWord} </strong> 
+              }
+              
+              return (
+                 <span key={index} className="inline-block text-center mx-1">
+                    <span className="text-xs text-red-500 font-sans font-semibold">{correctWord}</span>
+                    <s className="text-red-500">{userInput || '...'}</s>
+                 </span>
+              )
+            }
+            return <span key={index}> {part} </span>
+         })}
+      </p>
+
+       <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
+    </div>
+  )
+
+}
+
 
 export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
@@ -94,7 +183,7 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     if (!isClient) return;
 
-    const words = currentVerse.text.split(' ');
+    const words = currentVerse.text.split(/(\s+)/); // Split by space, keeping the delimiter
     const missing: string[] = [];
     const verseParts: VerseParts = [];
     
@@ -104,7 +193,7 @@ export default function VerseMemoryPage() {
 
     const potentialBlankIndices = words
       .map((word, index) => ({ word, index }))
-      .filter(item => item.word.length > 3)
+      .filter(item => item.word.length > 3 && item.word.trim() !== '')
       .map(item => item.index);
     
     const shuffled = potentialBlankIndices.sort(() => 0.5 - Math.random());
@@ -225,7 +314,7 @@ export default function VerseMemoryPage() {
               onChange={(e) => handleInputChange(currentIndex, e.target.value)}
               onBlur={() => setEditingIndex(null)}
               autoFocus
-              className="w-32 h-8 text-base shrink-0"
+              className="w-32 h-8 text-base shrink-0 inline-block"
               style={{ width: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch` }}
             />
           );
@@ -250,7 +339,7 @@ export default function VerseMemoryPage() {
           </Label>
         )
       }
-      return <span key={`word-${index}`}>{part} </span>;
+      return <span key={`word-${index}`}>{part}</span>;
     });
   };
 
@@ -284,7 +373,7 @@ export default function VerseMemoryPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
+          <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
             {gameState === 'scored' && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
@@ -313,8 +402,19 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               <p className="text-center font-serif italic">"{currentVerse.text}"</p>
-               <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+               {gameState === 'revealed' ? (
+                  <>
+                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
+                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+                  </>
+               ) : (
+                  <VerseReview 
+                    verse={currentVerse} 
+                    verseWithBlanks={verseWithBlanks} 
+                    userInputs={userInputs} 
+                    missingWords={missingWords}
+                  />
+               )}
              </CardContent>
           </Card>
           <AlertDialogFooter>
@@ -330,4 +430,5 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-}
+
+    
