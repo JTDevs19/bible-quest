@@ -87,15 +87,17 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
 
             // Find the original word including punctuation
             let originalWord = '';
-            while(wordCounter < originalWords.length) {
-              const word = originalWords[wordCounter];
-              wordCounter++;
-              if (word.trim().length > 0) {
-                 if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex].toLowerCase()) {
+            let tempCounter = wordCounter;
+            while(tempCounter < originalWords.length) {
+              const word = originalWords[tempCounter];
+               if (word.trim().length > 0 && /^[a-zA-Z]+$/.test(word.trim())) {
+                 if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex]?.toLowerCase()) {
                     originalWord = word;
+                    wordCounter = tempCounter + 1;
                     break;
                  }
               }
+              tempCounter++;
             }
             if (!originalWord) originalWord = missingWords[currentBlankIndex];
 
@@ -115,7 +117,13 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
               </span>
             );
           }
-          wordCounter++;
+          
+          let found = false;
+          if (originalWords[wordCounter] === part) {
+            wordCounter++;
+            found = true;
+          }
+          
           return <span key={`review-text-${index}`}>{part}</span>;
         })}
       </p>
@@ -178,30 +186,23 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     if (!isClient) return;
 
-    const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/);
+    const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
     // Resetting states for the new verse
     setUserInputs([]);
     setVerseWithBlanks([]);
     setMissingWords([]);
-    setIsVerseMastered(false);
     setGameState('playing');
     setEditingIndex(0);
     setAttemptScore(0);
     setCheckAttempts(10);
+    setIsVerseMastered(currentVerseScore === STARS_PER_VERSE);
 
     if (currentVerseScore === STARS_PER_VERSE) {
-        // If verse is mastered, show the full verse
-        const fullVerseParts = words.map(word => word);
-        const fullVerseWords = words.filter(word => word.trim().length > 0 && /^[a-zA-Z]+$/.test(word.trim()));
-        
-        setVerseWithBlanks(fullVerseParts);
-        // We set missingWords and userInputs to be identical to show filled-in text
-        setMissingWords(fullVerseWords);
-        setUserInputs(fullVerseWords);
-        
-        setIsVerseMastered(true);
+        setVerseWithBlanks(words);
+        setMissingWords([]);
+        setUserInputs([]);
         setGameState('scored');
         setEditingIndex(null);
     } else {
@@ -229,7 +230,6 @@ export default function VerseMemoryPage() {
         setVerseWithBlanks(verseParts);
         setMissingWords(missing);
         setUserInputs(new Array(missing.length).fill(''));
-        setIsVerseMastered(false);
     }
 
 }, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel, JSON.stringify(verseScores)]);
@@ -280,18 +280,20 @@ export default function VerseMemoryPage() {
             setTotalStars(s => s + scoreDiff);
           }
 
-          return {
+          const updatedScores = {
               ...prevScores,
               [currentLevel]: {
                   ...prevScores[currentLevel],
                   [currentVerseIndex]: newTotalScore
               }
           };
-      });
+          
+          if (newTotalScore === STARS_PER_VERSE) {
+            setIsVerseMastered(true);
+          }
 
-      if (newScore === STARS_PER_VERSE) {
-        setIsVerseMastered(true);
-      }
+          return updatedScores;
+      });
 
       setGameState('scored');
       setShowSummaryDialog(true);
