@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle, Map, Trophy } from 'lucide-react';
+import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle, Map, Trophy, Languages } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -77,6 +77,74 @@ const triviaLevels = [
   ]
 ];
 
+const triviaLevelsFilipino = [
+  // Level 1
+  [
+    { question: "Sino ang kilala sa kanyang pambihirang lakas na nakatali sa kanyang mahabang buhok?", options: ["David", "Goliath", "Samson", "Gideon"], answer: "Samson" },
+    { question: "Sino ang nilamon ng malaking isda matapos sumuway sa Diyos?", options: ["Jonas", "Daniel", "Elias", "Pedro"], answer: "Jonas" },
+    { question: "Sino ang namuno sa mga Israelita palabas sa pagkaalipin sa Ehipto?", options: ["Josue", "Abraham", "Moises", "Jacob"], answer: "Moises" },
+    { question: "Sino ang matapang na reyna na nagligtas sa kanyang bayan mula sa isang masamang balak?", options: ["Ruth", "Esther", "Maria", "Debora"], answer: "Esther" },
+    { question: "Sino ang unang hari ng Israel?", options: ["David", "Solomon", "Saul", "Samuel"], answer: "Saul" },
+    { question: "Itinanggi ng disipulong ito si Jesus ng tatlong beses bago tumilaok ang manok.", options: ["Judas", "Juan", "Tomas", "Pedro"], answer: "Pedro" },
+    { question: "Sino ang inihagis sa yungib ng mga leon ngunit pinrotektahan ng Diyos?", options: ["Daniel", "Jose", "Jeremias", "Sadrac"], answer: "Daniel" },
+    { question: "Sino ang ama ng labindalawang tribo ng Israel?", options: ["Isaac", "Abraham", "Jacob", "Jose"], answer: "Jacob" },
+    { question: "Sino ang matalik na kaibigan ni David at anak ni Haring Saul?", options: ["Joab", "Jonathan", "Absalom", "Nathan"], answer: "Jonathan" },
+    { question: "Sino ang isang propetisa at ang tanging babaeng hukom ng Israel na nabanggit sa Bibliya?", options: ["Jael", "Miriam", "Hulda", "Debora"], answer: "Debora" },
+  ],
+  // Level 2
+  [
+    { question: "Sino ang propeta na humarap kay Haring David matapos ang kanyang kasalanan kay Bathsheba?", options: ["Elias", "Isaias", "Nathan", "Samuel"], answer: "Nathan" },
+    { question: "Sino ang ina ni Juan na Tagapagbautismo?", options: ["Maria", "Elisabet", "Ana", "Sara"], answer: "Elisabet" },
+    { question: "Sino ang ipinagbili ng kanyang mga kapatid sa pagkaalipin ngunit naging makapangyarihang pinuno sa Ehipto?", options: ["Esau", "Jose", "Benjamin", "Reuben"], answer: "Jose" },
+    { question: "Sino ang maniningil ng buwis na tinawag ni Jesus upang maging isa sa Kanyang mga alagad?", options: ["Zaqueo", "Nicodemo", "Mateo", "Bartolome"], answer: "Mateo" },
+    { question: "Sino ang unang Kristiyanong martir?", options: ["Pablo", "Pedro", "Esteban", "Santiago"], answer: "Esteban" },
+    { question: "Sino ang asawa ni Isaac at ina nina Jacob at Esau?", options: ["Leah", "Rachel", "Rebekah", "Sarai"], answer: "Rebekah" },
+    { question: "Sino ang namuno sa mga Israelita sa labanan sa Jerico?", options: ["Moises", "Gideon", "Josue", "Caleb"], answer: "Josue" },
+    { question: "Sino ang propeta na dinala sa langit sa isang karwaheng apoy?", options: ["Eliseo", "Elias", "Enoc", "Isaias"], answer: "Elias" },
+    { question: "Sino ang nagpahid ng langis kina Saul at David bilang mga hari ng Israel?", options: ["Nathan", "Samuel", "Eli", "Ahias"], answer: "Samuel" },
+    { question: "Sino ang apostol na pumalit kay Judas Iscariote?", options: ["Barnabas", "Silas", "Timoteo", "Matias"], answer: "Matias" },
+  ],
+  // Level 3
+  [
+    { question: "Sino ang tagahawak ng saro ng Persyanong hari na si Artaxerxes at tumulong sa muling pagtatayo ng mga pader ng Jerusalem?", options: ["Ezra", "Zerubbabel", "Nehemias", "Hagai"], answer: "Nehemias" },
+    { question: "Sino ang punong saserdote ng Jerusalem noong ipinako si Jesus sa krus?", options: ["Anas", "Caifas", "Eli", "Finehas"], answer: "Caifas" },
+    { question: "Sino ang mayamang Pariseo na tumulong sa paglilibing kay Jesus?", options: ["Nicodemo", "Jose ng Arimatea", "Simon na Cyrene", "Lazaro"], answer: "Jose ng Arimatea" },
+    { question: "Sino ang kaliweteng hukom na nagligtas sa Israel mula sa mga Moabita?", options: ["Otniel", "Ehud", "Samgar", "Gideon"], answer: "Ehud" },
+    { question: "Sino ang asawa ni Urias na Heteo, na kung kanino nakiapid si David?", options: ["Mical", "Abigail", "Bathsheba", "Tamar"], answer: "Bathsheba" },
+    { question: "Sino ang propetisa na kumilala sa sanggol na si Jesus bilang Mesiyas sa Templo?", options: ["Elisabet", "Ana", "Febe", "Priscila"], answer: "Ana" },
+    { question: "Sino ang mangkukulam sa Samaria na sinubukang bilhin ang kapangyarihan ng Banal na Espiritu?", options: ["Elimas", "Bar-Jesus", "Simon ang Mago", "Sceva"], answer: "Simon ang Mago" },
+    { question: "Sino ang pamangkin ni Abraham, na piniling manirahan sa lungsod ng Sodoma?", options: ["Lot", "Laban", "Haran", "Nahor"], answer: "Lot" },
+    { question: "Sino ang kahalili ng propetang si Elias?", options: ["Eliseo", "Oseas", "Amos", "Obadias"], answer: "Eliseo" },
+    { question: "Sino ang unang Hentil na nagbalik-loob sa Kristiyanismo na naitala sa aklat ng Mga Gawa?", options: ["Ang Bating na taga-Etiopia", "Cornelio", "Lidia", "Sergio Paulo"], answer: "Cornelio" },
+  ],
+  // Level 4
+  [
+    { question: "Sino ang hari ng Juda na kilala sa kanyang radikal na mga repormang panrelihiyon at pagsisisi?", options: ["Hezekias", "Josias", "Uzias", "Manases"], answer: "Josias" },
+    { question: "Sino ang tumakas na alipin na ipinabalik ni Pablo sa kanyang amo na si Filemon?", options: ["Tiquico", "Epafras", "Onesimo", "Arquito"], answer: "Onesimo" },
+    { question: "Sino ang panganay na anak ni Jacob, na tinalikuran ang kanyang karapatan sa pagkapanganay?", options: ["Simeon", "Levi", "Juda", "Reuben"], answer: "Reuben" },
+    { question: "Sino ang propeta na inutusan ng Diyos na pakasalan ang isang patutot bilang simbolo ng kataksilan ng Israel?", options: ["Jeremias", "Oseas", "Ezekiel", "Amos"], answer: "Oseas" },
+    { question: "Sino ang manggagawa, na puno ng Espiritu ng Diyos, na nangasiwa sa pagtatayo ng Tabernakulo?", options: ["Oholiab", "Huram-abi", "Bezalel", "Hiram ng Tiro"], answer: "Bezalel" },
+    { question: "Sino ang Romanong gobernador na namuno sa paglilitis kay Jesus?", options: ["Herodes Antipas", "Felix", "Festus", "Poncio Pilato"], answer: "Poncio Pilato" },
+    { question: "Sino ang ina ni Haring Solomon?", options: ["Hagit", "Bathsheba", "Abisag", "Mical"], answer: "Bathsheba" },
+    { question: "Sino ang lalaki na kailangang makumbinsi sa muling pagkabuhay ni Jesus sa pamamagitan ng paghawak sa Kanyang mga sugat?", options: ["Felipe", "Andres", "Tomas", "Bartolome"], answer: "Tomas" },
+    { question: "Sino ang kapitan ng hukbong Siria, na pinagaling sa ketong ni Eliseo?", options: ["Naaman", "Ben-Hadad", "Hazael", "Ziba"], answer: "Naaman" },
+    { question: "Sino ang nagtitinda ng telang purpura mula sa Tiatira na naging mananampalataya sa Filipos?", options: ["Dorcas", "Chloe", "Lidia", "Febe"], answer: "Lidia" },
+  ],
+  // Level 5
+  [
+    { question: "Sino ang lolo ni Haring David?", options: ["Jesse", "Boaz", "Obed", "Salmon"], answer: "Obed" },
+    { question: "Sino ang pari at hari ng Salem na sumalubong kay Abraham na may dalang tinapay at alak?", options: ["Melquisedec", "Jetro", "Adonizedec", "Abimelec"], answer: "Melquisedec" },
+    { question: "Sino ang propeta na nakakita ng pangitain ng isang libis ng mga tuyong buto na nabuhay?", options: ["Isaias", "Jeremias", "Ezekiel", "Daniel"], answer: "Ezekiel" },
+    { question: "Sino ang masamang reyna ng Israel, asawa ni Ahab, na nagtaguyod ng pagsamba kay Baal?", options: ["Jezebel", "Atalia", "Herodias", "Delila"], answer: "Jezebel" },
+    { question: "Sino ang opisyal na Hudyo sa korte ng Persia na humadlang sa balak ni Haman na patayin ang mga Hudyo?", options: ["Daniel", "Nehemias", "Ezra", "Mordecai"], answer: "Mordecai" },
+    { question: "Sino ang anak ni Jonathan, na pilay ang mga paa at pinakitaan ng kabutihan ni David?", options: ["Mefiboset", "Is-boset", "Adonias", "Amnon"], answer: "Mefiboset" },
+    { question: "Sino ang mag-asawang nagsinungaling sa Banal na Espiritu tungkol sa pagbebenta ng kanilang ari-arian at namatay bilang resulta?", options: ["Aquila at Priscila", "Ananias at Safira", "Filemon at Apia", "Andronico at Junia"], answer: "Ananias at Safira" },
+    { question: "Sino ang ikalawang hari ng hilagang kaharian ng Israel, na kilala sa pariralang 'ang mga kasalanan ni... na nagdulot ng pagkakasala sa Israel'?", options: ["Ahab", "Omri", "Jeroboam", "Baasha"], answer: "Jeroboam" },
+    { question: "Sino ang propeta mula sa Tekoa na isang pastol at tagapag-alaga ng mga puno ng sikomoro?", options: ["Mikas", "Oseas", "Joel", "Amos"], answer: "Amos" },
+    { question: "Sino ang 'tunay na anak sa pananampalataya' ni Pablo na kung kanino siya sumulat ng dalawang sulat?", options: ["Tito", "Timoteo", "Silas", "Lucas"], answer: "Timoteo" },
+  ]
+];
+
 const LEVEL_PASS_SCORE = 7;
 const MAX_LEVEL = 5;
 
@@ -87,6 +155,7 @@ export default function CharacterAdventuresPage() {
     const [currentLevel, setCurrentLevel] = useState(1);
     const [levelScores, setLevelScores] = useState<LevelScores>({});
     const [totalScore, setTotalScore] = useState(0);
+    const [language, setLanguage] = useState<'en' | 'fil'>('en');
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [currentLevelScore, setCurrentLevelScore] = useState(0);
@@ -131,8 +200,11 @@ export default function CharacterAdventuresPage() {
         saveProgress();
     }, [saveProgress]);
 
-    const triviaQuestions = triviaLevels[currentLevel - 1] || [];
+    const activeTriviaLevels = language === 'en' ? triviaLevels : triviaLevelsFilipino;
+    const triviaQuestions = activeTriviaLevels[currentLevel - 1] || [];
     const currentQuestion = triviaQuestions[currentQuestionIndex];
+    const englishQuestion = triviaLevels[currentLevel - 1]?.[currentQuestionIndex];
+
 
     const startLevel = (level: number) => {
         setCurrentLevel(level);
@@ -150,7 +222,10 @@ export default function CharacterAdventuresPage() {
         setSelectedAnswer(option);
         setIsAnswered(true);
 
-        if (option === currentQuestion.answer) {
+        const englishOptionIndex = currentQuestion.options.indexOf(option);
+        const englishOption = triviaLevels[currentLevel - 1][currentQuestionIndex].options[englishOptionIndex];
+        
+        if (englishOption === englishQuestion.answer) {
             setCurrentLevelScore(prevScore => prevScore + 1);
         }
     };
@@ -180,6 +255,10 @@ export default function CharacterAdventuresPage() {
         if (isUnlocked) {
             startLevel(level);
         }
+    }
+    
+    const toggleLanguage = () => {
+        setLanguage(prev => prev === 'en' ? 'fil' : 'en');
     }
 
     const cardVariants = {
@@ -251,6 +330,8 @@ export default function CharacterAdventuresPage() {
              <div className="text-center">
                 <div className="font-bold text-lg">Score: {currentLevelScore}</div>
             </div>
+            <div className='flex gap-2'>
+              <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
@@ -292,6 +373,7 @@ export default function CharacterAdventuresPage() {
                     </div>
                   </PopoverContent>
                </Popover>
+            </div>
         </div>
       
         <AnimatePresence mode="wait">
@@ -312,7 +394,10 @@ export default function CharacterAdventuresPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {currentQuestion.options.map((option) => {
                                 const isSelected = selectedAnswer === option;
-                                const isCorrect = option === currentQuestion.answer;
+                                
+                                // Logic to check correctness based on English answer
+                                const englishOptionIndex = currentQuestion.options.indexOf(option);
+                                const isCorrect = englishQuestion.options[englishOptionIndex] === englishQuestion.answer;
                                 
                                 return (
                                     <Button
@@ -345,15 +430,15 @@ export default function CharacterAdventuresPage() {
                             >
                                 <p className={cn(
                                   "font-bold text-lg",
-                                  selectedAnswer === currentQuestion.answer ? "text-green-600" : "text-red-600"
+                                  selectedAnswer && currentQuestion.options.indexOf(selectedAnswer) >= 0 && englishQuestion.options[currentQuestion.options.indexOf(selectedAnswer)] === englishQuestion.answer ? "text-green-600" : "text-red-600"
                                 )}>
-                                    {selectedAnswer === currentQuestion.answer
-                                        ? "Correct!"
-                                        : `The correct answer is ${currentQuestion.answer}.`
+                                    {selectedAnswer && currentQuestion.options.indexOf(selectedAnswer) >= 0 && englishQuestion.options[currentQuestion.options.indexOf(selectedAnswer)] === englishQuestion.answer
+                                        ? (language === 'en' ? "Correct!" : "Tama!")
+                                        : (language === 'en' ? `The correct answer is ${englishQuestion.answer}.` : `Ang tamang sagot ay ${triviaLevelsFilipino[currentLevel-1][currentQuestionIndex].options[triviaLevels[currentLevel-1][currentQuestionIndex].options.indexOf(englishQuestion.answer)]}.`)
                                     }
                                 </p>
                                 <Button onClick={handleNextQuestion} className="w-full sm:w-auto mt-2 sm:mt-0">
-                                    {currentQuestionIndex < triviaQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
+                                    {currentQuestionIndex < triviaQuestions.length - 1 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Quiz' : 'Tapusin ang Pagsusulit')}
                                 </Button>
                             </motion.div>
                         )}
