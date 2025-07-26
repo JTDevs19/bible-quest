@@ -74,8 +74,6 @@ const STARS_PER_VERSE = 3;
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
 
-  const verseTextParts = verse.text.split(/(\s+|[.,;!?“”"])/);
-
   return (
     <div className="text-center font-serif italic text-lg leading-relaxed">
       <p>
@@ -120,6 +118,8 @@ export default function VerseMemoryPage() {
   const [attemptScore, setAttemptScore] = useState(0);
   const [checkAttempts, setCheckAttempts] = useState(10);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
@@ -136,17 +136,18 @@ export default function VerseMemoryPage() {
   }, []);
 
   const saveProgress = useCallback(() => {
+    if (!isClient) return;
     const progress = {
       level: currentLevel,
       scores: verseScores,
       stars: totalStars,
     };
     localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [currentLevel, verseScores, totalStars]);
+  }, [currentLevel, verseScores, totalStars, isClient]);
 
   useEffect(() => {
-    if(isClient) saveProgress();
-  }, [isClient, saveProgress]);
+    saveProgress();
+  }, [saveProgress]);
 
 
   const currentVerse = verses[currentVerseIndex];
@@ -179,7 +180,6 @@ export default function VerseMemoryPage() {
     setVerseWithBlanks(verseParts);
     setMissingWords(missing);
     
-    // Reset state for the new verse
     setUserInputs(new Array(missing.length).fill(''));
     setGameState('playing');
     setEditingIndex(0);
@@ -199,7 +199,7 @@ export default function VerseMemoryPage() {
     const accuracy = correctCount / missingWords.length;
   
     if (currentLevel === 1) {
-      return accuracy === 1 ? 3 : 0;
+       return accuracy === 1 ? 3 : 0;
     }
   
     if (accuracy === 1) return 3;
@@ -218,14 +218,18 @@ export default function VerseMemoryPage() {
     
     setVerseScores(prevScores => {
         const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-        const scoreDiff = Math.max(0, newScore - existingScore);
-        setTotalStars(s => s + scoreDiff);
+        const newTotalScore = Math.max(existingScore, newScore);
+        const scoreDiff = newTotalScore - existingScore;
+
+        if (scoreDiff > 0) {
+          setTotalStars(s => s + scoreDiff);
+        }
 
         return {
             ...prevScores,
             [currentLevel]: {
                 ...prevScores[currentLevel],
-                [currentVerseIndex]: Math.max(existingScore, newScore)
+                [currentVerseIndex]: newTotalScore
             }
         };
     });
@@ -239,12 +243,16 @@ export default function VerseMemoryPage() {
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
-       // Completed all verses for the current level
        const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
        if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
-          setCurrentLevel(l => l + 1);
+          setCurrentLevel(l => {
+            const newLevel = l + 1;
+            setCurrentVerseIndex(0);
+            return newLevel;
+          });
+       } else {
+        setCurrentVerseIndex(0); 
        }
-       setCurrentVerseIndex(0); 
     }
   };
   
@@ -266,6 +274,15 @@ export default function VerseMemoryPage() {
   const handleLabelClick = (index: number) => {
     if (gameState === 'playing') {
       setEditingIndex(index);
+    }
+  };
+
+  const handleLevelSelect = (level: number) => {
+    const requiredStars = (level - 1) * verses.length * STARS_PER_VERSE;
+    if (level === 1 || totalStars >= requiredStars) {
+      setCurrentLevel(level);
+      setCurrentVerseIndex(0);
+      setPopoverOpen(false);
     }
   };
   
@@ -327,6 +344,7 @@ export default function VerseMemoryPage() {
   }
 
   const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
+  const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -339,7 +357,14 @@ export default function VerseMemoryPage() {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
+              <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                {currentVerse.reference} ({currentVerse.version})
+                <div className="flex">
+                  {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
+                    <Star key={i} className={cn("w-5 h-5", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                  ))}
+                </div>
+              </CardTitle>
               <CardDescription>Fill in the missing words from the verse below.</CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -349,7 +374,7 @@ export default function VerseMemoryPage() {
                     <Star className="w-4 h-4 text-yellow-500"/> {totalStars}
                 </div>
                </div>
-               <Popover>
+               <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
                   </PopoverTrigger>
@@ -362,18 +387,26 @@ export default function VerseMemoryPage() {
                         <div className="space-y-3">
                            {Array.from({length: MAX_LEVEL}).map((_, i) => {
                                const levelNum = i + 1;
-                               const requiredStars = levelNum * verses.length * STARS_PER_VERSE;
-                               const isUnlocked = levelNum === 1 || totalStars >= (levelNum - 1) * verses.length * STARS_PER_VERSE;
+                               const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
+                               const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
                                const isCurrent = levelNum === currentLevel;
                                return (
-                                 <div key={levelNum} className={cn("flex items-center gap-4 p-2 rounded-lg", isCurrent ? "bg-primary/10 border border-primary/20" : "")}>
+                                 <div 
+                                    key={levelNum} 
+                                    onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                                    className={cn(
+                                      "flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                      isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                      isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
+                                    )}
+                                  >
                                     <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
                                       {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
                                     </div>
                                     <div>
                                         <p className="font-semibold">Level {levelNum}</p>
                                         <p className="text-sm text-muted-foreground">
-                                           {isUnlocked ? `${levelNum} Blank${levelNum > 1 ? 's' : ''}` : `Requires ${requiredStars - verses.length * STARS_PER_VERSE} stars`}
+                                           {isUnlocked ? `${levelNum} Blank${levelNum > 1 ? 's' : ''}` : `Requires ${requiredStars} stars`}
                                         </p>
                                     </div>
                                  </div>
@@ -437,7 +470,7 @@ export default function VerseMemoryPage() {
             )}
             <AlertDialogAction onClick={handleNext}>
                 {currentVerseIndex === verses.length - 1 ? (
-                    totalStars >= starsForNextLevel ? "Start Next Level!" : "Finish Level"
+                    totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL ? "Start Next Level!" : "Finish Level"
                 ) : "Next Verse"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -446,5 +479,4 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-
-    
+}
