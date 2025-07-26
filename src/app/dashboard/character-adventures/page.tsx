@@ -222,14 +222,14 @@ export default function CharacterAdventuresPage() {
     
     const handleAnswerSelect = (option: string) => {
         if (isAnswered) return;
-
+        
         setSelectedAnswer(option);
         setIsAnswered(true);
 
         const englishOptionIndex = currentQuestion.options.indexOf(option);
-        const englishOption = triviaLevels[currentLevel - 1][currentQuestionIndex].options[englishOptionIndex];
+        const englishOption = englishQuestion.options[englishOptionIndex];
         const isCorrect = englishOption === englishQuestion.answer;
-
+        
         setIsCorrectAnswer(isCorrect);
         
         if (isCorrect) {
@@ -405,7 +405,13 @@ export default function CharacterAdventuresPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {currentQuestion.options.map((option) => (
+                            {currentQuestion.options.map((option) => {
+                                const englishOptionIndex = currentQuestion.options.indexOf(option);
+                                const englishOption = englishQuestion.options[englishOptionIndex];
+                                const isCorrect = englishOption === englishQuestion.answer;
+                                const isSelected = selectedAnswer === option;
+
+                                return (
                                 <Button
                                     key={option}
                                     variant="outline"
@@ -414,6 +420,8 @@ export default function CharacterAdventuresPage() {
                                         "justify-start p-6 h-auto text-base",
                                         isAnswered && "cursor-not-allowed",
                                         !isAnswered && "hover:bg-accent/50",
+                                        isAnswered && isCorrect && "bg-green-100 border-green-500 hover:bg-green-100 text-green-800",
+                                        isAnswered && isSelected && !isCorrect && "bg-red-100 border-red-500 hover:bg-red-100 text-red-800"
                                     )}
                                     onClick={() => handleAnswerSelect(option)}
                                     disabled={isAnswered}
@@ -421,7 +429,7 @@ export default function CharacterAdventuresPage() {
                                     <BrainCircuit className="mr-2 text-muted-foreground"/>
                                     {option}
                                 </Button>
-                            ))}
+                            )})}
                         </div>
                     </CardContent>
                 </Card>
