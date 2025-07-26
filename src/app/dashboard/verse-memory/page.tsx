@@ -87,6 +87,31 @@ const verses = [
     reference: 'Romans 12:2',
     text: 'Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God’s will is—his good, pleasing and perfect will.',
     version: 'NIV'
+  },
+    {
+    reference: 'Isaiah 41:10',
+    text: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 119:105',
+    text: 'Your word is a lamp for my feet, a light on my path.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Matthew 11:28-30',
+    text: 'Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls. For my yoke is easy and my burden is light.',
+    version: 'NIV'
+  },
+  {
+    reference: 'John 14:6',
+    text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
+    version: 'NIV'
+  },
+  {
+    reference: 'Romans 10:9',
+    text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
+    version: 'NIV'
   }
 ];
 
@@ -100,9 +125,9 @@ export default function VerseMemoryPage() {
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
-  const [score, setScore] = useState(0); // number of stars
+  const [attemptScore, setAttemptScore] = useState(0); // number of stars for the current attempt
   const [checkAttempts, setCheckAttempts] = useState(MAX_CHECKS);
-  const [completedVerses, setCompletedVerses] = useState<boolean[]>(new Array(verses.length).fill(false));
+  const [verseScores, setVerseScores] = useState<number[]>(new Array(verses.length).fill(0));
   const [unlockedIndex, setUnlockedIndex] = useState(0);
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -148,7 +173,7 @@ export default function VerseMemoryPage() {
     setUserInputs(new Array(missing.length).fill(''));
     setGameState('playing');
     setEditingIndex(0);
-    setScore(0);
+    setAttemptScore(0);
     setCheckAttempts(MAX_CHECKS);
   }, [currentVerse, isClient]);
 
@@ -176,21 +201,25 @@ export default function VerseMemoryPage() {
     return 0;
   };
 
+  const updateScoresAndUnlock = (newScore: number) => {
+    const newScores = [...verseScores];
+    if (newScore > newScores[currentVerseIndex]) {
+        newScores[currentVerseIndex] = newScore;
+        setVerseScores(newScores);
+    }
+    if (newScore >= 2 && currentVerseIndex === unlockedIndex) {
+      setUnlockedIndex(unlockedIndex + 1);
+    }
+  };
+
   const handleSubmit = () => {
     if (checkAttempts <= 0) return;
     setCheckAttempts(prev => prev - 1);
     setEditingIndex(null);
     const newScore = calculateScore(userInputs);
-    setScore(newScore);
+    setAttemptScore(newScore);
+    updateScoresAndUnlock(newScore);
     setGameState('scored');
-    if (newScore >= 2) {
-      const newCompleted = [...completedVerses];
-      newCompleted[currentVerseIndex] = true;
-      setCompletedVerses(newCompleted);
-      if(currentVerseIndex === unlockedIndex) {
-        setUnlockedIndex(unlockedIndex + 1);
-      }
-    }
   };
 
   const handleNext = () => {
@@ -199,7 +228,7 @@ export default function VerseMemoryPage() {
     } else {
       // End of game
       setCurrentVerseIndex(0); // Restart for now
-      setCompletedVerses(new Array(verses.length).fill(false));
+      setVerseScores(new Array(verses.length).fill(0));
       setUnlockedIndex(0);
     }
   };
@@ -208,17 +237,10 @@ export default function VerseMemoryPage() {
     const correctInputs = [...missingWords];
     setUserInputs(correctInputs);
     const newScore = calculateScore(correctInputs);
-    setScore(newScore);
+    setAttemptScore(newScore);
+    updateScoresAndUnlock(newScore);
     setGameState('revealed');
     setEditingIndex(null);
-     if (newScore >= 2) {
-      const newCompleted = [...completedVerses];
-      newCompleted[currentVerseIndex] = true;
-      setCompletedVerses(newCompleted);
-      if(currentVerseIndex === unlockedIndex) {
-        setUnlockedIndex(unlockedIndex + 1);
-      }
-    }
   };
   
   const handleLabelClick = (index: number) => {
@@ -227,14 +249,6 @@ export default function VerseMemoryPage() {
     }
   };
   
-  const handleLevelSelect = (index: number) => {
-    if(index <= unlockedIndex) {
-      resetVerse(index);
-    }
-  }
-  
-  const isCurrentVerseCompleted = score >= 2;
-
   const renderVerse = () => {
     if (!isClient) {
       return <div>Loading verse...</div>;
@@ -293,15 +307,24 @@ export default function VerseMemoryPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
-          <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="font-headline text-2xl">{currentVerse.reference} ({currentVerse.version})</CardTitle>
+              <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+            </div>
+            <div className="flex items-center gap-1">
+              {Array.from({length: 3}).map((_, i) => (
+                <Star key={i} className={cn("h-6 w-6", i < verseScores[currentVerseIndex] ? "text-yellow-500 fill-yellow-500" : "text-gray-300")}/>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-2 gap-y-4">{renderVerse()}</div>
           <div className="flex flex-wrap gap-2 justify-center">
             <Button onClick={handleSubmit} disabled={gameState !== 'playing' || checkAttempts <= 0}>Check My Answer ({checkAttempts})</Button>
             <Button variant="outline" onClick={handleReveal} disabled={gameState !== 'playing'}>Reveal Answer</Button>
-            <Button variant="secondary" onClick={handleNext} disabled={!isCurrentVerseCompleted && !completedVerses[currentVerseIndex]}>
+            <Button variant="secondary" onClick={handleNext} disabled={verseScores[currentVerseIndex] < 2}>
               {currentVerseIndex === verses.length - 1 ? 'Finish & Restart' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -313,12 +336,12 @@ export default function VerseMemoryPage() {
                  Your Score: 
                  <div className="flex">
                   {Array.from({length: 3}).map((_, i) => (
-                    <Star key={i} className={cn("h-5 w-5", i < score ? "text-yellow-500 fill-yellow-500" : "text-yellow-500/50")}/>
+                    <Star key={i} className={cn("h-5 w-5", i < attemptScore ? "text-yellow-500 fill-yellow-500" : "text-yellow-500/50")}/>
                   ))}
                  </div>
               </AlertTitle>
               <AlertDescription className="text-yellow-700 dark:text-yellow-400">
-                {score === 3 ? "Perfect! You're a star!" : score >= 2 ? "Great job! You've unlocked the next verse." : score > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
+                {attemptScore === 3 ? "Perfect! You're a star!" : attemptScore >= 2 ? "Great job! You've unlocked the next verse." : attemptScore > 0 ? "Great effort! Keep practicing." : "Keep trying! You'll get it."}
               </AlertDescription>
             </Alert>
           )}
@@ -337,3 +360,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
