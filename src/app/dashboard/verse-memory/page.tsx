@@ -113,6 +113,31 @@ const verses = [
     text: 'for all have sinned and fall short of the glory of God,',
     version: 'NIV',
   },
+    {
+    reference: '1 Corinthians 10:31',
+    text: 'So whether you eat or drink or whatever you do, do it all for the glory of God.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 19:14',
+    text: 'May these words of my mouth and this meditation of my heart be pleasing in your sight, LORD, my Rock and my Redeemer.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Colossians 3:23',
+    text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
+    version: 'NIV'
+  },
+  {
+    reference: 'Matthew 11:28',
+    text: 'Come to me, all you who are weary and burdened, and I will give you rest.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Isaiah 40:31',
+    text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
+    version: 'NIV'
+  }
 ];
 
 type GameState = 'playing' | 'scored' | 'revealed';
@@ -120,39 +145,11 @@ type VerseParts = (string | null)[];
 
 const MAX_CHECKS = 10;
 
-
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
-  const words = verse.text.split(' ');
   let blankCounter = 0;
 
   return (
     <div className="text-center font-serif italic text-lg leading-relaxed">
-      "{words.map((word, index) => {
-        const correspondingBlank = verseWithBlanks.findIndex((part, i) => {
-            // This is a naive way to find the corresponding blank index, might need refinement
-            const textUpToThisPoint = words.slice(0, index + 1).join(' ');
-            const versePartsText = verseWithBlanks.slice(0, i + 1).filter(p => p !== null).join(' ');
-            return part === null && textUpToThisPoint.startsWith(versePartsText)
-        });
-        
-        let isBlank = false;
-        let blankIndex = -1;
-
-        // A better check to see if the current word is a blank
-        if(verseWithBlanks[index] === null || (verseWithBlanks[index] === ' ' && verseWithBlanks[index-1] == null)) {
-            // this is complex because indices dont match up
-        }
-
-        const originalWord = word.replace(/[.,;!?]/g, '');
-        const missingWordIndex = missingWords.indexOf(originalWord);
-        const wasThisWordABlank = missingWordIndex !== -1 && missingWords.filter(w => w === originalWord).length > 0;
-
-        if (wasThisWordABlank) {
-             const indices = missingWords.map((w, i) => w === originalWord ? i : -1).filter(i => i !== -1);
-             // This logic is getting complicated. A simpler way is to reconstruct based on `verseWithBlanks`
-        }
-      })}
-
       <p>
          {verseWithBlanks.map((part, index) => {
             if (part === null) {
@@ -163,26 +160,24 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
               const isCorrect = userInput?.toLowerCase().trim() === correctWord?.toLowerCase().trim();
 
               if(isCorrect) {
-                return <strong key={index} className="text-green-600 dark:text-green-400"> {correctWord} </strong> 
+                return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400"> {correctWord} </strong> 
               }
               
               return (
-                 <span key={index} className="inline-block text-center mx-1">
+                 <span key={`review-blank-${index}`} className="inline-block text-center mx-1">
                     <span className="text-xs text-red-500 font-sans font-semibold">{correctWord}</span>
                     <s className="text-red-500">{userInput || '...'}</s>
                  </span>
               )
             }
-            return <span key={index}> {part} </span>
+            return <span key={`review-text-${index}`}> {part} </span>
          })}
       </p>
 
        <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
     </div>
   )
-
 }
-
 
 export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
@@ -456,4 +451,5 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-}
+
+    
