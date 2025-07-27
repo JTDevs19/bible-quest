@@ -106,7 +106,11 @@ export default function RegisterPage() {
       router.push('/dashboard');
 
     } catch (e: any) {
-      setError(e.message);
+      if (e.code === 'auth/configuration-not-found') {
+        setError("Account creation failed. Please ensure you have enabled Email/Password authentication in your Firebase project's Authentication > Sign-in method tab.");
+      } else {
+        setError(e.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -275,3 +279,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+    
