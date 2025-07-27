@@ -98,13 +98,15 @@ const generateGrid = (seed: number) => {
     return { grid, words: placedWords.sort() };
 };
 
+type Cell = { x: number, y: number };
 
 export default function DailyChallengePage() {
     const [isClient, setIsClient] = useState(false);
     const [lastPlayed, setLastPlayed] = useState<string | null>(null);
     const [isSelecting, setIsSelecting] = useState(false);
-    const [selection, setSelection] = useState<{ start: { x: number, y: number }, end: { x: number, y: number } } | null>(null);
+    const [selection, setSelection] = useState<{ start: Cell, end: Cell } | null>(null);
     const [foundWords, setFoundWords] = useState<string[]>([]);
+    const [foundCells, setFoundCells] = useState<Cell[]>([]);
     
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -118,8 +120,9 @@ export default function DailyChallengePage() {
         const savedLastPlayed = localStorage.getItem('dailyChallengeLastPlayed');
         if (savedLastPlayed) {
             setLastPlayed(savedLastPlayed);
-            const savedFoundWords = JSON.parse(localStorage.getItem(`dailyChallengeProgress_${savedLastPlayed}`) || '[]');
-            setFoundWords(savedFoundWords);
+            const progress = JSON.parse(localStorage.getItem(`dailyChallengeProgress_${savedLastPlayed}`) || '{}');
+            setFoundWords(progress.words || []);
+            setFoundCells(progress.cells || []);
         }
     }, []);
 
@@ -128,16 +131,20 @@ export default function DailyChallengePage() {
 
     const saveProgress = useCallback(() => {
         if (!isClient || !canPlay) return;
-        localStorage.setItem(`dailyChallengeProgress_${today}`, JSON.stringify(foundWords));
-    }, [isClient, canPlay, today, foundWords]);
+        const progress = {
+            words: foundWords,
+            cells: foundCells
+        };
+        localStorage.setItem(`dailyChallengeProgress_${today}`, JSON.stringify(progress));
+    }, [isClient, canPlay, today, foundWords, foundCells]);
     
     useEffect(() => {
         saveProgress();
-    }, [foundWords, saveProgress]);
+    }, [foundWords, foundCells, saveProgress]);
     
     const getSelectedCells = () => {
         if (!selection) return [];
-        const cells = [];
+        const cells: Cell[] = [];
         const { start, end } = selection;
         const dx = Math.sign(end.x - start.x);
         const dy = Math.sign(end.y - start.y);
@@ -174,13 +181,16 @@ export default function DailyChallengePage() {
         if (!isSelecting || !selection) return;
         setIsSelecting(false);
         
-        const selectedWord = selectedCells.map(cell => grid[cell.y][cell.x]).join('');
+        const currentSelectedCells = getSelectedCells();
+        const selectedWord = currentSelectedCells.map(cell => grid[cell.y][cell.x]).join('');
         const reversedSelectedWord = selectedWord.split('').reverse().join('');
         
         const wordFound = dailyWords.find(w => w === selectedWord || w === reversedSelectedWord);
 
         if (wordFound && !foundWords.includes(wordFound)) {
             setFoundWords(prev => [...prev, wordFound]);
+            setFoundCells(prev => [...prev, ...currentSelectedCells]);
+
             if (foundWords.length + 1 === dailyWords.length) {
                 // Completed!
                 setLastPlayed(today);
@@ -233,6 +243,7 @@ export default function DailyChallengePage() {
                             {grid.map((row, y) => 
                                 row.map((letter, x) => {
                                     const isSelected = selectedCells.some(cell => cell.x === x && cell.y === y);
+                                    const isFound = foundCells.some(cell => cell.x === x && cell.y === y);
                                     return (
                                         <div
                                             key={`${x}-${y}`}
@@ -240,7 +251,8 @@ export default function DailyChallengePage() {
                                             onMouseOver={() => handleMouseOver(x, y)}
                                             className={cn(
                                                 "flex items-center justify-center w-full aspect-square rounded-md text-lg font-bold uppercase cursor-pointer transition-colors",
-                                                isSelected ? "bg-primary text-primary-foreground" : "hover:bg-primary/10"
+                                                isSelected ? "bg-primary text-primary-foreground" : "hover:bg-primary/10",
+                                                isFound && "bg-accent/50 border border-accent"
                                             )}
                                         >
                                             {letter}
