@@ -442,7 +442,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev - 1);
+      setCurrentVerseIndex(prev => prev + 1);
     }
   };
   
@@ -621,107 +621,107 @@ export default function VerseMemoryPage() {
         <p className="text-muted-foreground">Fill in the blanks to complete the verse.</p>
       </div>
 
+       <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
+           <div>Level: {currentLevel}</div>
+           <div className="flex items-center gap-1">
+                <Star className="w-5 h-5 text-yellow-500"/> {totalStars}
+           </div>
+           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                    <div className="text-center">
+                       <h4 className="font-medium leading-none font-headline">Verse Journey</h4>
+                       <p className="text-sm text-muted-foreground">Complete all levels to become a master!</p>
+                    </div>
+                    <div className="space-y-3">
+                       {Array.from({length: MAX_LEVEL}).map((_, i) => {
+                           const levelNum = i + 1;
+                           const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
+                           const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
+                           const isCurrent = levelNum === currentLevel;
+                           const levelScoresData = verseScores[levelNum] || {};
+                           const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
+                           const isLevelComplete = masteredInLevel === verses.length;
+
+                           return (
+                             <div 
+                                key={levelNum} 
+                                onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                                className={cn(
+                                  "flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                  isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                  isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
+                                )}
+                              >
+                                <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                  {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                                </div>
+                                <div>
+                                    <p className="font-semibold">Level {levelNum}</p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                       {isUnlocked ? (
+                                         isLevelComplete ? (
+                                            <>
+                                              <CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!
+                                            </>
+                                         ) : (
+                                            `${masteredInLevel}/${verses.length} Mastered`
+                                         )
+                                       ) : (
+                                        `Requires ${requiredStars} stars`
+                                       )}
+                                    </p>
+                                </div>
+                             </div>
+                           )
+                       })}
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full">
+                                <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56">
+                            <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
+                                Reset Current Level
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
+                                Reset All Progress
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+              </PopoverContent>
+           </Popover>
+        </div>
+
+
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
                 <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
                     <ChevronLeft className="w-5 h-5"/>
                 </Button>
                 <div>
-                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                  <CardTitle className="font-headline text-2xl">
                     {currentVerse.reference} ({currentVerse.version})
-                    <div className="flex">
-                    {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
-                        <Star key={i} className={cn("w-5 h-5", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-                    ))}
-                    </div>
-                </CardTitle>
-                <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+                  </CardTitle>
+                  <CardDescription>Fill in the missing words from the verse below.</CardDescription>
                 </div>
                  <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
                     <ChevronRight className="w-5 h-5"/>
                 </Button>
             </div>
-            <div className="flex items-center gap-4">
-               <div className="text-right">
-                <div className="font-bold">Level {currentLevel}</div>
-                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500"/> {totalStars}
-                </div>
-               </div>
-               <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-4">
-                        <div className="text-center">
-                           <h4 className="font-medium leading-none font-headline">Verse Journey</h4>
-                           <p className="text-sm text-muted-foreground">Complete all levels to become a master!</p>
-                        </div>
-                        <div className="space-y-3">
-                           {Array.from({length: MAX_LEVEL}).map((_, i) => {
-                               const levelNum = i + 1;
-                               const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
-                               const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
-                               const isCurrent = levelNum === currentLevel;
-                               const levelScoresData = verseScores[levelNum] || {};
-                               const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
-                               const isLevelComplete = masteredInLevel === verses.length;
-
-                               return (
-                                 <div 
-                                    key={levelNum} 
-                                    onClick={() => isUnlocked && handleLevelSelect(levelNum)}
-                                    className={cn(
-                                      "flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                      isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                      isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
-                                    )}
-                                  >
-                                    <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                      {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold">Level {levelNum}</p>
-                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                           {isUnlocked ? (
-                                             isLevelComplete ? (
-                                                <>
-                                                  <CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!
-                                                </>
-                                             ) : (
-                                                `${masteredInLevel}/${verses.length} Mastered`
-                                             )
-                                           ) : (
-                                            `Requires ${requiredStars} stars`
-                                           )}
-                                        </p>
-                                    </div>
-                                 </div>
-                               )
-                           })}
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="w-full">
-                                    <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56">
-                                <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
-                                    Reset Current Level
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
-                                    Reset All Progress
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                  </PopoverContent>
-               </Popover>
-            </div>
+             <div className="flex">
+              {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
+                  <Star key={i} className={cn("w-6 h-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+              ))}
+              </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
