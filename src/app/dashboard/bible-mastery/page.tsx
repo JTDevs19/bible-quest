@@ -2,12 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, BookOpen } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const allBooksEnglish = [
@@ -58,11 +59,14 @@ const generateLevelConfig = () => {
 };
 
 const levels = generateLevelConfig();
+const PERFECT_SCORE_PER_LEVEL = 10;
+const TOTAL_ADVENTURE_LEVELS = 5;
 
 type Progress = { [level: number]: { [round: number]: boolean } };
 
 export default function BibleMasteryPage() {
   const [isClient, setIsClient] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [progress, setProgress] = useState<Progress>({});
@@ -77,6 +81,28 @@ export default function BibleMasteryPage() {
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+    // Check for Bible Mastery unlock
+    const characterAdventuresProgress = localStorage.getItem('characterAdventuresProgress');
+    if(characterAdventuresProgress) {
+        const { scores } = JSON.parse(characterAdventuresProgress);
+        if(scores) {
+            let completedLevels = 0;
+            for(let i=1; i<= TOTAL_ADVENTURE_LEVELS; i++) {
+                if(scores[i] === PERFECT_SCORE_PER_LEVEL) {
+                    completedLevels++;
+                }
+            }
+            if(completedLevels === TOTAL_ADVENTURE_LEVELS) {
+                setIsUnlocked(true);
+            }
+        }
+    }
+  }, []);
+  
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   
   const totalStars = Object.values(progress).flatMap(levelProgress => Object.values(levelProgress)).filter(Boolean).length;
@@ -103,9 +129,10 @@ export default function BibleMasteryPage() {
   }, [progress, currentLevel, currentRound, isClient]);
 
   useEffect(() => {
-    setIsClient(true);
-    loadProgress();
-  }, [loadProgress]);
+    if(isClient) {
+      loadProgress();
+    }
+  }, [isClient, loadProgress]);
 
   useEffect(() => {
     saveProgress();
@@ -137,8 +164,10 @@ export default function BibleMasteryPage() {
   }, []);
 
   useEffect(() => {
-    startRound(currentLevel, currentRound);
-  }, [currentLevel, currentRound, startRound]);
+    if (isUnlocked) {
+      startRound(currentLevel, currentRound);
+    }
+  }, [isUnlocked, currentLevel, currentRound, startRound]);
 
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
@@ -209,6 +238,31 @@ export default function BibleMasteryPage() {
 
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
+  }
+
+  if (!isUnlocked) {
+    return (
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
+                <Trophy className="w-10 h-10 text-primary" />
+            </div>
+            <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Bible Mastery!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              To unlock this ultimate challenge, you must first prove your knowledge of Bible characters.
+              Achieve a perfect score (10/10) on all 5 levels of Character Adventures.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogCancel onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push('/dashboard/character-adventures')}>
+              <Users className="mr-2" /> Go to Character Adventures
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
   }
   
   if (isGameFinished) {
