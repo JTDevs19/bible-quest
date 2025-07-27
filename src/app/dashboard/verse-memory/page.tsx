@@ -92,22 +92,25 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
           if (part === null) {
               const currentBlankIndex = blankCounter;
               blankCounter++;
+              
+              const correctWord = missingWords[currentBlankIndex];
+              if (!correctWord) return null;
 
-              let correctWordWithPunctuation = missingWords[currentBlankIndex];
-              if (missingWords[currentBlankIndex]) {
-                  for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
-                      const word = originalWordsWithPunctuation[i];
-                      const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
-                      if (cleanWord === (missingWords[currentBlankIndex] || '').toLowerCase()) {
-                          correctWordWithPunctuation = word;
-                          wordComponentIndex = i + 1;
-                          break;
-                      }
+
+              let correctWordWithPunctuation = correctWord;
+              
+              for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
+                  const word = originalWordsWithPunctuation[i];
+                  const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
+                  if (cleanWord === correctWord.toLowerCase()) {
+                      correctWordWithPunctuation = word;
+                      wordComponentIndex = i + 1;
+                      break;
                   }
               }
 
               const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
-              const isCorrect = userInput.toLowerCase() === (missingWords[currentBlankIndex] || '').toLowerCase();
+              const isCorrect = userInput.toLowerCase() === correctWord.toLowerCase();
 
               if (isCorrect) {
                   return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{correctWordWithPunctuation}</strong>;
@@ -361,7 +364,9 @@ export default function VerseMemoryPage() {
     const score = calculateScore(userInputs);
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     const oldTotalStars = totalStars;
-
+    
+    let isMasteredNow = false;
+    
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
       setTotalStars(prevStars => prevStars + scoreDifference);
@@ -372,9 +377,10 @@ export default function VerseMemoryPage() {
         return newScores;
       });
     }
-    
+
     if (score === STARS_PER_VERSE) {
         setIsVerseMastered(true);
+        isMasteredNow = true;
         setGameState('scored');
         
         const newTotalStars = oldTotalStars + (score - oldScore);
@@ -400,7 +406,9 @@ export default function VerseMemoryPage() {
                  </div>
             ),
         });
-    } else {
+    }
+
+    if (!isMasteredNow) {
         setAttemptScore(score);
         setGameState(score > 0 ? 'scored' : 'incorrect');
         setShowSummaryDialog(true);
@@ -410,7 +418,7 @@ export default function VerseMemoryPage() {
   const handleNext = () => {
     setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex + 1);
+      setCurrentVerseIndex(prev => prev + 1);
     } else {
         setShowLevelCompleteDialog(true);
     }
@@ -717,26 +725,19 @@ export default function VerseMemoryPage() {
           )}
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
-                        <ChevronLeft className="w-5 h-5"/>
-                    </Button>
-                    <div>
-                      <CardTitle className="font-headline text-2xl">
-                        {currentVerse.reference} ({currentVerse.version})
-                      </CardTitle>
-                      <CardDescription>Fill in the missing words from the verse below.</CardDescription>
-                    </div>
-                     <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
-                        <ChevronRight className="w-5 h-5"/>
-                    </Button>
-                </div>
-                 <div className={cn("flex", isVerseMastered && "opacity-0")}>
-                  {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
-                      <Star key={i} className={cn("w-6 h-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-                  ))}
+              <div className="flex justify-between items-center gap-4">
+                  <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
+                      <ChevronLeft className="w-5 h-5"/>
+                  </Button>
+                  <div className="flex-grow text-center">
+                    <CardTitle className="font-headline text-2xl">
+                      {currentVerse.reference} ({currentVerse.version})
+                    </CardTitle>
+                    <CardDescription>Fill in the missing words from the verse below.</CardDescription>
                   </div>
+                   <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
+                      <ChevronRight className="w-5 h-5"/>
+                  </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
