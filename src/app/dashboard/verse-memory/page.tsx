@@ -255,7 +255,7 @@ export default function VerseMemoryPage() {
         setUserInputs(new Array(missing.length).fill(''));
     }
 
-}, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel, JSON.stringify(verseScores)]);
+}, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel]);
 
    useEffect(() => {
     setHintsRemaining(HINTS_PER_LEVEL);
@@ -319,6 +319,11 @@ export default function VerseMemoryPage() {
     } else {
         if (currentLevel === 1) {
             setGameState('incorrect');
+            if(score > 0) {
+                 setAttemptScore(score);
+                 setGameState('scored');
+                 setShowSummaryDialog(true);
+            }
         } else {
             setGameState('checking');
             setCheckAttempts(prev => prev - 1);
@@ -580,15 +585,15 @@ export default function VerseMemoryPage() {
             {gameState !== 'incorrect' && (
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)}>
+                        <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)} onClick={handleSubmit}>
                             {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
                         </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    { currentLevel > 1 && <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                { currentLevel > 1 ? `This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.` : 'Are you sure you want to submit your answer?'}
+                                This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -597,7 +602,7 @@ export default function VerseMemoryPage() {
                                 Yes, Check Answer
                             </AlertDialogAction>
                         </AlertDialogFooter>
-                    </AlertDialogContent>
+                    </AlertDialogContent> }
                 </AlertDialog>
             )}
              {gameState === 'incorrect' && currentLevel === 1 && (
@@ -709,5 +714,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
