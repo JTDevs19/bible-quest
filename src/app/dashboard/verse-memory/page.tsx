@@ -75,7 +75,7 @@ const STARS_PER_VERSE = 3;
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
 
-function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
+function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = true }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
   const originalWordsWithPunctuation = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
   let originalWordIndex = 0;
@@ -107,7 +107,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { ver
 
             return (
               <span key={`review-blank-${index}`} className="inline-block text-center mx-1 relative -top-2">
-                <span className="text-xs text-red-500 font-sans font-semibold block">{correctWordWithPunctuation}</span>
+                {showCorrectAnswer && <span className="text-xs text-red-500 font-sans font-semibold block">{correctWordWithPunctuation}</span>}
                 <s className="text-red-500">{userInput || '...'}</s>
               </span>
             );
@@ -272,7 +272,9 @@ export default function VerseMemoryPage() {
   const setupRound = useCallback(() => {
     if (!isClient) return;
     const verse = verses[currentVerseIndex];
-    setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
+    if (verse) {
+      setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
+    }
   }, [currentVerseIndex, currentLevel, isClient]);
 
   useEffect(() => {
@@ -587,8 +589,8 @@ export default function VerseMemoryPage() {
                                const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
                                const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
                                const isCurrent = levelNum === currentLevel;
-                               const levelScores = verseScores[levelNum] || {};
-                               const masteredInLevel = Object.values(levelScores).filter(score => score === STARS_PER_VERSE).length;
+                               const levelScoresData = verseScores[levelNum] || {};
+                               const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
                                const isLevelComplete = masteredInLevel === verses.length;
 
                                return (
@@ -696,6 +698,7 @@ export default function VerseMemoryPage() {
                     verseWithBlanks={verseWithBlanks} 
                     userInputs={userInputs} 
                     missingWords={missingWords}
+                    showCorrectAnswer={gameState === 'revealed'}
                   />
                ) : (
                   <>
@@ -744,12 +747,12 @@ export default function VerseMemoryPage() {
         <AlertDialog open={showTradeDialog !== null} onOpenChange={(open) => !open && setShowTradeDialog(null)}>
             <AlertDialogContent>
                 {showTradeDialog === 'hints' && hintsRemaining > 0 ? (
-                    <>
+                     <>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Use a Hint?</AlertDialogTitle>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-sm text-muted-foreground space-y-2">
                                 <div>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</div>
-                                <div className="font-bold mt-2">You have {hintsRemaining} hint(s) remaining.</div>
+                                <div className="font-bold">You have {hintsRemaining} hint(s) remaining.</div>
                                 <div>Are you sure you want to use a hint?</div>
                             </div>
                         </AlertDialogHeader>
@@ -761,7 +764,7 @@ export default function VerseMemoryPage() {
                 ) : (
                     <>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>No {showTradeDialog === 'hints' ? 'Hints' : 'Reveals'} Remaining</AlertDialogTitle>
+                            <AlertDialogTitle>No {showTradeDialog ? `${showTradeDialog.charAt(0).toUpperCase()}${showTradeDialog.slice(1)}` : ''} Remaining</AlertDialogTitle>
                             <AlertDialogDescription>
                                 You can trade your stars for more {showTradeDialog}. You currently have {totalStars} star(s).
                             </AlertDialogDescription>
@@ -791,5 +794,6 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
 
 
