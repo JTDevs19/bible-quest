@@ -310,14 +310,14 @@ export default function VerseMemoryPage() {
     setShowSummaryDialog(false);
  }
 
- const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
     setEditingIndex(null);
 
     const score = calculateScore(userInputs);
-    setAttemptScore(score); // Set score immediately
-
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+    
+    setAttemptScore(score);
 
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
@@ -332,7 +332,7 @@ export default function VerseMemoryPage() {
       setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
-    if (score === 3) {
+    if (score === STARS_PER_VERSE) {
       setGameState('scored');
       setIsVerseMastered(true);
     } else if (score > 0) {
@@ -340,15 +340,9 @@ export default function VerseMemoryPage() {
     } else {
       setGameState('incorrect');
     }
+    setShowSummaryDialog(true);
   };
   
-  useEffect(() => {
-    if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
-      setShowSummaryDialog(true);
-    }
-  }, [gameState, attemptScore]);
-
-
   const handleNext = () => {
     setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
@@ -395,6 +389,7 @@ export default function VerseMemoryPage() {
     setAttemptScore(0);
     setGameState('revealed');
     setEditingIndex(null);
+    setShowSummaryDialog(true);
   }
 
   const handleTradeForReveals = () => {
@@ -703,7 +698,7 @@ export default function VerseMemoryPage() {
                     verseWithBlanks={verseWithBlanks} 
                     userInputs={userInputs} 
                     missingWords={missingWords}
-                    showCorrectAnswer={false} 
+                    showCorrectAnswer={true} 
                   />
                ) : (
                   <>
@@ -799,3 +794,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
