@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -207,6 +207,7 @@ export default function VerseMemoryPage() {
       delete newScores[currentLevel];
       
       const newTotalStars = recalculateTotalStars(newScores);
+      
       setVerseScores(newScores);
       setTotalStars(newTotalStars);
       setCurrentVerseIndex(0);
@@ -214,7 +215,7 @@ export default function VerseMemoryPage() {
       setupRound();
   };
 
-  const setupRoundLogic = (verse: typeof verses[0], level: number, scores: VerseScores, verseIdx: number) => {
+  const setupRoundLogic = (verse: typeof verses[number], level: number, scores: VerseScores, verseIdx: number) => {
     const currentVerseScore = scores[level]?.[verseIdx] ?? 0;
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
@@ -273,11 +274,11 @@ export default function VerseMemoryPage() {
     if (!isClient) return;
     const verse = verses[currentVerseIndex];
     setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
-  }, [currentVerseIndex, currentLevel, isClient, verseScores]);
+  }, [currentVerseIndex, currentLevel, isClient]);
 
   useEffect(() => {
     setupRound();
-  }, [setupRound]);
+  }, [setupRound, verseScores]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -402,10 +403,10 @@ export default function VerseMemoryPage() {
   const handleHintClick = () => {
     if(isVerseMastered) return;
     if (hintsRemaining > 0) {
-        setShowTradeDialog('hints'); // This will now open the confirmation dialog
+        setShowTradeDialog('hints');
     } else {
         setTradeAmount(1);
-        setShowTradeDialog('hints'); // This will open the trade dialog
+        setShowTradeDialog('hints');
     }
   };
   
@@ -580,6 +581,10 @@ export default function VerseMemoryPage() {
                                const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
                                const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
                                const isCurrent = levelNum === currentLevel;
+                               const levelScores = verseScores[levelNum] || {};
+                               const masteredInLevel = Object.values(levelScores).filter(score => score === STARS_PER_VERSE).length;
+                               const isLevelComplete = masteredInLevel === verses.length;
+
                                return (
                                  <div 
                                     key={levelNum} 
@@ -595,8 +600,18 @@ export default function VerseMemoryPage() {
                                     </div>
                                     <div>
                                         <p className="font-semibold">Level {levelNum}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                           {isUnlocked ? `${levelNum} Blank${levelNum > 1 ? 's' : ''}` : `Requires ${requiredStars} stars`}
+                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                           {isUnlocked ? (
+                                             isLevelComplete ? (
+                                                <>
+                                                  <CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!
+                                                </>
+                                             ) : (
+                                                `${masteredInLevel}/${verses.length} Mastered`
+                                             )
+                                           ) : (
+                                            `Requires ${requiredStars} stars`
+                                           )}
                                         </p>
                                     </div>
                                  </div>
@@ -669,7 +684,7 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || (gameState === 'incorrect' && attemptScore < 3) || (gameState === 'scored' && attemptScore < 3) ? (
+               {gameState === 'revealed' || ((gameState === 'incorrect' || gameState === 'scored') && attemptScore < 3) ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
@@ -770,3 +785,4 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
