@@ -96,7 +96,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
                   for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
                       const word = originalWordsWithPunctuation[i];
                       const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
-                      if (cleanWord === missingWords[currentBlankIndex].toLowerCase()) {
+                      if (cleanWord === missingWords[currentBlankIndex]?.toLowerCase()) {
                           correctWordWithPunctuation = word;
                           wordComponentIndex = i + 1;
                           break;
@@ -424,7 +424,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev + 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
   
@@ -847,5 +847,7 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
 
     
