@@ -336,6 +336,8 @@ export default function VerseMemoryPage() {
     }
 
     const score = calculateScore(userInputs);
+    setAttemptScore(score);
+
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
     if (score > oldScore) {
@@ -349,8 +351,6 @@ export default function VerseMemoryPage() {
       setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
-    setAttemptScore(score);
-
     if (score === 3) {
       setGameState('scored');
       setIsVerseMastered(true);
@@ -551,6 +551,7 @@ export default function VerseMemoryPage() {
 
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
+      if (attemptScore === 3) return "Perfect score! You're a true scripture scholar!";
       if (attemptScore >= 2) return "Great job! Keep going!";
       if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
       return "Keep trying! Memorization is a journey. You can do it!";
