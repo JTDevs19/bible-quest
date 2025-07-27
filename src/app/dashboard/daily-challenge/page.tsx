@@ -147,7 +147,7 @@ export default function DailyChallengePage() {
         saveProgress();
     }, [foundWords, foundCells, saveProgress]);
     
-    const getSelectedCells = () => {
+    const getSelectedCells = useCallback(() => {
         if (!selection) return [];
         const cells: Cell[] = [];
         let { start, end } = selection;
@@ -158,43 +158,45 @@ export default function DailyChallengePage() {
         let y1 = end.y;
 
         const dx = Math.abs(x1 - x0);
-        const dy = -Math.abs(y1 - y0);
+        const dy = Math.abs(y1 - y0);
         let sx = x0 < x1 ? 1 : -1;
         let sy = y0 < y1 ? 1 : -1;
         
         // Lock to straight line or 45-degree diagonal
-        if (dx > 0 && dy < 0 && dx !== Math.abs(dy)) {
-            if (dx > Math.abs(dy)) {
-                y1 = y0 + (Math.abs(dx) * sy);
+        if (dx > 0 && dy > 0 && dx !== dy) {
+            if (dx > dy) {
+                y1 = y0 + (dx * sy);
             } else {
-                x1 = x0 + (Math.abs(dy) * sx);
+                x1 = x0 + (dy * sx);
             }
         }
 
+        const newDx = Math.abs(x1-x0);
+        const newDy = -Math.abs(y1-y0);
 
         // Bresenham's line algorithm
-        let err = dx + dy;
+        let err = newDx + newDy;
 
         while (true) {
             cells.push({ x: x0, y: y0 });
             if (x0 === x1 && y0 === y1) break;
             let e2 = 2 * err;
-            if (e2 >= dy) {
-                if (x0 === x1) break; // prevent infinite loop on vertical lines
-                err += dy;
+            if (e2 >= newDy) {
+                if (x0 === x1) break; 
+                err += newDy;
                 x0 += sx;
             }
-            if (e2 <= dx) {
-                if (y0 === y1) break; // prevent infinite loop on horizontal lines
-                err += dx;
+            if (e2 <= newDx) {
+                if (y0 === y1) break;
+                err += newDx;
                 y0 += sy;
             }
         }
         
         return cells;
-    };
+    }, [selection]);
     
-    const selectedCells = useMemo(getSelectedCells, [selection]);
+    const selectedCells = useMemo(getSelectedCells, [selection, getSelectedCells]);
     
     const finishSelection = () => {
         if (!isSelecting || !selection) return;
@@ -245,7 +247,10 @@ export default function DailyChallengePage() {
         const cellX = Math.floor(x / cellWidth);
         const cellY = Math.floor(y / cellHeight);
 
-        return { x: cellX, y: cellY };
+        if (cellX >= 0 && cellX < GRID_SIZE && cellY >= 0 && cellY < GRID_SIZE) {
+            return { x: cellX, y: cellY };
+        }
+        return null;
     }
 
 
@@ -362,3 +367,5 @@ export default function DailyChallengePage() {
         </div>
     );
 }
+
+    
