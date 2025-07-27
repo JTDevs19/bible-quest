@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, BookText, Milestone, Star, TrendingUp, Users } from 'lucide-react';
+import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users } from 'lucide-react';
+
+const DAILY_CHALLENGE_STARS = 10;
 
 export default function ProgressPage() {
   const [verseMemoryStars, setVerseMemoryStars] = useState(0);
   const [characterAdventureStars, setCharacterAdventureStars] = useState(0);
   const [bibleMasteryStars, setBibleMasteryStars] = useState(0);
+  const [dailyChallengeCompletions, setDailyChallengeCompletions] = useState(0);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -28,8 +31,14 @@ export default function ProgressPage() {
         setBibleMasteryStars(0);
     }
 
+    const dailyChallengeProgress = JSON.parse(localStorage.getItem('dailyChallengeProgress') || 'null');
+    if (dailyChallengeProgress) {
+        setDailyChallengeCompletions(Object.keys(dailyChallengeProgress).length);
+    }
+
   }, []);
 
+  const dailyChallengeStars = dailyChallengeCompletions * DAILY_CHALLENGE_STARS;
   const totalStars = verseMemoryStars + characterAdventureStars + bibleMasteryStars;
 
   if (!isClient) {
@@ -56,7 +65,7 @@ export default function ProgressPage() {
             </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -65,7 +74,7 @@ export default function ProgressPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="text-center">
-                     <p className="text-4xl font-bold">{verseMemoryStars}</p>
+                     <p className="text-4xl font-bold">{verseMemoryStars - dailyChallengeStars}</p>
                      <p className="text-sm text-muted-foreground">Stars Earned</p>
                 </CardContent>
             </Card>
@@ -91,6 +100,18 @@ export default function ProgressPage() {
                 <CardContent className="text-center">
                      <p className="text-4xl font-bold">{bibleMasteryStars}</p>
                      <p className="text-sm text-muted-foreground">Rounds Mastered</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="font-headline text-xl">Daily Challenge</CardTitle>
+                        <Gift className="w-6 h-6 text-muted-foreground"/>
+                    </div>
+                </CardHeader>
+                <CardContent className="text-center">
+                     <p className="text-4xl font-bold">{dailyChallengeStars}</p>
+                     <p className="text-sm text-muted-foreground">Bonus Stars</p>
                 </CardContent>
             </Card>
         </div>

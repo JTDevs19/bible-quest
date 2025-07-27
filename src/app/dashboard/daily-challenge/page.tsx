@@ -37,28 +37,33 @@ export default function DailyChallengePage() {
     const dayOfMonth = today.getDate(); // 1-31
     const challengeIndex = (dayOfMonth - 1) % dailyChallenges.length;
     const currentChallenge = dailyChallenges[challengeIndex];
+    const todayStr = today.toISOString().split('T')[0];
 
     const loadProgress = useCallback(() => {
-        const todayStr = today.toISOString().split('T')[0];
         const saved = localStorage.getItem(`dailyChallengeCompletion_${todayStr}`);
         if (saved === 'true') {
             setIsCompletedToday(true);
         }
-    }, [today]);
+    }, [todayStr]);
 
     const saveProgress = useCallback(() => {
         if (!isClient || !isCompletedToday) return;
-        const todayStr = today.toISOString().split('T')[0];
         localStorage.setItem(`dailyChallengeCompletion_${todayStr}`, 'true');
-    }, [isClient, isCompletedToday, today]);
+        
+        const dailyProgress = JSON.parse(localStorage.getItem('dailyChallengeProgress') || '{}');
+        if (!dailyProgress[todayStr]) {
+            dailyProgress[todayStr] = true;
+            const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
+            const currentStars = verseMemoryProgress.stars || 0;
+            verseMemoryProgress.stars = currentStars + BONUS_STARS;
+            localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
+        }
+        localStorage.setItem('dailyChallengeProgress', JSON.stringify(dailyProgress));
+
+    }, [isClient, isCompletedToday, todayStr]);
 
     const handleChallengeComplete = () => {
         if (isCompletedToday) return;
-
-        const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-        const currentStars = verseMemoryProgress.stars || 0;
-        verseMemoryProgress.stars = currentStars + BONUS_STARS;
-        localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
         
         setIsCompletedToday(true);
         setTimeout(() => setIsChallengeOpen(false), 2000);
