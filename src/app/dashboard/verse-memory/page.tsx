@@ -419,7 +419,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev + 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
   
@@ -851,9 +851,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
