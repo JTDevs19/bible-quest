@@ -292,7 +292,7 @@ export default function CharacterAdventuresPage() {
         if (isUnlocked) {
             startLevel(level);
         } else {
-            if (!verseMemoryCompleted && levelOnePassed) {
+            if (!verseMemoryCompleted && level > 1) {
                  toast({
                     title: 'Level Locked',
                     description: 'You must master all verses in the Verse Memory game first!',
@@ -417,7 +417,12 @@ export default function CharacterAdventuresPage() {
                                     <div>
                                         <p className="font-semibold">Level {levelNum}</p>
                                         <p className="text-sm text-muted-foreground">
-                                           {isUnlocked ? `Best Score: ${levelScores[levelNum] || 0}/${triviaLevels[levelNum-1].length}` : `Locked`}
+                                           {isUnlocked 
+                                              ? `Best Score: ${levelScores[levelNum] || 0}/${triviaLevels[levelNum-1].length}` 
+                                              : (levelNum > 1 && !verseMemoryCompleted) 
+                                                ? "Finish Verse Memory first" 
+                                                : "Locked"
+                                            }
                                         </p>
                                     </div>
                                  </div>
