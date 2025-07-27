@@ -4,9 +4,10 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gift, Star, CheckCircle, Clock } from 'lucide-react';
+import { Gift, Star, CheckCircle, Clock, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const words = [
     "DAVID", "MOSES", "ABRAHAM", "ESTHER", "RUTH", "SAMSON", "GIDEON", "JONAH", "DANIEL",
@@ -107,6 +108,7 @@ export default function DailyChallengePage() {
     const [selection, setSelection] = useState<{ start: Cell, end: Cell } | null>(null);
     const [foundWords, setFoundWords] = useState<string[]>([]);
     const [foundCells, setFoundCells] = useState<Cell[]>([]);
+    const [isPuzzleOpen, setIsPuzzleOpen] = useState(false);
     const gridRef = useRef<HTMLDivElement>(null);
 
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -116,7 +118,6 @@ export default function DailyChallengePage() {
        return generateGrid(dateSeed);
     }, [today]);
     
-    const canPlay = lastPlayed !== today || foundWords.length < dailyWords.length;
     const isCompletedToday = lastPlayed === today && foundWords.length === dailyWords.length;
     
     const loadProgress = useCallback(() => {
@@ -126,17 +127,28 @@ export default function DailyChallengePage() {
             setLastPlayed(today);
             setFoundWords(progress.words || []);
             setFoundCells(progress.cells || []);
+        } else {
+             const anyProgress = localStorage.getItem('dailyChallengeProgress');
+             if (anyProgress) {
+                 const progress = JSON.parse(anyProgress);
+                 if (progress.date === today) {
+                    setLastPlayed(today);
+                    setFoundWords(progress.words || []);
+                    setFoundCells(progress.cells || []);
+                 }
+             }
         }
     }, [today]);
 
     const saveProgress = useCallback(() => {
-        if (!isClient || !canPlay) return;
+        if (!isClient) return;
         const progress = {
+            date: today,
             words: foundWords,
             cells: foundCells
         };
         localStorage.setItem(`dailyChallengeProgress_${today}`, JSON.stringify(progress));
-    }, [isClient, canPlay, today, foundWords, foundCells]);
+    }, [isClient, today, foundWords, foundCells]);
     
     useEffect(() => {
         setIsClient(true);
@@ -225,6 +237,9 @@ export default function DailyChallengePage() {
                 const currentStars = verseMemoryProgress.stars || 0;
                 verseMemoryProgress.stars = currentStars + BONUS_STARS;
                 localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
+                
+                // Automatically close the puzzle dialog on completion
+                setTimeout(() => setIsPuzzleOpen(false), 1000);
             }
         }
         setSelection(null);
@@ -254,20 +269,26 @@ export default function DailyChallengePage() {
     }
 
 
-    const handleMouseDown = (x: number, y: number) => {
-        if (!canPlay || isCompletedToday) return;
-        setIsSelecting(true);
-        setSelection({ start: { x, y }, end: { x, y } });
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isCompletedToday) return;
+        const cell = getCellFromCoords(e.clientX, e.clientY);
+        if (cell) {
+            setIsSelecting(true);
+            setSelection({ start: cell, end: cell });
+        }
     };
 
-    const handleMouseOver = (x: number, y: number) => {
+    const handleMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
         if (isSelecting && selection) {
-            setSelection({ ...selection, end: { x, y } });
+            const cell = getCellFromCoords(e.clientX, e.clientY);
+            if (cell) {
+                setSelection({ ...selection, end: cell });
+            }
         }
     };
     
     const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-        if (!canPlay || isCompletedToday) return;
+        if (isCompletedToday) return;
         const cell = getCellFromCoords(e.touches[0].clientX, e.touches[0].clientY);
         if (cell) {
             setIsSelecting(true);
@@ -286,27 +307,6 @@ export default function DailyChallengePage() {
     };
 
     if (!isClient) return <div>Loading...</div>;
-
-    if (isCompletedToday) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
-                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                    <Card className="max-w-md w-full">
-                        <CardHeader>
-                            <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
-                               <CheckCircle className="w-10 h-10 text-primary" />
-                            </div>
-                            <CardTitle className="font-headline text-3xl">Challenge Complete!</CardTitle>
-                            <CardDescription>You earned {BONUS_STARS} stars!</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="flex items-center justify-center gap-2 text-muted-foreground"><Clock className="w-5 h-5"/> Come back tomorrow for a new puzzle.</p>
-                        </CardContent>
-                    </Card>
-                 </motion.div>
-            </div>
-        );
-    }
     
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -314,58 +314,108 @@ export default function DailyChallengePage() {
                 <h1 className="font-headline text-3xl font-bold">Daily Word Search</h1>
                 <p className="text-muted-foreground">Find the hidden Bible character names to earn bonus stars!</p>
             </div>
+            
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-4">
+                            <Gift className="w-10 h-10 text-primary" />
+                            <div>
+                                <CardTitle className="font-headline text-2xl">Today's Puzzle</CardTitle>
+                                <CardDescription>Complete the puzzle for a special reward.</CardDescription>
+                            </div>
+                        </div>
+                        {isCompletedToday ? (
+                             <div className="text-right">
+                                <div className="flex items-center gap-2 text-green-600 font-bold">
+                                    <CheckCircle />
+                                    <span>Completed!</span>
+                                </div>
+                                <p className="text-sm text-muted-foreground">You earned {BONUS_STARS} stars!</p>
+                            </div>
+                        ) : (
+                             <div className="text-right">
+                                <p className="font-bold text-primary">{foundWords.length} / {dailyWords.length} Found</p>
+                                <p className="text-sm text-muted-foreground">Keep going!</p>
+                             </div>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                     <Button onClick={() => setIsPuzzleOpen(true)} className="w-full" size="lg">
+                        {isCompletedToday ? 'View Puzzle' : 'Start Puzzle'}
+                        {!isCompletedToday && <Play className="ml-2"/>}
+                    </Button>
+                </CardContent>
+            </Card>
 
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-                <Card className="flex-grow">
-                    <CardContent className="p-2 md:p-4" onMouseUp={finishSelection} onMouseLeave={finishSelection} onTouchEnd={finishSelection} onTouchCancel={finishSelection}>
-                        <div
-                            ref={gridRef} 
-                            className="grid grid-cols-12 gap-1 bg-muted/50 p-2 rounded-lg aspect-square select-none"
-                            onTouchStart={handleTouchStart}
-                            onTouchMove={handleTouchMove}
-                         >
-                            {grid.map((row, y) => 
-                                row.map((letter, x) => {
-                                    const isSelected = selectedCells.some(cell => cell.x === x && cell.y === y);
-                                    const isFound = foundCells.some(cell => cell.x === x && cell.y === y);
-                                    return (
-                                        <div
-                                            key={`${x}-${y}`}
-                                            onMouseDown={() => handleMouseDown(x, y)}
-                                            onMouseOver={() => handleMouseOver(x, y)}
-                                            className={cn(
-                                                "flex items-center justify-center w-full aspect-square rounded-sm md:rounded-md text-base md:text-lg font-bold uppercase cursor-pointer transition-colors",
-                                                isSelected ? "bg-primary text-primary-foreground" : "hover:bg-primary/10",
-                                                isFound && "bg-accent text-accent-foreground"
-                                            )}
-                                        >
-                                            {letter}
-                                        </div>
-                                    )
-                                })
+
+            <Dialog open={isPuzzleOpen} onOpenChange={setIsPuzzleOpen}>
+                <DialogContent className="max-w-3xl p-4 sm:p-6">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl">Daily Word Search</DialogTitle>
+                        <DialogDescription>Find all {dailyWords.length} names. Click and drag to select a word.</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col md:flex-row gap-8 items-start mt-4">
+                        <div className="flex-grow w-full">
+                             <div
+                                ref={gridRef} 
+                                className="grid grid-cols-12 gap-0.5 bg-muted/50 p-1 rounded-lg aspect-square select-none touch-none"
+                                onMouseDown={handleMouseDown}
+                                onMouseMove={handleMouseOver}
+                                onMouseUp={finishSelection}
+                                onMouseLeave={finishSelection}
+                                onTouchStart={handleTouchStart}
+                                onTouchMove={handleTouchMove}
+                                onTouchEnd={finishSelection}
+                                onTouchCancel={finishSelection}
+                             >
+                                {grid.map((row, y) => 
+                                    row.map((letter, x) => {
+                                        const isSelected = selectedCells.some(cell => cell.x === x && cell.y === y);
+                                        const isFound = foundCells.some(cell => cell.x === x && cell.y === y);
+                                        return (
+                                            <div
+                                                key={`${x}-${y}`}
+                                                className={cn(
+                                                    "flex items-center justify-center w-full aspect-square rounded-sm text-xs sm:text-base font-bold uppercase transition-colors",
+                                                    !isCompletedToday && "cursor-pointer",
+                                                    isSelected ? "bg-primary text-primary-foreground" : "",
+                                                    isFound ? "bg-accent text-accent-foreground" : "bg-background hover:bg-primary/10",
+                                                )}
+                                            >
+                                                {letter}
+                                            </div>
+                                        )
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="w-full md:w-52 shrink-0">
+                             <h3 className="font-headline text-lg font-semibold mb-2">Words to Find</h3>
+                            <ul className="space-y-1.5 columns-2">
+                               {dailyWords.map(word => (
+                                    <li key={word} className={cn(
+                                        "font-medium transition-all text-sm sm:text-base", 
+                                        foundWords.includes(word) && "line-through text-muted-foreground"
+                                    )}>
+                                        {word}
+                                    </li>
+                               ))}
+                            </ul>
+                             {isCompletedToday && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{delay: 0.5}}
+                                    className="mt-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-center"
+                                >
+                                    <p className="font-bold flex items-center justify-center gap-2"><CheckCircle/> Puzzle Complete!</p>
+                                </motion.div>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="w-full md:w-64 shrink-0">
-                    <CardHeader>
-                        <CardTitle className="font-headline">Words to Find</CardTitle>
-                        <CardDescription>Find all {dailyWords.length} names.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2">
-                           {dailyWords.map(word => (
-                                <li key={word} className={cn("text-lg font-medium transition-all", foundWords.includes(word) && "line-through text-muted-foreground")}>
-                                    {word}
-                                </li>
-                           ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
-
-    
