@@ -66,7 +66,7 @@ export const loadGameProgress = async (userId: string): Promise<GameProgress | n
             return null; // No progress saved yet
         }
     } catch (error) {
-        console.error("Error loading game progress: ", error);
+        console.error("Error loading game progress (client may be offline):", error);
         return null;
     }
 };
