@@ -14,6 +14,8 @@ import { LionIcon } from '../icons/LionIcon';
 import { LambIcon } from '../icons/LambIcon';
 import { DoveIcon } from '../icons/DoveIcon';
 import { CrossIcon } from '../icons/CrossIcon';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 const profileSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters.').max(20, 'Username must be 20 characters or less.'),
@@ -28,7 +30,7 @@ const avatars = [
 ];
 
 export function ProfileStep() {
-  const { prevStep, data, setData, finishOnboardingAsGuest } = useOnboarding();
+  const { prevStep, data, setData, finishOnboardingAsGuest, error, loading } = useOnboarding();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -40,7 +42,10 @@ export function ProfileStep() {
 
   const onSubmit = async (values: z.infer<typeof profileSchema>) => {
     setData((prev) => ({ ...prev, ...values }));
-    await finishOnboardingAsGuest();
+    await finishOnboardingAsGuest({
+        username: values.username,
+        avatar: values.avatar,
+    });
   };
 
   return (
@@ -52,6 +57,11 @@ export function ProfileStep() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-6">
+            {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
             <FormField
               control={form.control}
               name="username"
@@ -97,11 +107,12 @@ export function ProfileStep() {
             />
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={prevStep} type="button">
+            <Button variant="outline" onClick={prevStep} type="button" disabled={loading}>
               Back
             </Button>
-            <Button type="submit">
-              Finish Setup
+            <Button type="submit" disabled={loading}>
+              {loading && <Loader2 className="mr-2 animate-spin" />}
+              {loading ? 'Setting up...' : 'Finish Setup'}
             </Button>
           </CardFooter>
         </form>

@@ -30,7 +30,9 @@ interface OnboardingContextType {
   nextStep: () => void;
   prevStep: () => void;
   step: number;
-  finishOnboardingAsGuest: () => Promise<void>;
+  finishOnboardingAsGuest: (profileData: Pick<OnboardingData, 'username' | 'avatar'>) => Promise<void>;
+  error: string | null;
+  loading: boolean;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
@@ -64,42 +66,51 @@ export default function OnboardingPage() {
     avatar: 'Lion of Judah',
   });
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   
   useEffect(() => {
-    if(!loading && user) {
+    if(!authLoading && user) {
         router.push('/dashboard');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TotalSteps));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
   
-  const finishOnboardingAsGuest = async () => {
+  const finishOnboardingAsGuest = async (profileData: Pick<OnboardingData, 'username' | 'avatar'>) => {
+    setLoading(true);
+    setError(null);
     try {
         const userCredential = await signInAnonymously(auth);
         const guestUser = userCredential.user;
         
         await saveUserProfile(guestUser.uid, {
-            username: data.username,
-            avatar: data.avatar,
-            ageGroup: data.ageGroup,
-            spiritualLevel: data.spiritualLevel,
-            focus: data.focus
+            ...data,
+            username: profileData.username,
+            avatar: profileData.avatar,
         });
         
-        localStorage.setItem('bibleQuestsUser', JSON.stringify(data)); // Keep for quick access if needed, but Firestore is source of truth
+        localStorage.setItem('bibleQuestsUser', JSON.stringify(data));
         nextStep();
 
-    } catch (error) {
-        console.error("Error signing in as guest:", error);
+    } catch (e: any) {
+        console.error("Error signing in as guest:", e);
+        if (e.code === 'auth/operation-not-allowed' || e.code === 'auth/admin-restricted-operation') {
+            setError("Guest sign-in failed. Please enable Anonymous Authentication in your Firebase project's Authentication > Sign-in method tab.");
+        } else {
+            setError(e.message);
+        }
+    } finally {
+        setLoading(false);
     }
   }
 
-  const contextValue = { data, setData, nextStep, prevStep, step, finishOnboardingAsGuest };
+  const contextValue = { data, setData, nextStep, prevStep, step, finishOnboardingAsGuest, error, loading };
   
-  if (loading || user) {
+  if (authLoading || user) {
       return <div className="flex items-center justify-center h-screen">Loading...</div>
   }
 
