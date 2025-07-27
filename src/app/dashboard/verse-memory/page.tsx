@@ -65,7 +65,7 @@ const verses = [
   },
 ];
 
-type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect';
+type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect' | 'incomplete';
 type VerseParts = (string | null)[];
 type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
@@ -142,7 +142,6 @@ export default function VerseMemoryPage() {
   const [gameState, setGameState] = useState<GameState>('playing');
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
-  const [checkAttempts, setCheckAttempts] = useState(10);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
@@ -205,6 +204,14 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     saveProgress();
   }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgress]);
+  
+  useEffect(() => {
+    if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
+      setShowSummaryDialog(true);
+    } else {
+      setShowSummaryDialog(false);
+    }
+  }, [gameState]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
     return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
@@ -243,7 +250,6 @@ export default function VerseMemoryPage() {
     setGameState('playing');
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
-    setCheckAttempts(10);
 
     if (isMastered || !verse) {
         setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
@@ -303,7 +309,7 @@ export default function VerseMemoryPage() {
   }, [setupRound]);
 
 
-  const calculateScore = (inputs: string[]) => {
+  const calculateScore = useCallback((inputs: string[]) => {
     if (missingWords.length === 0) return 0;
     
     const correctCount = inputs.reduce((count, input, index) => {
@@ -317,21 +323,23 @@ export default function VerseMemoryPage() {
     if (accuracy >= 0.5) return 2;
     if (accuracy > 0) return 1;
     return 0;
-  };
+  }, [missingWords]);
   
  const tryAgain = () => {
     setGameState('playing');
     setEditingIndex(0);
-    setCheckAttempts(prev => prev - 1);
-    setShowSummaryDialog(false);
  }
 
-  const handleSubmit = () => {
-    if (checkAttempts <= 0 || isVerseMastered) return;
-    setEditingIndex(null);
+  const handleSubmit = useCallback(() => {
+    if (isVerseMastered) return;
+
+    if (userInputs.some(input => input.trim() === '')) {
+      setGameState('incomplete');
+      return;
+    }
 
     const score = calculateScore(userInputs);
-    setAttemptScore(score); 
+    setAttemptScore(score);
 
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     
@@ -339,9 +347,7 @@ export default function VerseMemoryPage() {
       const scoreDifference = score - oldScore;
       setVerseScores(prevScores => {
         const newScores = { ...prevScores };
-        if (!newScores[currentLevel]) {
-          newScores[currentLevel] = {};
-        }
+        if (!newScores[currentLevel]) newScores[currentLevel] = {};
         newScores[currentLevel][currentVerseIndex] = score;
         return newScores;
       });
@@ -349,18 +355,16 @@ export default function VerseMemoryPage() {
     }
     
     if (score === STARS_PER_VERSE) {
-      setGameState('scored');
-      setIsVerseMastered(true);
+        setGameState('scored');
+        setIsVerseMastered(true);
     } else if (score > 0) {
-      setGameState('scored');
+        setGameState('scored');
     } else {
-      setGameState('incorrect');
+        setGameState('incorrect');
     }
-    setShowSummaryDialog(true);
-  };
+  }, [isVerseMastered, userInputs, calculateScore, verseScores, currentLevel, currentVerseIndex]);
   
   const handleNext = () => {
-    setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
@@ -407,7 +411,6 @@ export default function VerseMemoryPage() {
     setAttemptScore(0);
     setGameState('revealed');
     setEditingIndex(null);
-    setShowSummaryDialog(true);
   }
 
   const handleTradeForReveals = () => {
@@ -453,12 +456,14 @@ export default function VerseMemoryPage() {
     const newInputs = [...userInputs];
     newInputs[index] = value;
     setUserInputs(newInputs);
-    if(gameState === 'checking' || gameState === 'incorrect') setGameState('playing');
+    if(gameState === 'checking' || gameState === 'incorrect' || gameState === 'incomplete') {
+      setGameState('playing');
+    }
   };
 
   const handleLabelClick = (index: number) => {
     if (isVerseMastered) return;
-    if (gameState === 'playing' || gameState === 'checking') {
+    if (gameState === 'playing' || gameState === 'checking' || gameState === 'incomplete') {
       setEditingIndex(index);
     }
   };
@@ -494,7 +499,7 @@ export default function VerseMemoryPage() {
         const currentIndex = inputIndex;
         inputIndex++;
         
-        const isEditable = (gameState === 'playing' || gameState === 'checking') && editingIndex === currentIndex && !isVerseMastered;
+        const isEditable = (gameState === 'playing' || gameState === 'checking' || gameState === 'incomplete') && editingIndex === currentIndex && !isVerseMastered;
 
         if (isEditable) {
            return (
@@ -505,7 +510,7 @@ export default function VerseMemoryPage() {
               onChange={(e) => handleInputChange(currentIndex, e.target.value)}
               onBlur={() => setEditingIndex(null)}
               autoFocus
-              className={cn("w-32 h-8 text-base shrink-0 inline-block", gameState === 'incorrect' && 'border-destructive ring-destructive')}
+              className={cn("w-32 h-8 text-base shrink-0 inline-block", (gameState === 'incorrect' || gameState === 'incomplete') && 'border-destructive ring-destructive')}
               style={{ width: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch` }}
               disabled={isVerseMastered}
             />
@@ -669,10 +674,11 @@ export default function VerseMemoryPage() {
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
            {gameState === 'incorrect' && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
+           {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
             {gameState !== 'incorrect' ? (
-                <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)} onClick={handleSubmit}>
-                    {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+                <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
+                    Check My Answer
                 </Button>
             ) : (
                 <Button onClick={tryAgain} variant="destructive">
