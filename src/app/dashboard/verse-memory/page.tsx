@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -600,7 +600,7 @@ export default function VerseMemoryPage() {
             onClick={() => handleLabelClick(currentIndex)}
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
-               userInputs[currentIndex] ? "border-primary/50 text-primary-foreground bg-primary/20" : "border-muted-foreground/50",
+               userInputs[currentIndex] ? "border-primary/50 text-primary bg-primary/20" : "border-muted-foreground/50",
               (gameState === 'scored' || gameState === 'revealed' || isVerseMastered) ? 'cursor-default' : '',
               isWrong ? 'bg-destructive/20 border-destructive' : '',
               isCheckingAndCorrect ? 'bg-green-500/20 border-green-500' : '',
@@ -719,18 +719,18 @@ export default function VerseMemoryPage() {
 
       <div className="relative">
           {isVerseMastered && (
-             <>
+             <div className="pointer-events-none">
                 <div className="absolute -top-3 -left-3.5 w-16 h-16 overflow-hidden z-10">
                     <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', left: '-35%', top: '25%' }}>
-                        <Check className="w-4 h-4"/>
+                        <CheckCircle2 className="w-4 h-4"/>
                     </div>
                 </div>
                 <div className="absolute -top-3 -right-3.5 w-16 h-16 overflow-hidden z-10">
                     <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', right: '-35%', top: '25%' }}>
-                         <Check className="w-4 h-4"/>
+                         <CheckCircle2 className="w-4 h-4"/>
                     </div>
                 </div>
-            </>
+            </div>
           )}
           <Card>
             <CardHeader>
@@ -957,4 +957,5 @@ export default function VerseMemoryPage() {
   );
 
     
+
 
