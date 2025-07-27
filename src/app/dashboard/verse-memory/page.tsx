@@ -442,7 +442,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev + 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
   
@@ -675,7 +675,7 @@ export default function VerseMemoryPage() {
                                        )}
                                     </p>
                                 </div>
-                             </div>
+                              </div>
                            )
                        })}
                     </div>
@@ -699,52 +699,69 @@ export default function VerseMemoryPage() {
            </Popover>
         </div>
 
-
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
-                    <ChevronLeft className="w-5 h-5"/>
-                </Button>
-                <div>
-                  <CardTitle className="font-headline text-2xl">
-                    {currentVerse.reference} ({currentVerse.version})
-                  </CardTitle>
-                  <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+      <div className="relative">
+          {isVerseMastered && (
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-12 z-10 flex justify-center items-end pointer-events-none">
+                    <div className="absolute top-0 w-full h-full">
+                        {/* Ribbons */}
+                        <div className="absolute top-2 -left-4 w-16 h-8 bg-yellow-400 transform -rotate-45" style={{clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'}}/>
+                        <div className="absolute top-2 -right-4 w-16 h-8 bg-yellow-400 transform rotate-45" style={{clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'}}/>
+                    </div>
+                     {/* Crown Stars */}
+                    <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+                        <Star className="w-8 h-8 text-yellow-400 fill-yellow-400 absolute bottom-4 left-1/2 -translate-x-1/2" />
+                        <Star className="w-7 h-7 text-yellow-400 fill-yellow-400 absolute bottom-1 left-8 transform -rotate-15" />
+                        <Star className="w-7 h-7 text-yellow-400 fill-yellow-400 absolute bottom-1 right-8 transform rotate-15" />
+                    </motion.div>
                 </div>
-                 <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
-                    <ChevronRight className="w-5 h-5"/>
-                </Button>
-            </div>
-             <div className="flex">
-              {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
-                  <Star key={i} className={cn("w-6 h-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-              ))}
+          )}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
+                        <ChevronLeft className="w-5 h-5"/>
+                    </Button>
+                    <div>
+                      <CardTitle className="font-headline text-2xl">
+                        {currentVerse.reference} ({currentVerse.version})
+                      </CardTitle>
+                      <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+                    </div>
+                     <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
+                        <ChevronRight className="w-5 h-5"/>
+                    </Button>
+                </div>
+                 <div className={cn("flex", isVerseMastered && "opacity-0")}>
+                  {Array.from({length: STARS_PER_VERSE}).map((_, i) => (
+                      <Star key={i} className={cn("w-6 h-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                  ))}
+                  </div>
               </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
-           {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
-          <div className="flex flex-wrap gap-2 justify-center">
-             <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
-                Check My Answer
-            </Button>
-            <Button variant="outline" onClick={handleHintClick} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'}>
-                <HelpCircle className="mr-2 h-4 w-4"/>
-                Hint ({hintsRemaining})
-            </Button>
-            
-            <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>
-                Reveal Answer ({revealsRemaining})
-            </Button>
-             <Button variant="secondary" onClick={handleNext}>
-              {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
+               {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
+              <div className="flex flex-wrap gap-2 justify-center">
+                 <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
+                    Check My Answer
+                </Button>
+                <Button variant="outline" onClick={handleHintClick} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'}>
+                    <HelpCircle className="mr-2 h-4 w-4"/>
+                    Hint ({hintsRemaining})
+                </Button>
+                
+                <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>
+                    Reveal Answer ({revealsRemaining})
+                </Button>
+                 <Button variant="secondary" onClick={handleNext}>
+                  {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+      </div>
+      
 
       <AlertDialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
         <AlertDialogContent>
