@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 
 
 const verses = [
+  // Level 1-5 Verses
   {
     reference: 'John 3:16',
     text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
@@ -63,21 +64,72 @@ const verses = [
     version: 'NIV'
   },
   {
-    reference: 'Psalm 23:1',
-    text: 'The LORD is my shepherd, I shall not be in want.',
+    reference: 'Psalm 23:1-2',
+    text: 'The LORD is my shepherd, I shall not be in want. He makes me lie down in green pastures, he leads me beside quiet waters,',
     version: 'NIV'
   },
+  // Level 6-10 Verses
+  {
+    reference: 'Romans 3:23',
+    text: 'for all have sinned and fall short of the glory of God,',
+    version: 'NIV'
+  },
+  {
+    reference: 'Romans 6:23',
+    text: 'For the wages of sin is death, but the gift of God is eternal life in Christ Jesus our Lord.',
+    version: 'NIV'
+  },
+  {
+    reference: 'John 14:6',
+    text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
+    version: 'NIV'
+  },
+  {
+    reference: 'Matthew 28:19-20',
+    text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Hebrews 12:1-2',
+    text: 'Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off everything that hinders and the sin that so easily entangles. And let us run with perseverance the race marked out for us, fixing our eyes on Jesus, the pioneer and perfecter of faith.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Joshua 1:9',
+    text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Isaiah 40:31',
+    text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 46:10',
+    text: 'He says, “Be still, and know that I am God; I will be exalted among the nations, I will be exalted in the earth.”',
+    version: 'NIV'
+  },
+  {
+    reference: '1 Peter 5:7',
+    text: 'Cast all your anxiety on him because he cares for you.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Micah 6:8',
+    text: 'He has shown you, O mortal, what is good. And what does the LORD require of you? To act justly and to love mercy and to walk humbly with your God.',
+    version: 'NIV'
+  }
 ];
 
 type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect' | 'incomplete';
 type VerseParts = (string | null)[];
 type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
-const MAX_LEVEL = 5;
+const MAX_LEVEL = 10;
 const STARS_PER_VERSE = 3;
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
-const STARS_TO_UNLOCK_ADVENTURES = 90;
+const STARS_TO_UNLOCK_ADVENTURES = 150; // Updated for 10 levels
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
@@ -176,12 +228,15 @@ export default function VerseMemoryPage() {
   
   const findFirstUnfinishedVerse = (level: number, scores: VerseScores) => {
     const levelScores = scores[level] || {};
-    for (let i = 0; i < verses.length; i++) {
+    const versesInLevel = level <= 5 ? 10 : 20;
+    const startIndex = level <= 5 ? 0 : 10;
+    
+    for (let i = startIndex; i < versesInLevel; i++) {
         if ((levelScores[i] || 0) < STARS_PER_VERSE) {
             return i;
         }
     }
-    return 0; // Default to first verse if all are complete
+    return startIndex; // Default to first verse of the set if all are complete
   };
 
   const loadProgress = useCallback(() => {
@@ -428,7 +483,10 @@ export default function VerseMemoryPage() {
   
   const handleNext = () => {
     setShowSummaryDialog(false);
-    if (currentVerseIndex < verses.length - 1) {
+    const versesInLevel = level <= 5 ? 10 : 20;
+    const startIndex = level <= 5 ? 0 : 10;
+    
+    if (currentVerseIndex < versesInLevel -1) {
       setCurrentVerseIndex(prev => prev + 1);
     } else {
         setShowLevelCompleteDialog(true);
@@ -437,8 +495,9 @@ export default function VerseMemoryPage() {
 
   const startNextLevel = () => {
     setShowLevelCompleteDialog(false);
-    const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
-    if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
+    const requiredStarsForNextLevel = currentLevel * (currentLevel <= 5 ? 10 : 10) * STARS_PER_VERSE;
+
+    if (totalStars >= requiredStarsForNextLevel && currentLevel < MAX_LEVEL) {
         setCurrentLevel(l => {
         const newLevel = l + 1;
         const firstUnfinished = findFirstUnfinishedVerse(newLevel, verseScores);
@@ -540,7 +599,8 @@ export default function VerseMemoryPage() {
   };
 
   const handleLevelSelect = (level: number) => {
-    const requiredStars = (level - 1) * verses.length * STARS_PER_VERSE;
+    const versesPerSet = 10;
+    const requiredStars = (level - 1) * versesPerSet * STARS_PER_VERSE;
     if (level === 1 || totalStars >= requiredStars) {
       setCurrentLevel(level);
       const firstUnfinished = findFirstUnfinishedVerse(level, verseScores);
@@ -550,6 +610,10 @@ export default function VerseMemoryPage() {
   };
   
   const currentVerse = verses[currentVerseIndex];
+  const versesInCurrentSet = currentLevel <= 5 ? 10 : 10;
+  const currentSetStartIndex = currentLevel <= 5 ? 0 : 10;
+  const isLastVerseInSet = currentVerseIndex === (currentSetStartIndex + versesInCurrentSet - 1);
+
 
   const renderVerse = () => {
     if (!isClient || !currentVerse) {
@@ -625,7 +689,7 @@ export default function VerseMemoryPage() {
   }
 
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-  const canUnlockNextLevel = totalStars >= (currentLevel * verses.length * STARS_PER_VERSE) && currentLevel < MAX_LEVEL;
+  const canUnlockNextLevel = totalStars >= (currentLevel * versesInCurrentSet * STARS_PER_VERSE) && currentLevel < MAX_LEVEL;
 
 
   if (!isClient || !currentVerse) {
@@ -657,12 +721,14 @@ export default function VerseMemoryPage() {
                     <div className="space-y-3">
                        {Array.from({length: MAX_LEVEL}).map((_, i) => {
                            const levelNum = i + 1;
-                           const requiredStars = (levelNum - 1) * verses.length * STARS_PER_VERSE;
+                           const versesPerSet = 10;
+                           const requiredStars = (levelNum - 1) * versesPerSet * STARS_PER_VERSE;
                            const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
                            const isCurrent = levelNum === currentLevel;
                            const levelScoresData = verseScores[levelNum] || {};
                            const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
-                           const isLevelComplete = masteredInLevel === verses.length;
+                           const totalVersesInLevel = levelNum <= 5 ? 10 : 10;
+                           const isLevelComplete = masteredInLevel === totalVersesInLevel;
 
                            return (
                              <div 
@@ -686,7 +752,7 @@ export default function VerseMemoryPage() {
                                               <CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!
                                             </>
                                          ) : (
-                                            `${masteredInLevel}/${verses.length} Mastered`
+                                            `${masteredInLevel}/${totalVersesInLevel} Mastered`
                                          )
                                        ) : (
                                         `Requires ${requiredStars} stars`
@@ -768,7 +834,7 @@ export default function VerseMemoryPage() {
                         )}
                         >
                         <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
-                            {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                            {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
                         </span>
                     </Button>
                  ) : (
@@ -784,7 +850,7 @@ export default function VerseMemoryPage() {
                           Reveal Answer ({revealsRemaining})
                       </Button>
                       <Button variant="secondary" onClick={handleNext}>
-                        {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                        {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
                       </Button>
                     </>
                  )}
@@ -827,7 +893,7 @@ export default function VerseMemoryPage() {
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
             <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0 && gameState !== 'revealed'}>
-                {currentVerseIndex === verses.length - 1 ? "Finish Level" : "Next Verse"}
+                {isLastVerseInSet ? "Finish Level" : "Next Verse"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -959,3 +1025,6 @@ export default function VerseMemoryPage() {
     
 
 
+
+
+    
