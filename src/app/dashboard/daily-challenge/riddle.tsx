@@ -19,7 +19,8 @@ interface RiddleProps {
 
 export function RiddleOfTheDay({ challenge, onComplete, isCompleted }: RiddleProps) {
     const [userInput, setUserInput] = useState('');
-    const [status, setStatus] = useState<'playing' | 'correct' | 'incorrect'>('playing');
+    const [status, setStatus] = useState<'playing' | 'correct' | 'incorrect' | 'failed'>('playing');
+    const [attemptsLeft, setAttemptsLeft] = useState(3);
 
     useEffect(() => {
         if (isCompleted) {
@@ -30,11 +31,19 @@ export function RiddleOfTheDay({ challenge, onComplete, isCompleted }: RiddlePro
     
 
     const checkAnswer = () => {
+        if (status !== 'playing' && status !== 'incorrect') return;
+
         if (userInput.trim().toLowerCase() === challenge.answer.toLowerCase()) {
             setStatus('correct');
             onComplete();
         } else {
-            setStatus('incorrect');
+            const newAttemptsLeft = attemptsLeft - 1;
+            setAttemptsLeft(newAttemptsLeft);
+            if (newAttemptsLeft <= 0) {
+                setStatus('failed');
+            } else {
+                setStatus('incorrect');
+            }
         }
     };
     
@@ -54,13 +63,16 @@ export function RiddleOfTheDay({ challenge, onComplete, isCompleted }: RiddlePro
                     className={cn(
                         "text-center text-lg h-12",
                         status === 'correct' && "border-green-500 ring-green-500",
-                        status === 'incorrect' && "border-destructive ring-destructive animate-shake"
+                        status === 'incorrect' && "border-destructive ring-destructive animate-shake",
+                        status === 'failed' && "border-destructive bg-destructive/10"
                     )}
-                    disabled={status === 'correct'}
+                    disabled={status === 'correct' || status === 'failed'}
                     onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
                 />
 
-                {status !== 'correct' && <Button onClick={checkAnswer}>Submit Answer</Button>}
+                {status === 'playing' || status === 'incorrect' ? (
+                    <Button onClick={checkAnswer}>Submit Answer ({attemptsLeft} {attemptsLeft === 1 ? 'try' : 'tries'} left)</Button>
+                ) : null}
             </div>
 
              {status === 'correct' && (
@@ -82,6 +94,18 @@ export function RiddleOfTheDay({ challenge, onComplete, isCompleted }: RiddlePro
                         <AlertTitle>Not Quite</AlertTitle>
                         <AlertDescription>
                             That's not the right answer. Give it another thought!
+                        </AlertDescription>
+                    </Alert>
+                </motion.div>
+            )}
+
+            {status === 'failed' && (
+                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+                    <Alert variant="destructive">
+                        <XCircle className="h-4 w-4" />
+                        <AlertTitle>No Tries Left</AlertTitle>
+                        <AlertDescription>
+                            You've used all your attempts. The correct answer was <strong>{challenge.answer}</strong>. Better luck tomorrow!
                         </AlertDescription>
                     </Alert>
                 </motion.div>
