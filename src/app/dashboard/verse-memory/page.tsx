@@ -292,9 +292,7 @@ export default function VerseMemoryPage() {
     const score = calculateScore(userInputs);
     setAttemptScore(score);
 
-    const isPerfect = score === 3 && missingWords.length > 0;
-
-    if (isPerfect) {
+    if (score === 3) {
         setVerseScores(prevScores => {
             const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
             const finalVerseScore = Math.max(existingScore, score);
@@ -311,7 +309,7 @@ export default function VerseMemoryPage() {
                     [currentVerseIndex]: finalVerseScore
                 }
             };
-             if (finalVerseScore === STARS_PER_VERSE) {
+            if (finalVerseScore === STARS_PER_VERSE) {
                 setIsVerseMastered(true);
             }
             return updatedScores;
@@ -319,7 +317,7 @@ export default function VerseMemoryPage() {
         setGameState('scored');
         setShowSummaryDialog(true);
     } else {
-        if(currentLevel === 1){
+        if (currentLevel === 1) {
             setGameState('incorrect');
         } else {
             setGameState('checking');
@@ -711,3 +709,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
