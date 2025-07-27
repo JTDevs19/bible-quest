@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from "@/hooks/use-toast"
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+
 
 const verses = [
   {
@@ -75,6 +77,7 @@ const MAX_LEVEL = 5;
 const STARS_PER_VERSE = 3;
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
+const STARS_TO_UNLOCK_ADVENTURES = 90;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
@@ -95,7 +98,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
                   for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
                       const word = originalWordsWithPunctuation[i];
                       const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
-                      if (cleanWord === missingWords[currentBlankIndex]?.toLowerCase()) {
+                      if (cleanWord === (missingWords[currentBlankIndex] || '').toLowerCase()) {
                           correctWordWithPunctuation = word;
                           wordComponentIndex = i + 1;
                           break;
@@ -158,7 +161,9 @@ export default function VerseMemoryPage() {
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
+  const [showUnlockDialog, setShowUnlockDialog] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -330,18 +335,18 @@ export default function VerseMemoryPage() {
   
   const tryAgain = () => {
     const newInputs = userInputs.map((input, index) => {
-        const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
+        const isCorrect = input.toLowerCase().trim() === (missingWords[index] || '').toLowerCase().trim();
         return isCorrect ? input : '';
     });
     setUserInputs(newInputs);
 
     const firstIncorrectIndex = userInputs.findIndex((input, index) => {
-        return input.toLowerCase().trim() !== missingWords[index]?.toLowerCase().trim();
+        return input.toLowerCase().trim() !== (missingWords[index] || '').toLowerCase().trim();
     });
 
-    setShowSummaryDialog(false);
     setGameState('playing');
     setEditingIndex(firstIncorrectIndex !== -1 ? firstIncorrectIndex : 0);
+    setShowSummaryDialog(false);
   };
 
   const handleSubmit = () => {
@@ -353,22 +358,29 @@ export default function VerseMemoryPage() {
     }
 
     const score = calculateScore(userInputs);
-    
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+    const oldTotalStars = totalStars;
+
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
+      setTotalStars(prevStars => prevStars + scoreDifference);
       setVerseScores(prevScores => {
         const newScores = { ...prevScores };
         if (!newScores[currentLevel]) newScores[currentLevel] = {};
         newScores[currentLevel][currentVerseIndex] = score;
         return newScores;
       });
-      setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
     if (score === STARS_PER_VERSE) {
         setIsVerseMastered(true);
         setGameState('scored');
+        
+        const newTotalStars = oldTotalStars + (score - oldScore);
+        if (oldTotalStars < STARS_TO_UNLOCK_ADVENTURES && newTotalStars >= STARS_TO_UNLOCK_ADVENTURES) {
+            setShowUnlockDialog(true);
+        }
+
         toast({
             title: (
                 <div className="flex items-center gap-2 font-headline">
@@ -422,7 +434,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev - 1);
+      setCurrentVerseIndex(prev => prev + 1);
     }
   };
   
@@ -593,7 +605,7 @@ export default function VerseMemoryPage() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 md:px-0 px-4">
+    <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
         <p className="text-muted-foreground">Fill in the blanks to complete the verse.</p>
@@ -747,7 +759,7 @@ export default function VerseMemoryPage() {
                         verseWithBlanks={verseWithBlanks} 
                         userInputs={userInputs} 
                         missingWords={missingWords}
-                        showCorrectAnswer={gameState === 'revealed'}
+                        showCorrectAnswer={gameState !== 'scored' && gameState !== 'incorrect'}
                     />
                 )}
              </CardContent>
@@ -834,9 +846,32 @@ export default function VerseMemoryPage() {
             </AlertDialogContent>
         </AlertDialog>
 
+        <AlertDialog open={showUnlockDialog} onOpenChange={setShowUnlockDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
+                    <Trophy className="w-10 h-10 text-primary" />
+                </div>
+              <AlertDialogTitle className="font-headline text-2xl text-center">New Game Unlocked!</AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Congratulations! Your knowledge has grown. You've unlocked the <strong>Character Adventures</strong> game.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
+              <AlertDialogCancel onClick={() => {
+                  setShowUnlockDialog(false);
+                  handleNext();
+                }}>
+                    Continue to Level 4
+                </AlertDialogCancel>
+              <AlertDialogAction onClick={() => router.push('/dashboard/character-adventures')}>
+                <Users className="mr-2" /> Explore New Game
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
     </div>
   );
 }
-
-    
