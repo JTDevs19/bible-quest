@@ -749,7 +749,7 @@ export default function VerseMemoryPage() {
             {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
-            <AlertDialogAction onClick={handleNext}>
+            <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0}>
                 {currentVerseIndex === verses.length - 1 ? (
                     totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL ? "Start Next Level!" : "Finish Level"
                 ) : "Next Verse"}
