@@ -354,10 +354,8 @@ export default function VerseMemoryPage() {
     }
 
     const score = calculateScore(userInputs);
-    setAttemptScore(score);
-
+    
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
       setVerseScores(prevScores => {
@@ -391,6 +389,7 @@ export default function VerseMemoryPage() {
             ),
         });
     } else {
+        setAttemptScore(score);
         setGameState(score > 0 ? 'scored' : 'incorrect');
         setShowSummaryDialog(true);
     }
@@ -424,7 +423,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev - 1);
+      setCurrentVerseIndex(prev => prev + 1);
     }
   };
   
@@ -847,6 +846,8 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
 
     
 
