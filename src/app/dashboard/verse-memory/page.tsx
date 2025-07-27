@@ -316,7 +316,7 @@ export default function VerseMemoryPage() {
 
     const score = calculateScore(userInputs);
     
-    setAttemptScore(score); // Set score immediately
+    setAttemptScore(score);
 
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
@@ -348,7 +348,7 @@ export default function VerseMemoryPage() {
     if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
       setShowSummaryDialog(true);
     }
-  }, [gameState, attemptScore]);
+  }, [gameState]);
 
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -689,7 +689,7 @@ export default function VerseMemoryPage() {
             </AlertDialogTitle>
             <div className="flex justify-center py-4">
               {Array.from({length: 3}).map((_, i) => (
-                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300")}/>
+                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
               ))}
             </div>
             <AlertDialogDescription className="text-center text-base">
@@ -800,3 +800,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
