@@ -145,21 +145,34 @@ export default function DailyChallengePage() {
     const getSelectedCells = () => {
         if (!selection) return [];
         const cells: Cell[] = [];
-        const { start, end } = selection;
-        const dx = Math.sign(end.x - start.x);
-        const dy = Math.sign(end.y - start.y);
-        
-        let x = start.x;
-        let y = start.y;
+        let { start, end } = selection;
 
-        if (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) { // Straight or diagonal line
-             while(true) {
-                cells.push({x, y});
-                if (x === end.x && y === end.y) break;
-                x += dx;
-                y += dy;
+        let x0 = start.x;
+        let y0 = start.y;
+        let x1 = end.x;
+        let y1 = end.y;
+
+        // Bresenham's line algorithm
+        const dx = Math.abs(x1 - x0);
+        const dy = -Math.abs(y1 - y0);
+        const sx = x0 < x1 ? 1 : -1;
+        const sy = y0 < y1 ? 1 : -1;
+        let err = dx + dy;
+
+        while (true) {
+            cells.push({ x: x0, y: y0 });
+            if (x0 === x1 && y0 === y1) break;
+            let e2 = 2 * err;
+            if (e2 >= dy) {
+                err += dy;
+                x0 += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                y0 += sy;
             }
         }
+        
         return cells;
     };
     
@@ -182,6 +195,11 @@ export default function DailyChallengePage() {
         setIsSelecting(false);
         
         const currentSelectedCells = getSelectedCells();
+        if (currentSelectedCells.length === 0) {
+            setSelection(null);
+            return;
+        }
+
         const selectedWord = currentSelectedCells.map(cell => grid[cell.y][cell.x]).join('');
         const reversedSelectedWord = selectedWord.split('').reverse().join('');
         
