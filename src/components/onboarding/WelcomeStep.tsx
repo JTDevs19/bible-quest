@@ -4,6 +4,7 @@ import { useOnboarding } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 export function WelcomeStep() {
   const { nextStep } = useOnboarding();
@@ -17,10 +18,19 @@ export function WelcomeStep() {
         <CardTitle className="font-headline text-3xl">Welcome to Bible Quests</CardTitle>
         <CardDescription className="pt-2">A journey of faith, fun, and discovery. Powered by God through AI.</CardDescription>
       </CardHeader>
-      <CardFooter>
+      <CardContent className='flex flex-col gap-4'>
         <Button onClick={nextStep} className="w-full" size="lg">
-          Begin My Journey
+          Play as Guest
         </Button>
+         <Link href="/login" passHref>
+          <Button variant="outline" className="w-full" size="lg">Login</Button>
+        </Link>
+      </CardContent>
+      <CardFooter className='flex-col gap-2'>
+        <p className="text-xs text-muted-foreground">Don't have an account?</p>
+        <Link href="/register" passHref>
+          <Button variant="link">Register here</Button>
+        </Link>
       </CardFooter>
     </Card>
   );

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useFormState } from 'react-dom';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,24 +12,17 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Sparkles } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
-import type { OnboardingData } from '@/app/page';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   spiritualNeed: z.string().min(10, 'Please describe your need in at least 10 characters.'),
 });
 
 export default function PersonalizedVersePage() {
-  const [user, setUser] = useState<OnboardingData | null>(null);
+  const { userProfile } = useAuth();
   const [recommendation, setRecommendation] = useState<PersonalizedVerseRecommendationsOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('bibleQuestsUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,7 +30,7 @@ export default function PersonalizedVersePage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
+    if (!userProfile) {
       setError("User data not found. Please complete onboarding.");
       return;
     }
@@ -48,7 +40,7 @@ export default function PersonalizedVersePage() {
     try {
       const result = await getVerseRecommendation({
         spiritualNeed: values.spiritualNeed,
-        spiritualLevel: user.spiritualLevel,
+        spiritualLevel: userProfile.spiritualLevel,
       });
       setRecommendation(result);
     } catch (e: any) {
@@ -93,7 +85,7 @@ export default function PersonalizedVersePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading || !user}>
+              <Button type="submit" className="w-full" disabled={loading || !userProfile}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 {loading ? 'Finding a Verse...' : 'Get Recommendation'}
               </Button>

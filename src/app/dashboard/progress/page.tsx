@@ -3,15 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Award, BookText, Milestone, Star, TrendingUp, Users } from 'lucide-react';
-
-type GameProgress = {
-  scores?: { [level: number]: any };
-  stars?: number;
-  total?: number; // For character adventures
-  progress?: { [level: number]: { [round: number]: boolean } }; // For bible mastery
-};
+import { useAuth } from '@/hooks/use-auth';
+import { loadGameProgress, GameProgress } from '@/lib/firestore';
 
 export default function ProgressPage() {
+  const { user } = useAuth();
   const [verseMemoryStars, setVerseMemoryStars] = useState(0);
   const [characterAdventureStars, setCharacterAdventureStars] = useState(0);
   const [bibleMasteryStars, setBibleMasteryStars] = useState(0);
@@ -19,24 +15,43 @@ export default function ProgressPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // Load Verse Memory Progress
-    const verseMemoryProgress: GameProgress | null = JSON.parse(localStorage.getItem('verseMemoryProgress') || 'null');
-    setVerseMemoryStars(verseMemoryProgress?.stars || 0);
+    async function fetchProgress() {
+        if (user) {
+            const progress = await loadGameProgress(user.uid);
+            if (progress) {
+                setVerseMemoryStars(progress.verseMemory?.stars || 0);
+                setCharacterAdventureStars(progress.characterAdventures?.total || 0);
+                
+                if (progress.bibleMastery?.progress) {
+                    const masteryStars = Object.values(progress.bibleMastery.progress)
+                        .flatMap((levelProgress: any) => Object.values(levelProgress))
+                        .filter(Boolean).length;
+                    setBibleMasteryStars(masteryStars);
+                } else {
+                    setBibleMasteryStars(0);
+                }
+            } else {
+                // Fallback to localStorage for guest or non-migrated users
+                const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || 'null');
+                setVerseMemoryStars(verseMemoryProgress?.stars || 0);
 
-    // Load Character Adventures Progress
-    const characterAdventuresProgress: GameProgress | null = JSON.parse(localStorage.getItem('characterAdventuresProgress') || 'null');
-    setCharacterAdventureStars(characterAdventuresProgress?.total || 0);
-    
-    // Load Bible Mastery Progress
-    const bibleMasteryProgress: GameProgress | null = JSON.parse(localStorage.getItem('bibleMasteryProgress') || 'null');
-    if (bibleMasteryProgress?.progress) {
-      const masteryStars = Object.values(bibleMasteryProgress.progress)
-        .flatMap(levelProgress => Object.values(levelProgress))
-        .filter(Boolean).length;
-      setBibleMasteryStars(masteryStars);
+                const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || 'null');
+                setCharacterAdventureStars(characterAdventuresProgress?.total || 0);
+                
+                const bibleMasteryProgress = JSON.parse(localStorage.getItem('bibleMasteryProgress') || 'null');
+                if (bibleMasteryProgress?.progress) {
+                    const masteryStars = Object.values(bibleMasteryProgress.progress)
+                        .flatMap((levelProgress: any) => Object.values(levelProgress))
+                        .filter(Boolean).length;
+                    setBibleMasteryStars(masteryStars);
+                } else {
+                    setBibleMasteryStars(0);
+                }
+            }
+        }
     }
-
-  }, []);
+    fetchProgress();
+  }, [user]);
 
   const totalStars = verseMemoryStars + characterAdventureStars + bibleMasteryStars;
 

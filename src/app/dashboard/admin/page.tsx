@@ -6,6 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { db } from '@/lib/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
+
 
 function Fab({ onReset }: { onReset: () => void }) {
     const [showConfirm, setShowConfirm] = useState(false);
@@ -32,7 +36,7 @@ function Fab({ onReset }: { onReset: () => void }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete all user progress data from this browser, including Verse Memory scores, stars, and levels.
+                            This action cannot be undone. This will permanently delete all your progress data from the database.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -50,11 +54,28 @@ function Fab({ onReset }: { onReset: () => void }) {
 
 export default function AdminPage() {
     const { toast } = useToast();
+    const { user } = useAuth();
 
-    const resetAllData = () => {
+    const resetAllData = async () => {
+        if (!user) {
+            toast({
+                title: "Error",
+                description: "You must be logged in to perform this action.",
+                variant: 'destructive',
+            });
+            return;
+        }
+
         try {
+            const progressDocRef = doc(db, 'progress', user.uid);
+            await deleteDoc(progressDocRef);
+            
+            // Also clear local storage as a fallback/for guests
             localStorage.removeItem('bibleQuestsUser');
             localStorage.removeItem('verseMemoryProgress');
+            localStorage.removeItem('characterAdventuresProgress');
+            localStorage.removeItem('bibleMasteryProgress');
+
             toast({
                 title: "Progress Reset",
                 description: "All user and game data has been cleared. Please refresh the page.",
@@ -81,7 +102,7 @@ export default function AdminPage() {
                     <CardDescription>Use these tools with caution.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>The buttons here perform irreversible actions. The "Reset All Progress" FAB will clear all data stored in the browser for this app.</p>
+                    <p>The buttons here perform irreversible actions. The "Reset All Progress" FAB will clear all your progress data from the database.</p>
                 </CardContent>
             </Card>
             <Fab onReset={resetAllData} />

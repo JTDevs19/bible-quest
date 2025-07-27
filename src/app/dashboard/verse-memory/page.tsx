@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/use-auth';
+import { loadGameProgress, saveGameProgress } from '@/lib/firestore';
 
 
 const verses = [
@@ -130,6 +132,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
 
 
 export default function VerseMemoryPage() {
+  const { user } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
@@ -153,22 +156,9 @@ export default function VerseMemoryPage() {
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
-
-  useEffect(() => {
-    setIsClient(true);
-    const savedProgress = localStorage.getItem('verseMemoryProgress');
-    if (savedProgress) {
-      const { level, scores, stars, reveals, hints } = JSON.parse(savedProgress);
-      setCurrentLevel(level || 1);
-      setVerseScores(scores || {});
-      setTotalStars(stars || 0);
-      setRevealsRemaining(reveals ?? INITIAL_REVEALS);
-      setHintsRemaining(hints ?? INITIAL_HINTS);
-    }
-  }, []);
-
-  const saveProgress = useCallback(() => {
-    if (!isClient) return;
+  
+  const saveProgressToDb = useCallback(async () => {
+    if (!user) return;
     const progress = {
       level: currentLevel,
       scores: verseScores,
@@ -176,20 +166,40 @@ export default function VerseMemoryPage() {
       reveals: revealsRemaining,
       hints: hintsRemaining,
     };
-    localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining, isClient]);
+    await saveGameProgress(user.uid, { verseMemory: progress });
+  }, [user, currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining]);
+
 
   useEffect(() => {
-    saveProgress();
-  }, [saveProgress]);
+    setIsClient(true);
+    async function loadProgress() {
+        if (user) {
+            const progress = await loadGameProgress(user.uid);
+            const verseMemoryProgress = progress?.verseMemory;
+            if (verseMemoryProgress) {
+                setCurrentLevel(verseMemoryProgress.level || 1);
+                setVerseScores(verseMemoryProgress.scores || {});
+                setTotalStars(verseMemoryProgress.stars || 0);
+                setRevealsRemaining(verseMemoryProgress.reveals ?? INITIAL_REVEALS);
+                setHintsRemaining(verseMemoryProgress.hints ?? INITIAL_HINTS);
+            }
+        }
+    }
+    loadProgress();
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+        saveProgressToDb();
+    }
+  }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgressToDb, user]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
     return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
   };
   
   const resetAllProgress = () => {
-    if (!isClient) return;
-    localStorage.removeItem('verseMemoryProgress');
+    if (!user) return;
     setCurrentLevel(1);
     setCurrentVerseIndex(0);
     setVerseScores({});
@@ -202,7 +212,7 @@ export default function VerseMemoryPage() {
   };
   
   const resetCurrentLevelProgress = () => {
-      if (!isClient) return;
+      if (!user) return;
       const newScores = { ...verseScores };
       delete newScores[currentLevel];
       
@@ -275,7 +285,7 @@ export default function VerseMemoryPage() {
     if (verse) {
       setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
     }
-  }, [currentVerseIndex, currentLevel, isClient]);
+  }, [currentVerseIndex, currentLevel, isClient, verseScores]);
 
   useEffect(() => {
     setupRound();
@@ -310,6 +320,9 @@ export default function VerseMemoryPage() {
     setEditingIndex(null);
 
     const score = calculateScore(userInputs);
+    
+    setAttemptScore(score); // Set score immediately
+
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
     if (score > oldScore) {
@@ -334,8 +347,6 @@ export default function VerseMemoryPage() {
     else {
       setGameState('incorrect');
     }
-
-    setAttemptScore(score);
   };
   
   useEffect(() => {
@@ -370,7 +381,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev + 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
   
@@ -692,13 +703,13 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || ((gameState === 'scored' || gameState === 'incorrect') && attemptScore < 3) ? (
+               {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
                     userInputs={userInputs} 
                     missingWords={missingWords}
-                    showCorrectAnswer={gameState === 'revealed'}
+                    showCorrectAnswer={false} 
                   />
                ) : (
                   <>
@@ -709,7 +720,7 @@ export default function VerseMemoryPage() {
              </CardContent>
           </Card>
           <AlertDialogFooter>
-            {gameState === 'incorrect' || (gameState === 'scored' && attemptScore < 3) ? (
+            {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
             <AlertDialogAction onClick={handleNext}>
@@ -794,6 +805,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-
-

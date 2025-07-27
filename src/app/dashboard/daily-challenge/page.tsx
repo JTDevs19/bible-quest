@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Gift, Star, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/use-auth';
+import { loadGameProgress, saveGameProgress } from '@/lib/firestore';
 
 const words = [
     "DAVID", "MOSES", "ABRAHAM", "ESTHER", "RUTH", "SAMSON", "GIDEON", "JONAH", "DANIEL",
@@ -101,6 +103,7 @@ const generateGrid = (seed: number) => {
 type Cell = { x: number, y: number };
 
 export default function DailyChallengePage() {
+    const { user } = useAuth();
     const [isClient, setIsClient] = useState(false);
     const [lastPlayed, setLastPlayed] = useState<string | null>(null);
     const [isSelecting, setIsSelecting] = useState(false);
@@ -117,30 +120,38 @@ export default function DailyChallengePage() {
     
     useEffect(() => {
         setIsClient(true);
-        const savedLastPlayed = localStorage.getItem('dailyChallengeLastPlayed');
-        if (savedLastPlayed) {
-            setLastPlayed(savedLastPlayed);
-            const progress = JSON.parse(localStorage.getItem(`dailyChallengeProgress_${savedLastPlayed}`) || '{}');
-            setFoundWords(progress.words || []);
-            setFoundCells(progress.cells || []);
+        async function loadProgressFromDb() {
+            if (user) {
+                const progress = await loadGameProgress(user.uid);
+                const dailyProgress = progress?.dailyChallenge;
+                if (dailyProgress && dailyProgress.lastPlayed) {
+                    setLastPlayed(dailyProgress.lastPlayed);
+                    if (dailyProgress.lastPlayed === today) {
+                        setFoundWords(dailyProgress.words || []);
+                        setFoundCells(dailyProgress.cells || []);
+                    }
+                }
+            }
         }
-    }, []);
+        loadProgressFromDb();
+    }, [user, today]);
 
     const canPlay = lastPlayed !== today || foundWords.length < dailyWords.length;
     const isCompletedToday = lastPlayed === today && foundWords.length === dailyWords.length;
 
-    const saveProgress = useCallback(() => {
-        if (!isClient || !canPlay) return;
+    const saveProgress = useCallback(async () => {
+        if (!isClient || !canPlay || !user) return;
         const progress = {
+            lastPlayed: today,
             words: foundWords,
             cells: foundCells
         };
-        localStorage.setItem(`dailyChallengeProgress_${today}`, JSON.stringify(progress));
-    }, [isClient, canPlay, today, foundWords, foundCells]);
+        await saveGameProgress(user.uid, { dailyChallenge: progress });
+    }, [isClient, canPlay, today, foundWords, foundCells, user]);
     
     useEffect(() => {
-        saveProgress();
-    }, [foundWords, foundCells, saveProgress]);
+        if (user) saveProgress();
+    }, [foundWords, foundCells, saveProgress, user]);
     
     const getSelectedCells = () => {
         if (!selection) return [];
@@ -190,7 +201,7 @@ export default function DailyChallengePage() {
         }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
         if (!isSelecting || !selection) return;
         setIsSelecting(false);
         
@@ -206,19 +217,20 @@ export default function DailyChallengePage() {
         const wordFound = dailyWords.find(w => w === selectedWord || w === reversedSelectedWord);
 
         if (wordFound && !foundWords.includes(wordFound)) {
-            setFoundWords(prev => [...prev, wordFound]);
+            const newFoundWords = [...foundWords, wordFound];
+            setFoundWords(newFoundWords);
             setFoundCells(prev => [...prev, ...currentSelectedCells]);
 
-            if (foundWords.length + 1 === dailyWords.length) {
-                // Completed!
+            if (newFoundWords.length === dailyWords.length) {
                 setLastPlayed(today);
-                localStorage.setItem('dailyChallengeLastPlayed', today);
                 
-                // Add stars
-                const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-                const currentStars = verseMemoryProgress.stars || 0;
-                verseMemoryProgress.stars = currentStars + BONUS_STARS;
-                localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
+                if (user) {
+                    const progress = await loadGameProgress(user.uid);
+                    const verseMemoryProgress = progress?.verseMemory || { stars: 0 };
+                    const currentStars = verseMemoryProgress.stars || 0;
+                    verseMemoryProgress.stars = currentStars + BONUS_STARS;
+                    await saveGameProgress(user.uid, { verseMemory: verseMemoryProgress });
+                }
             }
         }
         setSelection(null);

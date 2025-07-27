@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/hooks/use-auth';
+import { saveGameProgress, loadGameProgress } from '@/lib/firestore';
 
 
 const triviaLevels = [
@@ -153,6 +155,7 @@ const MAX_LEVEL = 5;
 type LevelScores = { [level: number]: number };
 
 export default function CharacterAdventuresPage() {
+    const { user } = useAuth();
     const [isClient, setIsClient] = useState(false);
     const [currentLevel, setCurrentLevel] = useState(1);
     const [levelScores, setLevelScores] = useState<LevelScores>({});
@@ -168,41 +171,45 @@ export default function CharacterAdventuresPage() {
     const [showTriviaDialog, setShowTriviaDialog] = useState(false);
     const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
     
-    // Load progress from localStorage
     useEffect(() => {
         setIsClient(true);
-        const savedProgress = localStorage.getItem('characterAdventuresProgress');
-        if (savedProgress) {
-            const { scores, total } = JSON.parse(savedProgress);
-            setLevelScores(scores);
-            setTotalScore(total);
-            
-            // Determine the highest unlocked level
-            let highestUnlocked = 1;
-            for (let i = 1; i <= MAX_LEVEL; i++) {
-                if(scores[i-1] >= LEVEL_PASS_SCORE) {
-                    highestUnlocked = i + 1;
-                } else {
-                    break;
+        async function loadProgressFromDb() {
+            if (user) {
+                const progress = await loadGameProgress(user.uid);
+                const charAdvProgress = progress?.characterAdventures;
+                if (charAdvProgress) {
+                    setLevelScores(charAdvProgress.scores || {});
+                    setTotalScore(charAdvProgress.total || 0);
+
+                    let highestUnlocked = 1;
+                    for (let i = 1; i <= MAX_LEVEL; i++) {
+                        if((charAdvProgress.scores?.[i-1] || 0) >= LEVEL_PASS_SCORE) {
+                            highestUnlocked = i + 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
                 }
             }
-            setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
         }
-    }, []);
+        loadProgressFromDb();
+    }, [user]);
 
-    // Save progress to localStorage
-    const saveProgress = useCallback(() => {
-        if (!isClient) return;
+    const saveProgress = useCallback(async () => {
+        if (!isClient || !user) return;
         const progress = {
             scores: levelScores,
             total: totalScore,
         };
-        localStorage.setItem('characterAdventuresProgress', JSON.stringify(progress));
-    }, [levelScores, totalScore, isClient]);
+        await saveGameProgress(user.uid, { characterAdventures: progress });
+    }, [levelScores, totalScore, isClient, user]);
 
     useEffect(() => {
-        saveProgress();
-    }, [saveProgress]);
+        if (isClient && user) {
+            saveProgress();
+        }
+    }, [saveProgress, isClient, user]);
 
     const activeTriviaLevels = language === 'en' ? triviaLevels : triviaLevelsFilipino;
     const triviaQuestions = activeTriviaLevels[currentLevel - 1] || [];
@@ -241,14 +248,12 @@ export default function CharacterAdventuresPage() {
     const handleNextQuestion = () => {
         setShowTriviaDialog(false);
 
-        // A delay to allow the dialog to close before re-rendering
         setTimeout(() => {
             if (currentQuestionIndex < triviaQuestions.length - 1) {
                 setCurrentQuestionIndex(prevIndex => prevIndex + 1);
                 setIsAnswered(false);
                 setSelectedAnswer(null);
             } else {
-                // Update scores after finishing a level
                 const oldLevelScore = levelScores[currentLevel] || 0;
                 if (currentLevelScore > oldLevelScore) {
                     setLevelScores(prev => ({ ...prev, [currentLevel]: currentLevelScore }));
@@ -476,7 +481,3 @@ export default function CharacterAdventuresPage() {
     </div>
   );
 }
-
-    
-
-    

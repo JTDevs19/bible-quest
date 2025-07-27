@@ -15,20 +15,13 @@ import { LambIcon } from '../icons/LambIcon';
 import { DoveIcon } from '../icons/DoveIcon';
 import { CrossIcon } from '../icons/CrossIcon';
 
-const avatars = [
-  { name: 'Lion of Judah', icon: LionIcon },
-  { name: 'Lamb of God', icon: LambIcon },
-  { name: 'Holy Spirit Dove', icon: DoveIcon },
-  { name: 'The Cross', icon: CrossIcon },
-];
-
 const profileSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters.').max(20, 'Username must be 20 characters or less.'),
   avatar: z.string().nonempty('Please select an avatar.'),
 });
 
 export function ProfileStep() {
-  const { nextStep, prevStep, data, setData } = useOnboarding();
+  const { prevStep, data, setData, finishOnboardingAsGuest } = useOnboarding();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -38,16 +31,16 @@ export function ProfileStep() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof profileSchema>) => {
+  const onSubmit = async (values: z.infer<typeof profileSchema>) => {
     setData((prev) => ({ ...prev, ...values }));
-    nextStep();
+    await finishOnboardingAsGuest();
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Create Your Profile</CardTitle>
-        <CardDescription>Create a sense of identity and fun for your journey.</CardDescription>
+        <CardTitle className="font-headline text-2xl">Create Your Guest Profile</CardTitle>
+        <CardDescription>Create a sense of identity for your guest session. You can register to save progress permanently.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

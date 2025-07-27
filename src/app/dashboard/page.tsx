@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { type OnboardingData } from '../page';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookText, Users, Milestone, Sparkles, User, Calendar, Shield, Target } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import type { UserProfile } from '@/lib/firestore';
 
 const focusIcons: { [key: string]: React.ElementType } = {
   'Memorizing Bible Verses': BookText,
@@ -14,30 +15,25 @@ const focusIcons: { [key: string]: React.ElementType } = {
 };
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<OnboardingData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, userProfile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('bibleQuestsUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
+    if (!loading && !user) {
       router.push('/');
     }
-    setLoading(false);
-  }, [router]);
+  }, [user, loading, router]);
 
-  if (loading || !user) {
-    return <div>Loading...</div>;
+  if (loading || !user || !userProfile) {
+    return <div>Loading Dashboard...</div>;
   }
 
-  const FocusIcon = focusIcons[user.focus] || Target;
+  const FocusIcon = focusIcons[userProfile.focus] || Target;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold font-headline tracking-tight">Welcome back, {user.username}!</h1>
+        <h1 className="text-3xl font-bold font-headline tracking-tight">Welcome back, {userProfile.username}!</h1>
         <p className="text-muted-foreground">Ready to continue your journey in God's Word?</p>
       </div>
 
@@ -48,8 +44,8 @@ export default function DashboardPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.username}</div>
-            <p className="text-xs text-muted-foreground">{user.avatar}</p>
+            <div className="text-2xl font-bold">{userProfile.username}</div>
+            <p className="text-xs text-muted-foreground">{userProfile.avatar}</p>
           </CardContent>
         </Card>
         <Card>
@@ -58,7 +54,7 @@ export default function DashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.ageGroup}</div>
+            <div className="text-2xl font-bold">{userProfile.ageGroup}</div>
              <p className="text-xs text-muted-foreground">Content tailored for you</p>
           </CardContent>
         </Card>
@@ -68,7 +64,7 @@ export default function DashboardPage() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.spiritualLevel}</div>
+            <div className="text-2xl font-bold">{userProfile.spiritualLevel}</div>
              <p className="text-xs text-muted-foreground">Challenges match your pace</p>
           </CardContent>
         </Card>
@@ -78,7 +74,7 @@ export default function DashboardPage() {
             <FocusIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{user.focus}</div>
+            <div className="text-2xl font-bold">{userProfile.focus}</div>
             <p className="text-xs text-muted-foreground">Your chosen path for spiritual growth</p>
           </CardContent>
         </Card>

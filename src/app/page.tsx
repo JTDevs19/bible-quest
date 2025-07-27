@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext, type Dispatch, type SetStateAction } from 'react';
+import { useState, createContext, useContext, type Dispatch, type SetStateAction, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { AgeStep } from '@/components/onboarding/AgeStep';
@@ -9,6 +9,12 @@ import { FocusStep } from '@/components/onboarding/FocusStep';
 import { ProfileStep } from '@/components/onboarding/ProfileStep';
 import { FinalStep } from '@/components/onboarding/FinalStep';
 import { Progress } from '@/components/ui/progress';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { signInAnonymously } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { saveUserProfile } from '@/lib/firestore';
+
 
 export interface OnboardingData {
   ageGroup: string;
@@ -24,6 +30,7 @@ interface OnboardingContextType {
   nextStep: () => void;
   prevStep: () => void;
   step: number;
+  finishOnboardingAsGuest: () => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
@@ -56,11 +63,45 @@ export default function OnboardingPage() {
     username: '',
     avatar: 'Lion of Judah',
   });
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  
+  useEffect(() => {
+    if(!loading && user) {
+        router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, TotalSteps));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  
+  const finishOnboardingAsGuest = async () => {
+    try {
+        const userCredential = await signInAnonymously(auth);
+        const guestUser = userCredential.user;
+        
+        await saveUserProfile(guestUser.uid, {
+            username: data.username,
+            avatar: data.avatar,
+            ageGroup: data.ageGroup,
+            spiritualLevel: data.spiritualLevel,
+            focus: data.focus
+        });
+        
+        localStorage.setItem('bibleQuestsUser', JSON.stringify(data)); // Keep for quick access if needed, but Firestore is source of truth
+        nextStep();
 
-  const contextValue = { data, setData, nextStep, prevStep, step };
+    } catch (error) {
+        console.error("Error signing in as guest:", error);
+    }
+  }
+
+  const contextValue = { data, setData, nextStep, prevStep, step, finishOnboardingAsGuest };
+  
+  if (loading || user) {
+      return <div className="flex items-center justify-center h-screen">Loading...</div>
+  }
 
   return (
     <OnboardingContext.Provider value={contextValue}>

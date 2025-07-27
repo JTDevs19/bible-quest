@@ -4,18 +4,11 @@ import { useOnboarding } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
 export function FinalStep() {
   const { data } = useOnboarding();
   const router = useRouter();
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('bibleQuestsUser', JSON.stringify(data));
-    }
-  }, [data]);
 
   const handleStart = () => {
     router.push('/dashboard');

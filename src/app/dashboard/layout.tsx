@@ -20,7 +20,7 @@ import {
   Milestone,
   Sparkles,
   TrendingUp,
-  UserCircle,
+  UserPlus,
   LogOut,
   Cog,
   Gift,
@@ -28,76 +28,91 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { type OnboardingData } from '../page';
 import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { loadGameProgress, GameProgress } from '@/lib/firestore';
 
 const STARS_TO_UNLOCK_LEVEL_4 = 90; 
-
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
-  {
-    href: '/dashboard/character-adventures',
-    icon: Users,
-    label: 'Character Adventures',
-    isLocked: 'verseMemory',
-  },
-  { 
-    href: '/dashboard/bible-mastery', 
-    icon: Milestone, 
-    label: 'Bible Mastery',
-  },
-  { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
-  { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
-  { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
-];
-
+const PERFECT_SCORE_PER_LEVEL = 10;
+const TOTAL_ADVENTURE_LEVELS = 5;
 
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const [characterAdventuresUnlocked, setCharacterAdventuresUnlocked] = useState(false);
-  
+  const { user } = useAuth();
+  const [gameProgress, setGameProgress] = useState<GameProgress | null>(null);
+
   useEffect(() => {
-    // Check for Character Adventures unlock
-    const verseMemoryProgress = localStorage.getItem('verseMemoryProgress');
-    if (verseMemoryProgress) {
-      const { stars } = JSON.parse(verseMemoryProgress);
-      if (stars >= STARS_TO_UNLOCK_LEVEL_4) {
-        setCharacterAdventuresUnlocked(true);
+    async function fetchProgress() {
+      if (user) {
+        const progress = await loadGameProgress(user.uid);
+        setGameProgress(progress);
+
+        // Fallback to localStorage if Firestore is empty (for guest users migrating)
+        if (!progress) {
+          const localProgress = {
+            verseMemory: JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}'),
+            characterAdventures: JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}'),
+            bibleMastery: JSON.parse(localStorage.getItem('bibleMasteryProgress') || '{}'),
+          };
+          setGameProgress(localProgress);
+        }
       }
     }
-  }, []);
+    fetchProgress();
+  }, [user]);
+
+  const verseMemoryStars = gameProgress?.verseMemory?.stars || 0;
+  
+  const characterAdventuresUnlocked = verseMemoryStars >= STARS_TO_UNLOCK_LEVEL_4;
+
+  const characterScores = gameProgress?.characterAdventures?.scores || {};
+  const completedAdventures = Object.keys(characterScores).filter(level => characterScores[level] === PERFECT_SCORE_PER_LEVEL).length;
+  const bibleMasteryUnlocked = completedAdventures >= TOTAL_ADVENTURE_LEVELS;
+
+  const navItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
+    {
+      href: '/dashboard/character-adventures',
+      icon: Users,
+      label: 'Character Adventures',
+      isLocked: !characterAdventuresUnlocked,
+      tooltipText: 'Unlock at Verse Memory Lvl 4'
+    },
+    { 
+      href: '/dashboard/bible-mastery', 
+      icon: Milestone, 
+      label: 'Bible Mastery',
+      isLocked: !bibleMasteryUnlocked,
+      tooltipText: 'Master all Character Adventures first'
+    },
+    { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
+    { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
+    { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+  ];
 
   return (
      <SidebarMenu>
       {navItems.map((item) => {
-        let isLocked = false;
-        let tooltipText = item.label;
-
-        if (item.isLocked === 'verseMemory' && !characterAdventuresUnlocked) {
-          isLocked = true;
-          tooltipText = `${item.label} (Unlock at Verse Memory Lvl 4)`;
-        }
-
         const buttonContent = (
           <SidebarMenuButton
             isActive={pathname === item.href}
-            tooltip={tooltipText}
-            onClick={() => !isLocked && setOpenMobile(false)}
-            disabled={isLocked}
-            className={cn(isLocked && "text-muted-foreground/50 cursor-not-allowed")}
+            tooltip={item.isLocked ? `${item.label} (${item.tooltipText})` : item.label}
+            onClick={() => !item.isLocked && setOpenMobile(false)}
+            disabled={item.isLocked}
+            className={cn(item.isLocked && "text-muted-foreground/50 cursor-not-allowed")}
           >
-            {isLocked ? <Lock /> : <item.icon />}
+            {item.isLocked ? <Lock /> : <item.icon />}
             <span>{item.label}</span>
           </SidebarMenuButton>
         );
 
         return (
           <SidebarMenuItem key={item.href}>
-            {isLocked ? (
+            {item.isLocked ? (
               <div>{buttonContent}</div>
             ) : (
               <Link href={item.href} passHref>
@@ -117,20 +132,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [user, setUser] = useState<OnboardingData | null>(null);
-
+  const { user, userProfile, loading, signOut } = useAuth();
+  
   useEffect(() => {
-    const storedUser = localStorage.getItem('bibleQuestsUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
+    if (!loading && !user) {
       router.push('/');
     }
-  }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('bibleQuestsUser');
-    router.push('/');
+  }, [user, loading, router]);
+  
+  if (loading || !user) {
+    return <div className="flex h-screen items-center justify-center">Loading Dashboard...</div>
   }
 
   return (
@@ -150,6 +161,16 @@ export default function DashboardLayout({
         <SidebarFooter>
           <div className="border-t border-border -mx-2 pt-2">
              <SidebarMenu>
+                {user.isAnonymous && (
+                   <SidebarMenuItem>
+                      <Link href="/register">
+                        <SidebarMenuButton tooltip="Register to Save Progress">
+                            <UserPlus/>
+                            <span>Register Account</span>
+                        </SidebarMenuButton>
+                      </Link>
+                   </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <Link href="/dashboard/admin">
                     <SidebarMenuButton tooltip="Administration">
@@ -159,7 +180,7 @@ export default function DashboardLayout({
                   </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleLogout} tooltip="Logout">
+                  <SidebarMenuButton onClick={signOut} tooltip="Logout">
                     <LogOut/>
                     <span>Logout</span>
                   </SidebarMenuButton>
@@ -173,9 +194,9 @@ export default function DashboardLayout({
            <SidebarTrigger className="md:hidden" />
            <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarFallback>{user?.username?.[0].toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{userProfile?.username?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
-            <span className="font-semibold">{user?.username}</span>
+            <span className="font-semibold">{userProfile?.username}</span>
            </div>
         </header>
         <main className="flex-1 p-4 md:p-6">{children}</main>
