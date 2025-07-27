@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from "@/hooks/use-toast"
+import { motion } from 'framer-motion';
 
 const verses = [
   {
@@ -143,11 +145,11 @@ export default function VerseMemoryPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [showPerfectScoreDialog, setShowPerfectScoreDialog] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
+  const { toast } = useToast();
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -244,7 +246,6 @@ export default function VerseMemoryPage() {
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setShowSummaryDialog(false);
-    setShowPerfectScoreDialog(false);
 
     if (isMastered || !verse) {
         setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
@@ -313,11 +314,8 @@ export default function VerseMemoryPage() {
     }, 0);
     
     if (correctCount === missingWords.length) return 3;
-
-    const accuracy = correctCount / missingWords.length;
-
-    if (accuracy >= 0.5) return 2;
-    if (accuracy > 0) return 1;
+    if (correctCount > 0 && correctCount / missingWords.length >= 0.5) return 2;
+    if (correctCount > 0) return 1;
     return 0;
   }, [missingWords]);
   
@@ -363,7 +361,25 @@ export default function VerseMemoryPage() {
     
     if (score === STARS_PER_VERSE) {
         setIsVerseMastered(true);
-        setShowPerfectScoreDialog(true);
+        setGameState('scored');
+        toast({
+            title: (
+                <div className="flex items-center gap-2 font-headline">
+                    <Trophy className="text-primary" />
+                    Verse Mastered!
+                </div>
+            ),
+            description: (
+                 <div className="flex items-center gap-2">
+                    Congratulations! You earned 3 stars!
+                     <motion.div className="flex" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, staggerChildren: 0.1 }}>
+                        <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
+                        <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
+                        <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
+                     </motion.div>
+                 </div>
+            ),
+        });
     } else {
         setGameState(score > 0 ? 'scored' : 'incorrect');
         setShowSummaryDialog(true);
@@ -372,7 +388,6 @@ export default function VerseMemoryPage() {
   
   const handleNext = () => {
     setShowSummaryDialog(false);
-    setShowPerfectScoreDialog(false);
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
@@ -557,7 +572,6 @@ export default function VerseMemoryPage() {
 
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
-      if (attemptScore === 3) return "Perfect score! You're a true scripture scholar!";
       if (attemptScore >= 2) return "Great job! Keep going!";
       if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
       return "Keep trying! Memorization is a journey. You can do it!";
@@ -684,11 +698,12 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
            {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
-            {gameState !== 'incorrect' ? (
+            {gameState !== 'incorrect' && attemptScore !== 3 ? (
                 <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
                     Check My Answer
                 </Button>
-            ) : (
+            ) : null}
+             {gameState === 'incorrect' && (
                 <Button onClick={tryAgain} variant="destructive">
                     <RefreshCw className="mr-2 h-4 w-4" /> Try Again
                 </Button>
@@ -716,7 +731,7 @@ export default function VerseMemoryPage() {
             </AlertDialogTitle>
             <div className="flex justify-center py-4">
               {Array.from({length: 3}).map((_, i) => (
-                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300")} />
+                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
               ))}
             </div>
             <AlertDialogDescription className="text-center text-base">
@@ -749,36 +764,12 @@ export default function VerseMemoryPage() {
             {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
-            <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0}>
+            <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0 && gameState !== 'revealed'}>
                 {currentVerseIndex === verses.length - 1 ? (
                     totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL ? "Start Next Level!" : "Finish Level"
                 ) : "Next Verse"}
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      <AlertDialog open={showPerfectScoreDialog} onOpenChange={setShowPerfectScoreDialog}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
-                    <Trophy className="w-10 h-10 text-primary" />
-                </div>
-                <AlertDialogTitle className="font-headline text-3xl text-center">Verse Mastered!</AlertDialogTitle>
-                <div className="flex justify-center py-2">
-                    {Array.from({length: 3}).map((_, i) => (
-                        <Star key={i} className="h-12 w-12 text-yellow-400 fill-yellow-400" />
-                    ))}
-                </div>
-                <AlertDialogDescription className="text-center text-base pt-2">
-                    Congratulations! You earned 3 stars and perfected {currentVerse.reference}.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogAction onClick={handleNext} className="w-full">
-                    {currentVerseIndex === verses.length - 1 ? "Finish Level" : "Next Verse"}
-                </AlertDialogAction>
-            </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -855,3 +846,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
