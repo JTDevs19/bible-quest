@@ -33,6 +33,10 @@ import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
+const STARS_TO_UNLOCK_LEVEL_4 = 90; // 3 levels * 10 verses/level * 3 stars/verse
+const PERFECT_SCORE_PER_LEVEL = 10;
+const TOTAL_ADVENTURE_LEVELS = 5;
+
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
@@ -40,22 +44,28 @@ const navItems = [
     href: '/dashboard/character-adventures',
     icon: Users,
     label: 'Character Adventures',
-    isLocked: true,
+    isLocked: 'verseMemory',
   },
-  { href: '/dashboard/bible-mastery', icon: Milestone, label: 'Bible Mastery' },
+  { 
+    href: '/dashboard/bible-mastery', 
+    icon: Milestone, 
+    label: 'Bible Mastery',
+    isLocked: 'characterAdventures',
+  },
   { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
   { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
   { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
 ];
 
-const STARS_TO_UNLOCK_LEVEL_4 = 90; // 3 levels * 10 verses/level * 3 stars/verse
 
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const [characterAdventuresUnlocked, setCharacterAdventuresUnlocked] = useState(false);
+  const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
 
   useEffect(() => {
+    // Check for Character Adventures unlock
     const verseMemoryProgress = localStorage.getItem('verseMemoryProgress');
     if (verseMemoryProgress) {
       const { stars } = JSON.parse(verseMemoryProgress);
@@ -63,16 +73,44 @@ function DashboardNav() {
         setCharacterAdventuresUnlocked(true);
       }
     }
+    
+    // Check for Bible Mastery unlock
+    const characterAdventuresProgress = localStorage.getItem('characterAdventuresProgress');
+    if(characterAdventuresProgress) {
+        const { scores } = JSON.parse(characterAdventuresProgress);
+        if(scores) {
+            let completedLevels = 0;
+            for(let i=1; i<= TOTAL_ADVENTURE_LEVELS; i++) {
+                if(scores[i] === PERFECT_SCORE_PER_LEVEL) {
+                    completedLevels++;
+                }
+            }
+            if(completedLevels === TOTAL_ADVENTURE_LEVELS) {
+                setBibleMasteryUnlocked(true);
+            }
+        }
+    }
+
   }, []);
 
   return (
      <SidebarMenu>
       {navItems.map((item) => {
-        const isLocked = item.isLocked && !characterAdventuresUnlocked;
+        let isLocked = false;
+        let tooltipText = item.label;
+
+        if (item.isLocked === 'verseMemory' && !characterAdventuresUnlocked) {
+          isLocked = true;
+          tooltipText = `${item.label} (Unlock at Verse Memory Lvl 4)`;
+        } else if (item.isLocked === 'characterAdventures' && !bibleMasteryUnlocked) {
+          isLocked = true;
+          tooltipText = `${item.label} (Complete all Character Adventures levels with a perfect score)`;
+        }
+
         const buttonContent = (
           <SidebarMenuButton
             isActive={pathname === item.href}
-            tooltip={isLocked ? `${item.label} (Unlock at Verse Memory Lvl 4)` : item.label}
+            tooltip={tooltipText}
             onClick={() => !isLocked && setOpenMobile(false)}
             disabled={isLocked}
             className={cn(isLocked && "text-muted-foreground/50 cursor-not-allowed")}
