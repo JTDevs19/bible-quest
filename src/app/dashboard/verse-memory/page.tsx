@@ -351,7 +351,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex + 1);
+      setCurrentVerseIndex(currentVerseIndex - 1);
     }
   };
   
@@ -606,11 +606,11 @@ export default function VerseMemoryPage() {
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Use a Hint?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <div className="text-sm text-muted-foreground">
                             <div>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</div>
                             <div className="font-bold mt-2">You have {hintsRemaining} hint(s) remaining for this round.</div>
                             <div>Are you sure you want to use a hint?</div>
-                        </AlertDialogDescription>
+                        </div>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
