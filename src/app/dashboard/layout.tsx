@@ -1,3 +1,4 @@
+
 'use client';
 import {
   SidebarProvider,
@@ -23,38 +24,76 @@ import {
   LogOut,
   Cog,
   Gift,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { type OnboardingData } from '../page';
 import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
-  { href: '/dashboard/character-adventures', icon: Users, label: 'Character Adventures' },
+  {
+    href: '/dashboard/character-adventures',
+    icon: Users,
+    label: 'Character Adventures',
+    isLocked: true,
+  },
   { href: '/dashboard/bible-mastery', icon: Milestone, label: 'Bible Mastery' },
   { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
   { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
   { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
 ];
 
+const STARS_TO_UNLOCK_LEVEL_4 = 90; // 3 levels * 10 verses/level * 3 stars/verse
+
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
+  const [characterAdventuresUnlocked, setCharacterAdventuresUnlocked] = useState(false);
+
+  useEffect(() => {
+    const verseMemoryProgress = localStorage.getItem('verseMemoryProgress');
+    if (verseMemoryProgress) {
+      const { stars } = JSON.parse(verseMemoryProgress);
+      if (stars >= STARS_TO_UNLOCK_LEVEL_4) {
+        setCharacterAdventuresUnlocked(true);
+      }
+    }
+  }, []);
+
   return (
      <SidebarMenu>
-      {navItems.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <Link href={item.href} passHref>
-            <SidebarMenuButton isActive={pathname === item.href} tooltip={item.label} onClick={() => setOpenMobile(false)}>
-              <item.icon />
-              <span>{item.label}</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-      ))}
+      {navItems.map((item) => {
+        const isLocked = item.isLocked && !characterAdventuresUnlocked;
+        const buttonContent = (
+          <SidebarMenuButton
+            isActive={pathname === item.href}
+            tooltip={isLocked ? `${item.label} (Unlock at Verse Memory Lvl 4)` : item.label}
+            onClick={() => !isLocked && setOpenMobile(false)}
+            disabled={isLocked}
+            className={cn(isLocked && "text-muted-foreground/50 cursor-not-allowed")}
+          >
+            {isLocked ? <Lock /> : <item.icon />}
+            <span>{item.label}</span>
+          </SidebarMenuButton>
+        );
+
+        return (
+          <SidebarMenuItem key={item.href}>
+            {isLocked ? (
+              <div>{buttonContent}</div>
+            ) : (
+              <Link href={item.href} passHref>
+                {buttonContent}
+              </Link>
+            )}
+          </SidebarMenuItem>
+        );
+      })}
     </SidebarMenu>
   )
 }
