@@ -212,7 +212,6 @@ export default function VerseMemoryPage() {
       setTotalStars(newTotalStars);
       setCurrentVerseIndex(0);
       setShowResetConfirm(null);
-      setupRound();
   };
 
   const setupRoundLogic = (verse: typeof verses[number], level: number, scores: VerseScores, verseIdx: number) => {
@@ -278,7 +277,7 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     setupRound();
-  }, [setupRound, verseScores]);
+  }, [setupRound]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -307,9 +306,8 @@ export default function VerseMemoryPage() {
  const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
     setEditingIndex(null);
-    const score = calculateScore(userInputs);
-    setAttemptScore(score);
 
+    const score = calculateScore(userInputs);
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
     if (score > oldScore) {
@@ -328,12 +326,21 @@ export default function VerseMemoryPage() {
     if (score === 3) {
       setGameState('scored');
       setIsVerseMastered(true);
-    } else {
+    } else if (score > 0) {
+      setGameState('scored');
+    }
+    else {
       setGameState('incorrect');
     }
 
-    setShowSummaryDialog(true);
+    setAttemptScore(score);
   };
+  
+  useEffect(() => {
+    if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
+      setShowSummaryDialog(true);
+    }
+  }, [gameState, attemptScore]);
 
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -381,7 +388,6 @@ export default function VerseMemoryPage() {
     setAttemptScore(0);
     setGameState('revealed');
     setEditingIndex(null);
-    setShowSummaryDialog(true);
   }
 
   const handleTradeForReveals = () => {
@@ -684,7 +690,7 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || ((gameState === 'incorrect' || gameState === 'scored') && attemptScore < 3) ? (
+               {gameState === 'revealed' || ((gameState === 'scored' || gameState === 'incorrect') && attemptScore < 3) ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
@@ -785,4 +791,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
 
