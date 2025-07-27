@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 const triviaLevels = [
   // Level 1
@@ -176,6 +177,7 @@ export default function CharacterAdventuresPage() {
     const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
     
     const router = useRouter();
+    const { toast } = useToast();
 
     const saveProgress = useCallback(() => {
         if (!isClient) return;
@@ -280,32 +282,22 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
-        let isUnlocked = level === 1 || ((levelScores[level - 1] || 0) >= LEVEL_PASS_SCORE);
+        const levelOnePassed = (levelScores[level - 2] || 0) >= LEVEL_PASS_SCORE;
+        let isUnlocked = level === 1 || levelOnePassed;
+
         if (level > 1) {
-            isUnlocked = isUnlocked && verseMemoryCompleted;
+          isUnlocked = isUnlocked && verseMemoryCompleted;
         }
 
         if (isUnlocked) {
             startLevel(level);
         } else {
-            // Optional: show a toast or alert telling the user what's required
-            if (!verseMemoryCompleted) {
-                const alert = document.createElement('div');
-                alert.innerHTML = `
-                    <div
-                        role="alert"
-                        class="fixed top-5 right-5 w-auto rounded-lg border bg-background text-foreground p-4 shadow-lg animate-in fade-in-0 zoom-in-95"
-                    >
-                        <h5 class="mb-1 font-medium leading-none tracking-tight">Level Locked</h5>
-                        <div class="text-sm [&_p]:leading-relaxed">
-                            You must master all verses in the Verse Memory game first!
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(alert.firstChild!);
-                setTimeout(() => {
-                    alert.firstChild?.remove();
-                }, 3000);
+            if (!verseMemoryCompleted && levelOnePassed) {
+                 toast({
+                    title: 'Level Locked',
+                    description: 'You must master all verses in the Verse Memory game first!',
+                    variant: 'destructive',
+                });
             }
         }
     }
