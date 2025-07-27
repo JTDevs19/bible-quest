@@ -162,6 +162,7 @@ export default function VerseMemoryPage() {
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
   const [showUnlockDialog, setShowUnlockDialog] = useState(false);
+  const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -411,18 +412,25 @@ export default function VerseMemoryPage() {
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
-       const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
-       if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
-          setCurrentLevel(l => {
-            const newLevel = l + 1;
-            const firstUnfinished = findFirstUnfinishedVerse(newLevel, verseScores);
-            setCurrentVerseIndex(firstUnfinished);
-            return newLevel;
-          });
-       } else {
+        setShowLevelCompleteDialog(true);
+    }
+  };
+
+  const startNextLevel = () => {
+    setShowLevelCompleteDialog(false);
+    const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
+    if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
+        setCurrentLevel(l => {
+        const newLevel = l + 1;
+        const firstUnfinished = findFirstUnfinishedVerse(newLevel, verseScores);
+        setCurrentVerseIndex(firstUnfinished);
+        return newLevel;
+        });
+    } else {
+        // This case handles finishing the last level, or if they haven't unlocked the next one.
+        // It just resets to the first unfinished verse of the current level.
         const firstUnfinished = findFirstUnfinishedVerse(currentLevel, verseScores);
         setCurrentVerseIndex(firstUnfinished); 
-       }
     }
   };
 
@@ -434,7 +442,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev + 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
   
@@ -599,6 +607,8 @@ export default function VerseMemoryPage() {
 
   const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+  const canUnlockNextLevel = totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL;
+
 
   if (!isClient || !currentVerse) {
     return <div>Loading...</div>;
@@ -769,10 +779,33 @@ export default function VerseMemoryPage() {
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
             <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0 && gameState !== 'revealed'}>
-                {currentVerseIndex === verses.length - 1 ? (
-                    totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL ? "Start Next Level!" : "Finish Level"
-                ) : "Next Verse"}
+                {currentVerseIndex === verses.length - 1 ? "Finish Level" : "Next Verse"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showLevelCompleteDialog} onOpenChange={setShowLevelCompleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
+                <Trophy className="w-10 h-10 text-primary" />
+            </div>
+            <AlertDialogTitle className="font-headline text-2xl text-center">Level {currentLevel} Complete!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Excellent work! You've mastered all the verses in this level.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            {canUnlockNextLevel ? (
+              <AlertDialogAction onClick={startNextLevel} className="w-full">
+                Start Level {currentLevel + 1}
+              </AlertDialogAction>
+            ) : (
+                <AlertDialogAction onClick={() => setShowLevelCompleteDialog(false)} className="w-full">
+                    Continue Practicing
+                </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
