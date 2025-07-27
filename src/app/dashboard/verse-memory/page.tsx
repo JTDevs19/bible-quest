@@ -195,53 +195,50 @@ export default function VerseMemoryPage() {
     setRevealsRemaining(INITIAL_REVEALS);
     setPopoverOpen(false);
     setShowResetConfirm(null);
+    // We need to call setupRound to reflect the changes immediately
+    const verse = verses[0]; // Reset to the first verse
+    setupRoundLogic(verse, 1, {}, 0);
   };
   
   const resetCurrentLevelProgress = () => {
-    if (!isClient) return;
+      if (!isClient) return;
+      const newScores = { ...verseScores };
+      const currentLevelStars = Object.values(newScores[currentLevel] || {}).reduce((sum, score) => sum + score, 0);
+      delete newScores[currentLevel];
+      
+      setVerseScores(newScores);
+      setTotalStars(recalculateTotalStars(newScores));
+      setCurrentVerseIndex(0);
+      setShowResetConfirm(null);
+  };
 
-    const newScores = { ...verseScores };
-    delete newScores[currentLevel];
-    
-    setVerseScores(newScores);
-    setTotalStars(recalculateTotalStars(newScores));
-    setCurrentVerseIndex(0);
-    setShowResetConfirm(null);
-};
-
-
-  const currentVerse = verses[currentVerseIndex];
-  const wordsToBlankForCurrentLevel = currentLevel;
-
-  const setupRound = useCallback(() => {
-    if (!isClient || !currentVerse) return;
-    
-    const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+  const setupRoundLogic = (verse: typeof verses[0], level: number, scores: VerseScores, verseIdx: number) => {
+    const currentVerseScore = scores[level]?.[verseIdx] ?? 0;
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
-    
+
     setGameState('playing');
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setCheckAttempts(10);
     setHintsRemaining(HINTS_PER_LEVEL);
-    
-    if (isMastered) {
-        setVerseWithBlanks(currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0));
+
+    if (isMastered || !verse) {
+        setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
         setMissingWords([]);
         setUserInputs([]);
     } else {
-        const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+        const words = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
+        const wordsToBlank = level;
         const potentialBlankIndices = words
             .map((word, index) => ({ word, index }))
             .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim()))
             .map(item => item.index);
         
-        // Seeded shuffle to make blank words consistent
-        const seedString = `${currentVerse.reference}-${currentLevel}`;
+        const seedString = `${verse.reference}-${level}`;
         let h = 1779033703 ^ seedString.length;
         for (let i = 0; i < seedString.length; i++) {
             h = Math.imul(h ^ seedString.charCodeAt(i), 3432918353);
@@ -254,7 +251,7 @@ export default function VerseMemoryPage() {
         };
 
         const shuffled = [...potentialBlankIndices].sort(() => pseudoRandom() - 0.5);
-        const blankIndices = new Set(shuffled.slice(0, wordsToBlankForCurrentLevel));
+        const blankIndices = new Set(shuffled.slice(0, wordsToBlank));
 
         words.forEach((word, index) => {
             if (blankIndices.has(index)) {
@@ -269,6 +266,12 @@ export default function VerseMemoryPage() {
         setMissingWords(missing);
         setUserInputs(new Array(missing.length).fill(''));
     }
+  }
+
+  const setupRound = useCallback(() => {
+    if (!isClient) return;
+    const verse = verses[currentVerseIndex];
+    setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
   }, [currentVerseIndex, currentLevel, isClient]);
 
   useEffect(() => {
@@ -295,35 +298,39 @@ export default function VerseMemoryPage() {
  const tryAgain = () => {
     setGameState('playing');
     setEditingIndex(0);
-    setUserInputs(new Array(missingWords.length).fill(''));
-    setCheckAttempts(prev => prev -1);
+    // Do not reset user inputs to allow them to correct mistakes
+    setCheckAttempts(prev => prev - 1);
+    setShowSummaryDialog(false); // Close dialog to allow re-trying
  }
 
-  const handleSubmit = () => {
+ const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
     setEditingIndex(null);
     const score = calculateScore(userInputs);
     setAttemptScore(score);
 
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-    if(score > oldScore) {
-       const newScores = {
-          ...verseScores,
-          [currentLevel]: {
-            ...(verseScores[currentLevel] || {}),
-            [currentVerseIndex]: score
-          }
-       };
-       setVerseScores(newScores);
-       setTotalStars(recalculateTotalStars(newScores));
+
+    if (score > oldScore) {
+      const scoreDifference = score - oldScore;
+      setVerseScores(prevScores => {
+        const newScores = { ...prevScores };
+        if (!newScores[currentLevel]) {
+          newScores[currentLevel] = {};
+        }
+        newScores[currentLevel][currentVerseIndex] = score;
+        return newScores;
+      });
+      setTotalStars(prevStars => prevStars + scoreDifference);
     }
-      
+    
     if (score === 3) {
       setGameState('scored');
       setIsVerseMastered(true);
     } else {
-       setGameState('incorrect');
+      setGameState('incorrect');
     }
+
     setShowSummaryDialog(true);
   };
 
@@ -363,7 +370,7 @@ export default function VerseMemoryPage() {
         setRevealsRemaining(r => r - 1);
         performReveal();
     } else {
-        setTradeAmount(1); // Reset trade amount when opening dialog
+        setTradeAmount(1);
         setShowTradeDialog(true);
     }
   };
@@ -376,7 +383,7 @@ export default function VerseMemoryPage() {
     setShowSummaryDialog(true);
   }
 
-  const handleTradeForReals = () => {
+  const handleTradeForReveals = () => {
     if (totalStars >= tradeAmount && tradeAmount > 0) {
         setTotalStars(s => s - tradeAmount);
         setRevealsRemaining(r => r + tradeAmount);
@@ -419,6 +426,8 @@ export default function VerseMemoryPage() {
     }
   };
   
+  const currentVerse = verses[currentVerseIndex];
+
   const renderVerse = () => {
     if (!isClient || !currentVerse) {
       return <div>Loading verse...</div>;
@@ -497,7 +506,7 @@ export default function VerseMemoryPage() {
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
   if (!isClient || !currentVerse) {
-    return <div>Loading...</div>; // Or a skeleton loader
+    return <div>Loading...</div>;
   }
 
   return (
@@ -659,7 +668,7 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || (gameState === 'incorrect') || (gameState === 'scored' && attemptScore < 3) ? (
+               {gameState === 'revealed' || gameState === 'incorrect' || (gameState === 'scored' && attemptScore < 3) ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
@@ -730,7 +739,7 @@ export default function VerseMemoryPage() {
                 </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleTradeForReals} disabled={totalStars < tradeAmount || tradeAmount <= 0}>
+                    <AlertDialogAction onClick={handleTradeForReveals} disabled={totalStars < tradeAmount || tradeAmount <= 0}>
                         Trade {tradeAmount} <Star className="w-4 h-4 ml-1" />
                     </AlertDialogAction>
                 </AlertDialogFooter>
@@ -741,5 +750,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
