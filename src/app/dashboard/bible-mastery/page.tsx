@@ -313,7 +313,7 @@ export default function BibleMasteryPage() {
             </AlertDialogHeader>
             
             <ScrollArea className="h-60 w-full rounded-md border p-4">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                <div className="grid grid-cols-1 gap-x-8 gap-y-1">
                     {bookListToShow.map((book) => (
                         <div
                             key={book}
