@@ -91,18 +91,21 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
               blankCounter++;
 
               let correctWordWithPunctuation = missingWords[currentBlankIndex];
-              for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
-                  const word = originalWordsWithPunctuation[i];
-                  const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
-                  if (cleanWord === missingWords[currentBlankIndex].toLowerCase()) {
-                      correctWordWithPunctuation = word;
-                      wordComponentIndex = i + 1;
-                      break;
+              // Ensure missingWords[currentBlankIndex] is not undefined before using it
+              if (missingWords[currentBlankIndex]) {
+                  for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
+                      const word = originalWordsWithPunctuation[i];
+                      const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
+                      if (cleanWord === missingWords[currentBlankIndex].toLowerCase()) {
+                          correctWordWithPunctuation = word;
+                          wordComponentIndex = i + 1;
+                          break;
+                      }
                   }
               }
 
               const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
-              const isCorrect = userInput.toLowerCase() === missingWords[currentBlankIndex].toLowerCase();
+              const isCorrect = userInput.toLowerCase() === (missingWords[currentBlankIndex] || '').toLowerCase();
 
               if (isCorrect) {
                   return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{correctWordWithPunctuation}</strong>;
@@ -116,9 +119,11 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
               );
           }
           
+          let partFound = false;
           for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
               if (originalWordsWithPunctuation[i] === part) {
                   wordComponentIndex = i + 1;
+                  partFound = true;
                   break;
               }
           }
@@ -419,7 +424,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(prev => prev - 1);
+      setCurrentVerseIndex(prev => prev + 1);
     }
   };
   
@@ -745,22 +750,13 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-                {(gameState === 'scored' || gameState === 'incorrect') && (
+                {(gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') && (
                     <VerseReview 
                         verse={currentVerse} 
                         verseWithBlanks={verseWithBlanks} 
                         userInputs={userInputs} 
                         missingWords={missingWords}
-                        showCorrectAnswer={false} 
-                    />
-                )}
-                {gameState === 'revealed' && (
-                    <VerseReview 
-                        verse={currentVerse} 
-                        verseWithBlanks={verseWithBlanks} 
-                        userInputs={userInputs} 
-                        missingWords={missingWords}
-                        showCorrectAnswer={true} 
+                        showCorrectAnswer={gameState === 'revealed'}
                     />
                 )}
              </CardContent>
@@ -851,3 +847,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
