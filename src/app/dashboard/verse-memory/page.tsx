@@ -143,6 +143,7 @@ export default function VerseMemoryPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [showPerfectScoreDialog, setShowPerfectScoreDialog] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
@@ -243,6 +244,7 @@ export default function VerseMemoryPage() {
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setShowSummaryDialog(false);
+    setShowPerfectScoreDialog(false);
 
     if (isMastered || !verse) {
         setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
@@ -334,10 +336,8 @@ export default function VerseMemoryPage() {
     }
 
     const score = calculateScore(userInputs);
-    setAttemptScore(score);
-
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-    
+
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
       setVerseScores(prevScores => {
@@ -349,19 +349,24 @@ export default function VerseMemoryPage() {
       setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
-    if (score > 0) {
-        setGameState('scored');
-        if (score === STARS_PER_VERSE) {
-            setIsVerseMastered(true);
-        }
+    setAttemptScore(score);
+
+    if (score === 3) {
+      setGameState('scored');
+      setIsVerseMastered(true);
+      setShowPerfectScoreDialog(true);
+    } else if (score > 0) {
+      setGameState('scored');
+      setShowSummaryDialog(true);
     } else {
-        setGameState('incorrect');
+      setGameState('incorrect');
+      setShowSummaryDialog(true);
     }
-    setShowSummaryDialog(true);
   };
   
   const handleNext = () => {
     setShowSummaryDialog(false);
+    setShowPerfectScoreDialog(false);
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
@@ -546,7 +551,6 @@ export default function VerseMemoryPage() {
 
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
-      if (attemptScore === 3) return "Perfect score! You're a true scripture scholar!";
       if (attemptScore >= 2) return "Great job! Keep going!";
       if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
       return "Keep trying! Memorization is a journey. You can do it!";
@@ -744,6 +748,30 @@ export default function VerseMemoryPage() {
         </AlertDialogContent>
       </AlertDialog>
       
+      <AlertDialog open={showPerfectScoreDialog} onOpenChange={setShowPerfectScoreDialog}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
+                    <Trophy className="w-10 h-10 text-primary" />
+                </div>
+                <AlertDialogTitle className="font-headline text-3xl text-center">Verse Mastered!</AlertDialogTitle>
+                <div className="flex justify-center py-2">
+                    {Array.from({length: 3}).map((_, i) => (
+                        <Star key={i} className="h-12 w-12 text-yellow-400 fill-yellow-400" />
+                    ))}
+                </div>
+                <AlertDialogDescription className="text-center text-base pt-2">
+                    Congratulations! You earned 3 stars and perfected {currentVerse.reference}.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={handleNext} className="w-full">
+                    {currentVerseIndex === verses.length - 1 ? "Finish Level" : "Next Verse"}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={showResetConfirm !== null} onOpenChange={(open) => !open && setShowResetConfirm(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -817,4 +845,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
