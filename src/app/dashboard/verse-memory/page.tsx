@@ -596,10 +596,29 @@ export default function VerseMemoryPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Button variant="outline" onClick={handleHint} disabled={isVerseMastered || hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
-                <HelpCircle className="mr-2 h-4 w-4"/>
-                Hint ({hintsRemaining})
-            </Button>
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={isVerseMastered || hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
+                        <HelpCircle className="mr-2 h-4 w-4"/>
+                        Hint ({hintsRemaining})
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Use a Hint?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            <p>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</p>
+                            <p className="font-bold mt-2">You have {hintsRemaining} hint(s) remaining for this round.</p>
+                            <p>Are you sure you want to use a hint?</p>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleHint}>Use Hint</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {gameState === 'scored' && !isVerseMastered && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext}>
