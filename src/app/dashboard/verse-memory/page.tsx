@@ -78,54 +78,59 @@ const INITIAL_REVEALS = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
-  const originalWordsWithPunctuation = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
-  let originalWordIndex = 0;
+  
+  const originalWordsWithPunctuation = useMemo(() => {
+      return verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+  }, [verse.text]);
 
-  return (
-    <div className="text-center font-serif italic text-lg leading-relaxed">
-      <p>
-        {verseWithBlanks.map((part, index) => {
+  const reviewContent = useMemo(() => {
+      let wordComponentIndex = 0;
+      return verseWithBlanks.map((part, index) => {
           if (part === null) {
-            const currentBlankIndex = blankCounter;
-            blankCounter++;
+              const currentBlankIndex = blankCounter;
+              blankCounter++;
 
-            let correctWordWithPunctuation = missingWords[currentBlankIndex];
-            for (let i = originalWordIndex; i < originalWordsWithPunctuation.length; i++) {
-                const word = originalWordsWithPunctuation[i];
-                if (word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '') === missingWords[currentBlankIndex].toLowerCase()) {
-                    correctWordWithPunctuation = word;
-                    originalWordIndex = i + 1;
-                    break;
-                }
-            }
+              let correctWordWithPunctuation = missingWords[currentBlankIndex];
+              for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
+                  const word = originalWordsWithPunctuation[i];
+                  const cleanWord = word.trim().toLowerCase().replace(/[.,;!?“”"]/g, '');
+                  if (cleanWord === missingWords[currentBlankIndex].toLowerCase()) {
+                      correctWordWithPunctuation = word;
+                      wordComponentIndex = i + 1;
+                      break;
+                  }
+              }
 
-            const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
-            const isCorrect = userInput.toLowerCase() === missingWords[currentBlankIndex].toLowerCase();
+              const userInput = userInputs[currentBlankIndex]?.trim() ?? '';
+              const isCorrect = userInput.toLowerCase() === missingWords[currentBlankIndex].toLowerCase();
 
-            if (isCorrect) {
-              return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{correctWordWithPunctuation}</strong>;
-            }
+              if (isCorrect) {
+                  return <strong key={`review-blank-${index}`} className="text-green-600 dark:text-green-400">{correctWordWithPunctuation}</strong>;
+              }
 
-            return (
-              <span key={`review-blank-${index}`} className="inline-block text-center mx-1 relative -top-2">
-                {showCorrectAnswer && <span className="text-xs text-red-500 font-sans font-semibold block">{correctWordWithPunctuation}</span>}
-                <s className="text-red-500">{userInput || '...'}</s>
-              </span>
-            );
+              return (
+                  <span key={`review-blank-${index}`} className="inline-block text-center mx-1 relative -top-2">
+                      {showCorrectAnswer && <span className="text-xs text-red-500 font-sans font-semibold block">{correctWordWithPunctuation}</span>}
+                      <s className="text-red-500">{userInput || '...'}</s>
+                  </span>
+              );
           }
           
-          for (let i = originalWordIndex; i < originalWordsWithPunctuation.length; i++) {
+          for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
               if (originalWordsWithPunctuation[i] === part) {
-                  originalWordIndex = i + 1;
+                  wordComponentIndex = i + 1;
                   break;
               }
           }
-
           return <span key={`review-text-${index}`}>{part}</span>;
-        })}
-      </p>
-      <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
-    </div>
+      });
+  }, [verseWithBlanks, missingWords, userInputs, showCorrectAnswer, originalWordsWithPunctuation]);
+
+  return (
+      <div className="text-center font-serif italic text-lg leading-relaxed">
+          <p>{reviewContent}</p>
+          <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
+      </div>
   );
 }
 
@@ -846,6 +851,8 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
 
     
 
