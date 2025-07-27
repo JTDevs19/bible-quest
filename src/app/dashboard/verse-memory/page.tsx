@@ -152,17 +152,33 @@ export default function VerseMemoryPage() {
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
+  
+  const findFirstUnfinishedVerse = (level: number, scores: VerseScores) => {
+    const levelScores = scores[level] || {};
+    for (let i = 0; i < verses.length; i++) {
+        if ((levelScores[i] || 0) < STARS_PER_VERSE) {
+            return i;
+        }
+    }
+    return 0; // Default to first verse if all are complete
+  };
 
   const loadProgress = useCallback(() => {
     if (!isClient) return;
     const savedProgress = localStorage.getItem('verseMemoryProgress');
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
-      setCurrentLevel(progress.level || 1);
-      setVerseScores(progress.scores || {});
+      const loadedLevel = progress.level || 1;
+      const loadedScores = progress.scores || {};
+      
+      setCurrentLevel(loadedLevel);
+      setVerseScores(loadedScores);
       setTotalStars(progress.stars || 0);
       setRevealsRemaining(progress.reveals ?? INITIAL_REVEALS);
       setHintsRemaining(progress.hints ?? INITIAL_HINTS);
+
+      const firstUnfinished = findFirstUnfinishedVerse(loadedLevel, loadedScores);
+      setCurrentVerseIndex(firstUnfinished);
     }
   }, [isClient]);
 
@@ -315,10 +331,10 @@ export default function VerseMemoryPage() {
     setEditingIndex(null);
 
     const score = calculateScore(userInputs);
+    setAttemptScore(score); 
+
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     
-    setAttemptScore(score);
-
     if (score > oldScore) {
       const scoreDifference = score - oldScore;
       setVerseScores(prevScores => {
@@ -352,11 +368,13 @@ export default function VerseMemoryPage() {
        if (totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL) {
           setCurrentLevel(l => {
             const newLevel = l + 1;
-            setCurrentVerseIndex(0);
+            const firstUnfinished = findFirstUnfinishedVerse(newLevel, verseScores);
+            setCurrentVerseIndex(firstUnfinished);
             return newLevel;
           });
        } else {
-        setCurrentVerseIndex(0); 
+        const firstUnfinished = findFirstUnfinishedVerse(currentLevel, verseScores);
+        setCurrentVerseIndex(firstUnfinished); 
        }
     }
   };
@@ -449,7 +467,8 @@ export default function VerseMemoryPage() {
     const requiredStars = (level - 1) * verses.length * STARS_PER_VERSE;
     if (level === 1 || totalStars >= requiredStars) {
       setCurrentLevel(level);
-      setCurrentVerseIndex(0);
+      const firstUnfinished = findFirstUnfinishedVerse(level, verseScores);
+      setCurrentVerseIndex(firstUnfinished);
       setPopoverOpen(false);
     }
   };
@@ -794,5 +813,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
