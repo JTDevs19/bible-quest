@@ -670,7 +670,6 @@ export default function VerseMemoryPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
-           {gameState === 'incorrect' && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
            {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
             {gameState !== 'incorrect' ? (
