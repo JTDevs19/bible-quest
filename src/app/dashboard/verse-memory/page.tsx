@@ -714,20 +714,21 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' ? (
-                  <>
-                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
-                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
-                  </>
-               ) : (
-                  <VerseReview 
-                    verse={currentVerse} 
-                    verseWithBlanks={verseWithBlanks} 
-                    userInputs={userInputs} 
-                    missingWords={missingWords}
-                    showCorrectAnswer={false} 
-                  />
-               )}
+                {(gameState === 'scored' || gameState === 'incorrect') && (
+                    <VerseReview 
+                        verse={currentVerse} 
+                        verseWithBlanks={verseWithBlanks} 
+                        userInputs={userInputs} 
+                        missingWords={missingWords}
+                        showCorrectAnswer={false} 
+                    />
+                )}
+                {gameState === 'revealed' && (
+                    <>
+                        <p className="text-center font-serif italic">"{currentVerse.text}"</p>
+                        <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+                    </>
+                )}
              </CardContent>
           </Card>
           <AlertDialogFooter>
@@ -816,3 +817,4 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
