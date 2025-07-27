@@ -4,9 +4,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -70,6 +72,7 @@ export default function BibleMasteryPage() {
   const [correctOrder, setCorrectOrder] = useState<string[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -109,6 +112,7 @@ export default function BibleMasteryPage() {
   }, [progress, saveProgress]);
 
   const startRound = useCallback((level: number, round: number) => {
+    setShowSuccessDialog(false);
     const config = levels.find(l => l.level === level)!;
     let roundBooks: string[];
 
@@ -161,10 +165,12 @@ export default function BibleMasteryPage() {
                 [currentRound]: true
             }
         }));
+        setTimeout(() => setShowSuccessDialog(true), 300);
     }
   };
 
   const handleNext = () => {
+    setShowSuccessDialog(false);
     if (currentRound < levelConfig.rounds) {
         setCurrentRound(prev => prev + 1);
     } else {
@@ -195,6 +201,11 @@ export default function BibleMasteryPage() {
       }
       return englishBook;
   };
+
+  const isBookInOldTestament = (book: string) => oldTestamentBooks.includes(book);
+  const bookListToShow = isBookInOldTestament(correctOrder[0]) ? oldTestamentBooks : newTestamentBooks;
+  const bookListName = isBookInOldTestament(correctOrder[0]) ? "Old Testament" : "New Testament";
+
 
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
@@ -232,6 +243,7 @@ export default function BibleMasteryPage() {
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
   return (
+    <>
     <div className="max-w-md mx-auto">
         <div className="text-center mb-4">
             <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>
@@ -287,7 +299,43 @@ export default function BibleMasteryPage() {
             </CardContent>
         </Card>
     </div>
+    
+    <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent className="max-w-lg">
+            <AlertDialogHeader>
+                <AlertDialogTitle className="font-headline text-2xl flex items-center gap-2">
+                    <Star className="w-6 h-6 text-yellow-400 fill-yellow-400"/>
+                    {language === 'en' ? "Correct Order!" : "Tamang Pagkakasunod-sunod!"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                    {language === 'en' ? `Well done! You correctly ordered the books. Here they are in the context of the ${bookListName}.` : `Mahusay! Nakuha mo ang tamang ayos. Narito ang mga ito sa konteksto ng ${language === 'fil' && bookListName === 'Old Testament' ? 'Lumang Tipan' : 'Bagong Tipan'}.`}
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            <ScrollArea className="h-60 w-full rounded-md border p-4">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                    {bookListToShow.map((book) => (
+                        <div
+                            key={book}
+                            className={cn(
+                                "p-1 rounded text-sm",
+                                correctOrder.includes(book) && "bg-primary/20 font-bold text-primary"
+                            )}
+                        >
+                           {getTranslatedBook(book)}
+                        </div>
+                    ))}
+                </div>
+            </ScrollArea>
+            
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={handleNext} className="w-full">
+                   {language === 'en' ? 'Next' : 'Susunod'}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+
+    </>
   );
 }
-
-    
