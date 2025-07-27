@@ -22,6 +22,7 @@ import {
   UserCircle,
   LogOut,
   Cog,
+  Gift,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/dashboard/character-adventures', icon: Users, label: 'Character Adventures' },
   { href: '/dashboard/bible-mastery', icon: Milestone, label: 'Bible Mastery' },
   { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
+  { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
   { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
 ];
 
