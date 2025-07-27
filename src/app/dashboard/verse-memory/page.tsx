@@ -155,9 +155,9 @@ export default function VerseMemoryPage() {
     const savedProgress = localStorage.getItem('verseMemoryProgress');
     if (savedProgress) {
       const { level, scores, stars } = JSON.parse(savedProgress);
-      setCurrentLevel(level);
-      setVerseScores(scores);
-      setTotalStars(stars);
+      setCurrentLevel(level || 1);
+      setVerseScores(scores || {});
+      setTotalStars(stars || 0);
     }
   }, []);
 
@@ -189,32 +189,24 @@ export default function VerseMemoryPage() {
   const resetCurrentLevelProgress = () => {
       if (!isClient) return;
 
-      const starsForCurrentLevel = Object.values(verseScores[currentLevel] || {}).reduce((sum, score) => sum + score, 0);
-      const newTotalStars = totalStars - starsForCurrentLevel;
-
       const newScores = { ...verseScores };
       delete newScores[currentLevel];
+      
+      const newTotalStars = Object.values(newScores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
       
       setTotalStars(newTotalStars);
       setVerseScores(newScores);
       setCurrentVerseIndex(0);
       
-      const progress = {
-          level: currentLevel,
-          scores: newScores,
-          stars: newTotalStars,
-      };
-      localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
       setShowResetConfirm(null);
-  }
+  };
 
   const currentVerse = verses[currentVerseIndex];
   const wordsToBlankForCurrentLevel = currentLevel;
 
-  useEffect(() => {
+ useEffect(() => {
     if (!isClient || !currentVerse) return;
     
-    const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
     const isMastered = currentVerseScore === STARS_PER_VERSE;
     setIsVerseMastered(isMastered);
@@ -223,13 +215,14 @@ export default function VerseMemoryPage() {
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setCheckAttempts(10);
+    setHintsRemaining(HINTS_PER_LEVEL);
     
     if (isMastered) {
-        setVerseWithBlanks(words);
+        setVerseWithBlanks(currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0));
         setMissingWords([]);
         setUserInputs([]);
     } else {
-        setUserInputs([]);
+        const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
@@ -255,11 +248,7 @@ export default function VerseMemoryPage() {
         setUserInputs(new Array(missing.length).fill(''));
     }
 
-}, [currentVerse, currentLevel, isClient]);
-
-   useEffect(() => {
-    setHintsRemaining(HINTS_PER_LEVEL);
-  }, [currentLevel, currentVerseIndex]);
+}, [currentVerseIndex, currentLevel, isClient]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -293,33 +282,35 @@ export default function VerseMemoryPage() {
 
     if (score === 3) {
       setGameState('scored');
-      setVerseScores(prevScores => {
-        const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-        if (score > existingScore) {
-          const scoreDiff = score - existingScore;
-          setTotalStars(s => s + scoreDiff);
-          if (score === STARS_PER_VERSE) {
-            setIsVerseMastered(true);
-          }
-          return {
+      const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+      if(score > oldScore) {
+         setVerseScores(prevScores => ({
             ...prevScores,
             [currentLevel]: {
               ...(prevScores[currentLevel] || {}),
               [currentVerseIndex]: score
             }
-          };
-        }
-        return prevScores;
-      });
+         }));
+         setTotalStars(prevTotal => prevTotal + (score - oldScore));
+      }
+      setIsVerseMastered(true);
       setShowSummaryDialog(true);
     } else {
       if (currentLevel === 1) {
         setGameState('incorrect');
-        // Still show score for partial credit on level 1
+        // Allow partial credit for level 1 to be saved, but still require "try again"
         if (score > 0) {
-          setAttemptScore(score);
-          setGameState('scored');
-          setShowSummaryDialog(true);
+           const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+           if(score > oldScore) {
+              setVerseScores(prevScores => ({
+                  ...prevScores,
+                  [currentLevel]: {
+                    ...(prevScores[currentLevel] || {}),
+                    [currentVerseIndex]: score
+                  }
+              }));
+              setTotalStars(prevTotal => prevTotal + (score - oldScore));
+           }
         }
       } else {
         setGameState('checking');
@@ -354,7 +345,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex + 1);
+      setCurrentVerseIndex(prev => prev + 1);
     }
   };
   
