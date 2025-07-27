@@ -204,14 +204,6 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     saveProgress();
   }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgress]);
-  
-  useEffect(() => {
-    if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
-      setShowSummaryDialog(true);
-    } else {
-      setShowSummaryDialog(false);
-    }
-  }, [gameState]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
     return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
@@ -250,6 +242,7 @@ export default function VerseMemoryPage() {
     setGameState('playing');
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
+    setShowSummaryDialog(false);
 
     if (isMastered || !verse) {
         setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
@@ -326,6 +319,7 @@ export default function VerseMemoryPage() {
   }, [missingWords]);
   
  const tryAgain = () => {
+    setShowSummaryDialog(false);
     setGameState('playing');
     setEditingIndex(0);
  }
@@ -354,17 +348,19 @@ export default function VerseMemoryPage() {
       setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
-    if (score === STARS_PER_VERSE) {
+    if (score > 0) {
         setGameState('scored');
-        setIsVerseMastered(true);
-    } else if (score > 0) {
-        setGameState('scored');
+        if (score === STARS_PER_VERSE) {
+            setIsVerseMastered(true);
+        }
     } else {
         setGameState('incorrect');
     }
+    setShowSummaryDialog(true);
   }, [isVerseMastered, userInputs, calculateScore, verseScores, currentLevel, currentVerseIndex]);
   
   const handleNext = () => {
+    setShowSummaryDialog(false);
     if (currentVerseIndex < verses.length - 1) {
       setCurrentVerseIndex(currentVerseIndex + 1);
     } else {
@@ -410,6 +406,7 @@ export default function VerseMemoryPage() {
     setUserInputs([...missingWords]);
     setAttemptScore(0);
     setGameState('revealed');
+    setShowSummaryDialog(true);
     setEditingIndex(null);
   }
 
