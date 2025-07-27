@@ -20,6 +20,13 @@ const profileSchema = z.object({
   avatar: z.string().nonempty('Please select an avatar.'),
 });
 
+const avatars = [
+  { name: 'Lion of Judah', icon: LionIcon },
+  { name: 'Lamb of God', icon: LambIcon },
+  { name: 'Holy Spirit Dove', icon: DoveIcon },
+  { name: 'The Cross', icon: CrossIcon },
+];
+
 export function ProfileStep() {
   const { prevStep, data, setData, finishOnboardingAsGuest } = useOnboarding();
 
