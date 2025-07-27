@@ -231,7 +231,7 @@ export default function VerseMemoryPage() {
     if (highlightNextButton) {
       const timer = setTimeout(() => {
         setHighlightNextButton(false);
-      }, 3000);
+      }, 3000); // Animation duration
       return () => clearTimeout(timer);
     }
   }, [highlightNextButton]);
@@ -719,14 +719,14 @@ export default function VerseMemoryPage() {
 
       <div className="relative">
           {isVerseMastered && (
-            <>
-                <div className="absolute -top-3 -left-4 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
+             <>
+                <div className="absolute -top-3 -left-3.5 w-16 h-16 overflow-hidden z-10">
+                    <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', left: '-35%', top: '25%' }}>
                         <Check className="w-4 h-4"/>
                     </div>
                 </div>
-                <div className="absolute -top-3 -right-4 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
+                <div className="absolute -top-3 -right-3.5 w-16 h-16 overflow-hidden z-10">
+                    <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', right: '-35%', top: '25%' }}>
                          <Check className="w-4 h-4"/>
                     </div>
                 </div>
@@ -759,15 +759,17 @@ export default function VerseMemoryPage() {
                {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
               <div className="flex flex-wrap gap-2 justify-center">
                  {isVerseMastered ? (
-                    <Button 
-                      variant="secondary"
-                      onClick={handleNext}
-                      className={cn(
-                        "w-full transition-all duration-300",
-                        highlightNextButton && "bg-primary text-primary-foreground animate-pulse"
-                      )}
-                    >
-                      {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                    <Button
+                        variant="secondary"
+                        onClick={handleNext}
+                        className={cn(
+                            "w-full relative overflow-hidden",
+                            highlightNextButton && "animate-border-fade-out"
+                        )}
+                        >
+                        <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
+                            {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                        </span>
                     </Button>
                  ) : (
                     <>
@@ -955,3 +957,4 @@ export default function VerseMemoryPage() {
   );
 
     
+

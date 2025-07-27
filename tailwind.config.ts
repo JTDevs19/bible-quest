@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -88,10 +89,21 @@ export default {
             height: '0',
           },
         },
+        'border-fade-out': {
+          '0%': { 'box-shadow': '0 0 0 2px hsl(var(--primary) / 0.8)', opacity: '1' },
+          '100%': { 'box-shadow': '0 0 0 10px hsl(var(--primary) / 0)', opacity: '0' },
+        },
+        'fade-in': {
+            '0%': { opacity: '0' },
+            '50%': { opacity: '0' },
+            '100%': { opacity: '1' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'border-fade-out': 'border-fade-out 1.5s ease-out forwards',
+        'fade-in': 'fade-in 1s ease-in forwards',
       },
     },
   },
