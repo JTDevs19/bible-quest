@@ -321,11 +321,21 @@ export default function VerseMemoryPage() {
     return 0;
   }, [missingWords]);
   
- const tryAgain = () => {
+  const tryAgain = () => {
+    const newInputs = userInputs.map((input, index) => {
+        const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
+        return isCorrect ? input : '';
+    });
+    setUserInputs(newInputs);
+
+    const firstIncorrectIndex = userInputs.findIndex((input, index) => {
+        return input.toLowerCase().trim() !== missingWords[index]?.toLowerCase().trim();
+    });
+
     setShowSummaryDialog(false);
     setGameState('playing');
-    setEditingIndex(0);
- }
+    setEditingIndex(firstIncorrectIndex !== -1 ? firstIncorrectIndex : 0);
+  };
 
   const handleSubmit = () => {
     if (isVerseMastered) return;
@@ -351,16 +361,12 @@ export default function VerseMemoryPage() {
       setTotalStars(prevStars => prevStars + scoreDifference);
     }
     
-    if (score === 3) {
-      setGameState('scored');
-      setIsVerseMastered(true);
-      setShowPerfectScoreDialog(true);
-    } else if (score > 0) {
-      setGameState('scored');
-      setShowSummaryDialog(true);
+    if (score === STARS_PER_VERSE) {
+        setIsVerseMastered(true);
+        setShowPerfectScoreDialog(true);
     } else {
-      setGameState('incorrect');
-      setShowSummaryDialog(true);
+        setGameState(score > 0 ? 'scored' : 'incorrect');
+        setShowSummaryDialog(true);
     }
   };
   
@@ -729,10 +735,13 @@ export default function VerseMemoryPage() {
                     />
                 )}
                 {gameState === 'revealed' && (
-                    <>
-                        <p className="text-center font-serif italic">"{currentVerse.text}"</p>
-                        <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
-                    </>
+                    <VerseReview 
+                        verse={currentVerse} 
+                        verseWithBlanks={verseWithBlanks} 
+                        userInputs={userInputs} 
+                        missingWords={missingWords}
+                        showCorrectAnswer={true} 
+                    />
                 )}
              </CardContent>
           </Card>
