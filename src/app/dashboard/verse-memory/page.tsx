@@ -74,7 +74,7 @@ const STARS_PER_VERSE = 3;
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
 
-function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = true }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
+function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
   const originalWordsWithPunctuation = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
   let originalWordIndex = 0;
@@ -310,9 +310,10 @@ export default function VerseMemoryPage() {
       return isCorrect ? count + 1 : count;
     }, 0);
     
+    if (correctCount === missingWords.length) return 3;
+
     const accuracy = correctCount / missingWords.length;
-  
-    if (accuracy === 1) return 3;
+
     if (accuracy >= 0.5) return 2;
     if (accuracy > 0) return 1;
     return 0;
@@ -324,7 +325,7 @@ export default function VerseMemoryPage() {
     setEditingIndex(0);
  }
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = () => {
     if (isVerseMastered) return;
 
     if (userInputs.some(input => input.trim() === '')) {
@@ -357,7 +358,7 @@ export default function VerseMemoryPage() {
         setGameState('incorrect');
     }
     setShowSummaryDialog(true);
-  }, [isVerseMastered, userInputs, calculateScore, verseScores, currentLevel, currentVerseIndex]);
+  };
   
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -713,19 +714,19 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
+               {gameState === 'revealed' ? (
+                  <>
+                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
+                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+                  </>
+               ) : (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
                     userInputs={userInputs} 
                     missingWords={missingWords}
-                    showCorrectAnswer={true} 
+                    showCorrectAnswer={false} 
                   />
-               ) : (
-                  <>
-                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
-                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
-                  </>
                )}
              </CardContent>
           </Card>
