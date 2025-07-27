@@ -64,7 +64,7 @@ function DashboardNav() {
       icon: Users,
       label: 'Character Adventures',
       isLocked: !characterAdventuresUnlocked,
-      tooltipText: 'Unlock at Verse Memory Lvl 4'
+      tooltipText: 'Master all Verse Memory first'
     },
     { 
       href: '/dashboard/bible-mastery', 

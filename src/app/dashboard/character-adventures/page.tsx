@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useRouter } from 'next/navigation';
 
 const triviaLevels = [
   // Level 1
@@ -148,6 +149,10 @@ const triviaLevelsFilipino = [
 
 const LEVEL_PASS_SCORE = 7;
 const MAX_LEVEL = 5;
+const STARS_PER_VERSE = 3;
+const NUM_VERSES = 10;
+const MAX_VERSE_STARS = MAX_LEVEL * NUM_VERSES * STARS_PER_VERSE;
+
 
 type LevelScores = { [level: number]: number };
 
@@ -158,6 +163,8 @@ export default function CharacterAdventuresPage() {
     const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
     const [showTour, setShowTour] = useState(false);
+    const [verseMemoryCompleted, setVerseMemoryCompleted] = useState(false);
+
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [currentLevelScore, setCurrentLevelScore] = useState(0);
@@ -168,6 +175,8 @@ export default function CharacterAdventuresPage() {
     const [showTriviaDialog, setShowTriviaDialog] = useState(false);
     const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
     
+    const router = useRouter();
+
     const saveProgress = useCallback(() => {
         if (!isClient) return;
         const progress = {
@@ -201,7 +210,13 @@ export default function CharacterAdventuresPage() {
             setShowTour(true);
         }
 
-    }, []);
+        const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
+        const verseStars = verseMemoryProgress.stars || 0;
+        if(verseStars === MAX_VERSE_STARS) {
+            setVerseMemoryCompleted(true);
+        }
+
+    }, [isClient]);
 
     useEffect(() => {
         saveProgress();
@@ -265,9 +280,33 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
-        const isUnlocked = level === 1 || (levelScores[level - 1] >= LEVEL_PASS_SCORE);
+        let isUnlocked = level === 1 || ((levelScores[level - 1] || 0) >= LEVEL_PASS_SCORE);
+        if (level > 1) {
+            isUnlocked = isUnlocked && verseMemoryCompleted;
+        }
+
         if (isUnlocked) {
             startLevel(level);
+        } else {
+            // Optional: show a toast or alert telling the user what's required
+            if (!verseMemoryCompleted) {
+                const alert = document.createElement('div');
+                alert.innerHTML = `
+                    <div
+                        role="alert"
+                        class="fixed top-5 right-5 w-auto rounded-lg border bg-background text-foreground p-4 shadow-lg animate-in fade-in-0 zoom-in-95"
+                    >
+                        <h5 class="mb-1 font-medium leading-none tracking-tight">Level Locked</h5>
+                        <div class="text-sm [&_p]:leading-relaxed">
+                            You must master all verses in the Verse Memory game first!
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(alert.firstChild!);
+                setTimeout(() => {
+                    alert.firstChild?.remove();
+                }, 3000);
+            }
         }
     }
     
@@ -291,7 +330,7 @@ export default function CharacterAdventuresPage() {
     }
     
     if (isGameFinished) {
-        const canUnlockNext = currentLevel < MAX_LEVEL && currentLevelScore >= LEVEL_PASS_SCORE;
+        const canUnlockNext = currentLevel < MAX_LEVEL && currentLevelScore >= LEVEL_PASS_SCORE && verseMemoryCompleted;
         return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
                  <motion.div initial="initial" animate="animate" variants={cardVariants}>
@@ -365,12 +404,15 @@ export default function CharacterAdventuresPage() {
                         <div className="space-y-3">
                            {Array.from({length: MAX_LEVEL}).map((_, i) => {
                                const levelNum = i + 1;
-                               const isUnlocked = levelNum === 1 || (levelScores[levelNum - 1] >= LEVEL_PASS_SCORE);
+                               let isUnlocked = levelNum === 1 || ((levelScores[levelNum - 1] || 0) >= LEVEL_PASS_SCORE);
+                                if (levelNum > 1) {
+                                  isUnlocked = isUnlocked && verseMemoryCompleted;
+                                }
                                const isCurrent = levelNum === currentLevel;
                                return (
                                  <div 
                                     key={levelNum} 
-                                    onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                                    onClick={() => handleLevelSelect(levelNum)}
                                     className={cn(
                                       "flex items-center gap-4 p-2 rounded-lg transition-colors", 
                                       isCurrent ? "bg-primary/10 border border-primary/20" : "",
