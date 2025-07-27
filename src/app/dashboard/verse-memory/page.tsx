@@ -710,13 +710,13 @@ export default function VerseMemoryPage() {
           {isVerseMastered && (
              <>
                 <div className="absolute -top-3 -left-3 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
-                        <CheckCircle className="w-4 h-4 mx-auto my-1"/>
+                    <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
+                        <Check className="w-4 h-4"/>
                     </div>
                 </div>
                 <div className="absolute -top-3 -right-3 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
-                         <CheckCircle className="w-4 h-4 mx-auto my-1"/>
+                    <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
+                         <Check className="w-4 h-4"/>
                     </div>
                 </div>
              </>
@@ -732,9 +732,9 @@ export default function VerseMemoryPage() {
                       {currentVerse.reference} ({currentVerse.version})
                     </CardTitle>
                     <CardDescription>Fill in the missing words from the verse below.</CardDescription>
-                     <div className="flex justify-center">
+                     <div className="flex justify-center items-center">
                         {Array.from({length: 3}).map((_, i) => (
-                            <Star key={i} className={cn("h-6 w-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                            <Star key={i} className={cn(i === 1 ? "h-7 w-7" : "h-6 w-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
                         ))}
                     </div>
                   </div>
@@ -929,5 +929,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
