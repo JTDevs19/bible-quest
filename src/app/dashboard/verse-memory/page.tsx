@@ -147,7 +147,7 @@ export default function VerseMemoryPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
-  const [showTradeDialog, setShowTradeDialog] = useState<null | 'reveals' | 'hints'>(null);
+  const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -310,13 +310,12 @@ export default function VerseMemoryPage() {
     setShowSummaryDialog(false);
  }
 
- const handleSubmit = () => {
+ const handleSubmit = async () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
     setEditingIndex(null);
 
     const score = calculateScore(userInputs);
-    
-    setAttemptScore(score);
+    setAttemptScore(score); // Set score immediately
 
     const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
 
@@ -338,8 +337,7 @@ export default function VerseMemoryPage() {
       setIsVerseMastered(true);
     } else if (score > 0) {
       setGameState('scored');
-    }
-    else {
+    } else {
       setGameState('incorrect');
     }
   };
@@ -348,7 +346,8 @@ export default function VerseMemoryPage() {
     if (gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') {
       setShowSummaryDialog(true);
     }
-  }, [gameState]);
+  }, [gameState, attemptScore]);
+
 
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -800,5 +799,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
