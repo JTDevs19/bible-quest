@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -73,6 +73,7 @@ type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 const MAX_LEVEL = 5;
 const STARS_PER_VERSE = 3;
 const HINTS_PER_LEVEL = 3;
+const INITIAL_REVEALS = 3;
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[] }) {
   let blankCounter = 0;
@@ -134,6 +135,7 @@ export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [totalStars, setTotalStars] = useState(0);
+  const [revealsRemaining, setRevealsRemaining] = useState(INITIAL_REVEALS);
 
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
@@ -145,6 +147,7 @@ export default function VerseMemoryPage() {
   const [hintsRemaining, setHintsRemaining] = useState(HINTS_PER_LEVEL);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
+  const [showTradeDialog, setShowTradeDialog] = useState(false);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -154,10 +157,11 @@ export default function VerseMemoryPage() {
     setIsClient(true);
     const savedProgress = localStorage.getItem('verseMemoryProgress');
     if (savedProgress) {
-      const { level, scores, stars } = JSON.parse(savedProgress);
+      const { level, scores, stars, reveals } = JSON.parse(savedProgress);
       setCurrentLevel(level || 1);
       setVerseScores(scores || {});
       setTotalStars(stars || 0);
+      setRevealsRemaining(reveals ?? INITIAL_REVEALS);
     }
   }, []);
 
@@ -167,9 +171,10 @@ export default function VerseMemoryPage() {
       level: currentLevel,
       scores: verseScores,
       stars: totalStars,
+      reveals: revealsRemaining,
     };
     localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [currentLevel, verseScores, totalStars, isClient]);
+  }, [currentLevel, verseScores, totalStars, revealsRemaining, isClient]);
 
   useEffect(() => {
     saveProgress();
@@ -182,29 +187,30 @@ export default function VerseMemoryPage() {
     setCurrentVerseIndex(0);
     setVerseScores({});
     setTotalStars(0);
+    setRevealsRemaining(INITIAL_REVEALS);
     setPopoverOpen(false);
     setShowResetConfirm(null);
   };
   
   const resetCurrentLevelProgress = () => {
-      if (!isClient) return;
+    if (!isClient) return;
 
-      const newScores = { ...verseScores };
-      delete newScores[currentLevel];
-      
-      const newTotalStars = Object.values(newScores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
-      
-      setTotalStars(newTotalStars);
-      setVerseScores(newScores);
-      setCurrentVerseIndex(0);
-      
-      setShowResetConfirm(null);
-  };
+    const newScores = { ...verseScores };
+    delete newScores[currentLevel];
+    
+    const newTotalStars = Object.values(newScores).flat().reduce((sum, score) => sum + (score || 0), 0);
+    
+    setVerseScores(newScores);
+    setTotalStars(newTotalStars);
+    setCurrentVerseIndex(0);
+    setShowResetConfirm(null);
+};
+
 
   const currentVerse = verses[currentVerseIndex];
   const wordsToBlankForCurrentLevel = currentLevel;
 
- useEffect(() => {
+  const setupRound = useCallback(() => {
     if (!isClient || !currentVerse) return;
     
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
@@ -247,8 +253,11 @@ export default function VerseMemoryPage() {
         setMissingWords(missing);
         setUserInputs(new Array(missing.length).fill(''));
     }
+  }, [currentVerseIndex, currentLevel, isClient, currentVerse, verseScores, wordsToBlankForCurrentLevel]);
 
-}, [currentVerseIndex, currentLevel, isClient]);
+  useEffect(() => {
+    setupRound();
+  }, [setupRound]);
 
 
   const calculateScore = (inputs: string[]) => {
@@ -296,7 +305,7 @@ export default function VerseMemoryPage() {
       setIsVerseMastered(true);
       setShowSummaryDialog(true);
     } else {
-      if (currentLevel === 1) {
+       if (currentLevel === 1) {
         setGameState('incorrect');
         // Allow partial credit for level 1 to be saved, but still require "try again"
         if (score > 0) {
@@ -339,7 +348,7 @@ export default function VerseMemoryPage() {
 
   const handlePrevVerse = () => {
     if (currentVerseIndex > 0) {
-      setCurrentVerseIndex(currentVerseIndex - 1);
+      setCurrentVerseIndex(prev => prev - 1);
     }
   };
 
@@ -351,11 +360,29 @@ export default function VerseMemoryPage() {
   
   const handleReveal = () => {
     if (isVerseMastered) return;
+    if (revealsRemaining > 0) {
+        setRevealsRemaining(r => r - 1);
+        performReveal();
+    } else {
+        setShowTradeDialog(true);
+    }
+  };
+
+  const performReveal = () => {
     setUserInputs([...missingWords]);
     setAttemptScore(0);
     setGameState('revealed');
     setEditingIndex(null);
     setShowSummaryDialog(true);
+  }
+
+  const handleTradeStarForReveal = () => {
+    setShowTradeDialog(false);
+    if (totalStars > 0) {
+        setTotalStars(s => s - 1);
+        // We don't increment reveals, we just immediately use it
+        performReveal();
+    }
   };
 
   const handleHint = () => {
@@ -575,27 +602,9 @@ export default function VerseMemoryPage() {
            {gameState === 'incorrect' && currentLevel === 1 && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
             {gameState !== 'incorrect' && (
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)} onClick={handleSubmit}>
-                            {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
-                        </Button>
-                    </AlertDialogTrigger>
-                    { currentLevel > 1 && <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleSubmit}>
-                                Yes, Check Answer
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent> }
-                </AlertDialog>
+                <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)} onClick={handleSubmit}>
+                    {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+                </Button>
             )}
              {gameState === 'incorrect' && currentLevel === 1 && (
                 <Button onClick={tryAgain} variant="destructive">
@@ -625,8 +634,9 @@ export default function VerseMemoryPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {gameState === 'scored' && !isVerseMastered && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
-            <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>Reveal Answer</Button>
+            <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>
+                Reveal Answer ({revealsRemaining})
+            </Button>
              <Button variant="secondary" onClick={handleNext}>
               {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
             </Button>
@@ -651,7 +661,7 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || gameState === 'scored' ? (
+               {gameState === 'revealed' || (gameState === 'scored' && attemptScore < 3) ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
@@ -697,6 +707,25 @@ export default function VerseMemoryPage() {
                       className={cn(showResetConfirm === 'all' && 'bg-destructive text-destructive-foreground hover:bg-destructive/90')}
                     >
                         Confirm
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={showTradeDialog} onOpenChange={setShowTradeDialog}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>No Reveals Remaining</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {totalStars > 0
+                            ? `You can trade 1 star for 1 reveal. You currently have ${totalStars} star(s).`
+                            : "You have no stars to trade for a reveal. Try earning more stars in other challenges!"}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleTradeStarForReveal} disabled={totalStars <= 0}>
+                        Trade 1 <Star className="w-4 h-4 ml-1" />
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
