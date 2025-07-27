@@ -708,18 +708,18 @@ export default function VerseMemoryPage() {
 
       <div className="relative">
           {isVerseMastered && (
-             <>
-                <div className="absolute -top-3 -left-3 w-16 h-16 overflow-hidden z-10">
+            <>
+                <div className="absolute -top-3 -left-4 w-16 h-16 overflow-hidden z-10">
                     <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
                         <Check className="w-4 h-4"/>
                     </div>
                 </div>
-                <div className="absolute -top-3 -right-3 w-16 h-16 overflow-hidden z-10">
+                <div className="absolute -top-3 -right-4 w-16 h-16 overflow-hidden z-10">
                     <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
                          <Check className="w-4 h-4"/>
                     </div>
                 </div>
-             </>
+            </>
           )}
           <Card>
             <CardHeader>
@@ -747,20 +747,27 @@ export default function VerseMemoryPage() {
               <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
                {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
               <div className="flex flex-wrap gap-2 justify-center">
-                 <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
-                    Check My Answer
-                </Button>
-                <Button variant="outline" onClick={handleHintClick} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'}>
-                    <HelpCircle className="mr-2 h-4 w-4"/>
-                    Hint ({hintsRemaining})
-                </Button>
-                
-                <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>
-                    Reveal Answer ({revealsRemaining})
-                </Button>
-                 <Button variant="secondary" onClick={handleNext}>
-                  {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
-                </Button>
+                 {isVerseMastered ? (
+                    <Button variant="secondary" onClick={handleNext} className="w-full">
+                      {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                    </Button>
+                 ) : (
+                    <>
+                      <Button disabled={gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
+                          Check My Answer
+                      </Button>
+                      <Button variant="outline" onClick={handleHintClick} disabled={gameState === 'scored' || gameState === 'revealed'}>
+                          <HelpCircle className="mr-2 h-4 w-4"/>
+                          Hint ({hintsRemaining})
+                      </Button>
+                      <Button variant="outline" onClick={handleReveal}>
+                          Reveal Answer ({revealsRemaining})
+                      </Button>
+                      <Button variant="secondary" onClick={handleNext}>
+                        {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
+                      </Button>
+                    </>
+                 )}
               </div>
             </CardContent>
           </Card>
@@ -928,4 +935,5 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-}
+
+    
