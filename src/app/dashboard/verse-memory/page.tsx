@@ -212,7 +212,7 @@ export default function VerseMemoryPage() {
   const wordsToBlankForCurrentLevel = currentLevel;
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !currentVerse) return;
     
     const words = currentVerse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
     const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
@@ -255,7 +255,7 @@ export default function VerseMemoryPage() {
         setUserInputs(new Array(missing.length).fill(''));
     }
 
-}, [currentVerse, currentVerseIndex, currentLevel, isClient, wordsToBlankForCurrentLevel]);
+}, [currentVerse, currentLevel, isClient]);
 
    useEffect(() => {
     setHintsRemaining(HINTS_PER_LEVEL);
@@ -287,49 +287,46 @@ export default function VerseMemoryPage() {
 
   const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
-
     setEditingIndex(null);
     const score = calculateScore(userInputs);
     setAttemptScore(score);
 
     if (score === 3) {
-        setVerseScores(prevScores => {
-            const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-            const finalVerseScore = Math.max(existingScore, score);
-
-            if (finalVerseScore > existingScore) {
-                const scoreDiff = finalVerseScore - existingScore;
-                setTotalStars(s => s + scoreDiff);
+      setGameState('scored');
+      setVerseScores(prevScores => {
+        const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
+        if (score > existingScore) {
+          const scoreDiff = score - existingScore;
+          setTotalStars(s => s + scoreDiff);
+          if (score === STARS_PER_VERSE) {
+            setIsVerseMastered(true);
+          }
+          return {
+            ...prevScores,
+            [currentLevel]: {
+              ...(prevScores[currentLevel] || {}),
+              [currentVerseIndex]: score
             }
-
-            const updatedScores = {
-                ...prevScores,
-                [currentLevel]: {
-                    ...(prevScores[currentLevel] || {}),
-                    [currentVerseIndex]: finalVerseScore
-                }
-            };
-            if (finalVerseScore === STARS_PER_VERSE) {
-                setIsVerseMastered(true);
-            }
-            return updatedScores;
-        });
-        setGameState('scored');
-        setShowSummaryDialog(true);
-    } else {
-        if (currentLevel === 1) {
-            setGameState('incorrect');
-            if(score > 0) {
-                 setAttemptScore(score);
-                 setGameState('scored');
-                 setShowSummaryDialog(true);
-            }
-        } else {
-            setGameState('checking');
-            setCheckAttempts(prev => prev - 1);
+          };
         }
+        return prevScores;
+      });
+      setShowSummaryDialog(true);
+    } else {
+      if (currentLevel === 1) {
+        setGameState('incorrect');
+        // Still show score for partial credit on level 1
+        if (score > 0) {
+          setAttemptScore(score);
+          setGameState('scored');
+          setShowSummaryDialog(true);
+        }
+      } else {
+        setGameState('checking');
+        setCheckAttempts(prev => prev - 1);
+      }
     }
-};
+  };
 
   const handleNext = () => {
     setShowSummaryDialog(false);
@@ -357,7 +354,7 @@ export default function VerseMemoryPage() {
 
   const handleNextVerse = () => {
     if (currentVerseIndex < verses.length - 1) {
-      setCurrentVerseIndex(currentVerseIndex - 1);
+      setCurrentVerseIndex(currentVerseIndex + 1);
     }
   };
   
@@ -406,7 +403,7 @@ export default function VerseMemoryPage() {
   };
   
   const renderVerse = () => {
-    if (!isClient) {
+    if (!isClient || !currentVerse) {
       return <div>Loading verse...</div>;
     }
     
@@ -481,6 +478,10 @@ export default function VerseMemoryPage() {
 
   const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+
+  if (!isClient || !currentVerse) {
+    return <div>Loading...</div>; // Or a skeleton loader
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 md:px-0 px-4">
