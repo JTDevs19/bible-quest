@@ -18,19 +18,13 @@ export function WelcomeStep() {
         <CardTitle className="font-headline text-3xl">Welcome to Bible Quests</CardTitle>
         <CardDescription className="pt-2">A journey of faith, fun, and discovery. Powered by God through AI.</CardDescription>
       </CardHeader>
-      <CardContent className='flex flex-col gap-4'>
+      <CardContent>
         <Button onClick={nextStep} className="w-full" size="lg">
-          Play as Guest
+          Get Started
         </Button>
-         <Link href="/login" passHref>
-          <Button variant="outline" className="w-full" size="lg">Login</Button>
-        </Link>
       </CardContent>
-      <CardFooter className='flex-col gap-2'>
-        <p className="text-xs text-muted-foreground">Don't have an account?</p>
-        <Link href="/register" passHref>
-          <Button variant="link">Register here</Button>
-        </Link>
+      <CardFooter>
+        <p className="text-xs text-muted-foreground">Your progress will be saved in this browser.</p>
       </CardFooter>
     </Card>
   );

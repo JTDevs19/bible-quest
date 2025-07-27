@@ -11,9 +11,6 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/hooks/use-auth';
-import { loadGameProgress, saveGameProgress } from '@/lib/firestore';
-
 
 const verses = [
   {
@@ -132,7 +129,6 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
 
 
 export default function VerseMemoryPage() {
-  const { user } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
@@ -156,9 +152,22 @@ export default function VerseMemoryPage() {
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
-  
-  const saveProgressToDb = useCallback(async () => {
-    if (!user) return;
+
+  const loadProgress = useCallback(() => {
+    if (!isClient) return;
+    const savedProgress = localStorage.getItem('verseMemoryProgress');
+    if (savedProgress) {
+      const progress = JSON.parse(savedProgress);
+      setCurrentLevel(progress.level || 1);
+      setVerseScores(progress.scores || {});
+      setTotalStars(progress.stars || 0);
+      setRevealsRemaining(progress.reveals ?? INITIAL_REVEALS);
+      setHintsRemaining(progress.hints ?? INITIAL_HINTS);
+    }
+  }, [isClient]);
+
+  const saveProgress = useCallback(() => {
+    if (!isClient) return;
     const progress = {
       level: currentLevel,
       scores: verseScores,
@@ -166,53 +175,39 @@ export default function VerseMemoryPage() {
       reveals: revealsRemaining,
       hints: hintsRemaining,
     };
-    await saveGameProgress(user.uid, { verseMemory: progress });
-  }, [user, currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining]);
-
+    localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
+  }, [isClient, currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining]);
 
   useEffect(() => {
     setIsClient(true);
-    async function loadProgress() {
-        if (user) {
-            const progress = await loadGameProgress(user.uid);
-            const verseMemoryProgress = progress?.verseMemory;
-            if (verseMemoryProgress) {
-                setCurrentLevel(verseMemoryProgress.level || 1);
-                setVerseScores(verseMemoryProgress.scores || {});
-                setTotalStars(verseMemoryProgress.stars || 0);
-                setRevealsRemaining(verseMemoryProgress.reveals ?? INITIAL_REVEALS);
-                setHintsRemaining(verseMemoryProgress.hints ?? INITIAL_HINTS);
-            }
-        }
-    }
+  }, []);
+  
+  useEffect(() => {
     loadProgress();
-  }, [user]);
+  }, [loadProgress]);
 
   useEffect(() => {
-    if (user) {
-        saveProgressToDb();
-    }
-  }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgressToDb, user]);
+    saveProgress();
+  }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgress]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
     return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
   };
   
   const resetAllProgress = () => {
-    if (!user) return;
     setCurrentLevel(1);
     setCurrentVerseIndex(0);
     setVerseScores({});
     setTotalStars(0);
     setRevealsRemaining(INITIAL_REVEALS);
     setHintsRemaining(INITIAL_HINTS);
+    localStorage.removeItem('verseMemoryProgress');
     setPopoverOpen(false);
     setShowResetConfirm(null);
     setupRound();
   };
   
   const resetCurrentLevelProgress = () => {
-      if (!user) return;
       const newScores = { ...verseScores };
       delete newScores[currentLevel];
       

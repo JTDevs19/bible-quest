@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,17 +12,25 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Sparkles } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
-import { useAuth } from '@/hooks/use-auth';
+import type { UserProfile } from '@/app/page';
+
 
 const formSchema = z.object({
   spiritualNeed: z.string().min(10, 'Please describe your need in at least 10 characters.'),
 });
 
 export default function PersonalizedVersePage() {
-  const { userProfile } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recommendation, setRecommendation] = useState<PersonalizedVerseRecommendationsOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const profile = localStorage.getItem('bibleQuestsUser');
+    if (profile) {
+      setUserProfile(JSON.parse(profile));
+    }
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

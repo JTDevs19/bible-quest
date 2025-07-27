@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookText, Users, Milestone, Sparkles, User, Calendar, Shield, Target } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
-import type { UserProfile } from '@/lib/firestore';
+import type { UserProfile } from '@/app/page';
 
 const focusIcons: { [key: string]: React.ElementType } = {
   'Memorizing Bible Verses': BookText,
@@ -15,16 +14,19 @@ const focusIcons: { [key: string]: React.ElementType } = {
 };
 
 export default function DashboardPage() {
-  const { user, userProfile, loading } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    const storedProfile = localStorage.getItem('bibleQuestsUser');
+    if (storedProfile) {
+      setUserProfile(JSON.parse(storedProfile));
+    } else {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [router]);
 
-  if (loading || !user || !userProfile) {
+  if (!userProfile) {
     return <div>Loading Dashboard...</div>;
   }
 

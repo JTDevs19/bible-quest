@@ -9,9 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useAuth } from '@/hooks/use-auth';
-import { saveGameProgress, loadGameProgress } from '@/lib/firestore';
-
 
 const triviaLevels = [
   // Level 1
@@ -155,7 +152,6 @@ const MAX_LEVEL = 5;
 type LevelScores = { [level: number]: number };
 
 export default function CharacterAdventuresPage() {
-    const { user } = useAuth();
     const [isClient, setIsClient] = useState(false);
     const [currentLevel, setCurrentLevel] = useState(1);
     const [levelScores, setLevelScores] = useState<LevelScores>({});
@@ -171,45 +167,38 @@ export default function CharacterAdventuresPage() {
     const [showTriviaDialog, setShowTriviaDialog] = useState(false);
     const [isCorrectAnswer, setIsCorrectAnswer] = useState(false);
     
-    useEffect(() => {
-        setIsClient(true);
-        async function loadProgressFromDb() {
-            if (user) {
-                const progress = await loadGameProgress(user.uid);
-                const charAdvProgress = progress?.characterAdventures;
-                if (charAdvProgress) {
-                    setLevelScores(charAdvProgress.scores || {});
-                    setTotalScore(charAdvProgress.total || 0);
-
-                    let highestUnlocked = 1;
-                    for (let i = 1; i <= MAX_LEVEL; i++) {
-                        if((charAdvProgress.scores?.[i-1] || 0) >= LEVEL_PASS_SCORE) {
-                            highestUnlocked = i + 1;
-                        } else {
-                            break;
-                        }
-                    }
-                    setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
-                }
-            }
-        }
-        loadProgressFromDb();
-    }, [user]);
-
-    const saveProgress = useCallback(async () => {
-        if (!isClient || !user) return;
+    const saveProgress = useCallback(() => {
+        if (!isClient) return;
         const progress = {
             scores: levelScores,
             total: totalScore,
         };
-        await saveGameProgress(user.uid, { characterAdventures: progress });
-    }, [levelScores, totalScore, isClient, user]);
+        localStorage.setItem('characterAdventuresProgress', JSON.stringify(progress));
+    }, [levelScores, totalScore, isClient]);
 
     useEffect(() => {
-        if (isClient && user) {
-            saveProgress();
+        setIsClient(true);
+        const savedProgress = localStorage.getItem('characterAdventuresProgress');
+        if (savedProgress) {
+            const progress = JSON.parse(savedProgress);
+            setLevelScores(progress.scores || {});
+            setTotalScore(progress.total || 0);
+
+            let highestUnlocked = 1;
+            for (let i = 1; i <= MAX_LEVEL; i++) {
+                if((progress.scores?.[i-1] || 0) >= LEVEL_PASS_SCORE) {
+                    highestUnlocked = i + 1;
+                } else {
+                    break;
+                }
+            }
+            setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
         }
-    }, [saveProgress, isClient, user]);
+    }, []);
+
+    useEffect(() => {
+        saveProgress();
+    }, [saveProgress]);
 
     const activeTriviaLevels = language === 'en' ? triviaLevels : triviaLevelsFilipino;
     const triviaQuestions = activeTriviaLevels[currentLevel - 1] || [];

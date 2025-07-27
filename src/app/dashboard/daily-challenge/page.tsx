@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Gift, Star, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
-import { loadGameProgress, saveGameProgress } from '@/lib/firestore';
 
 const words = [
     "DAVID", "MOSES", "ABRAHAM", "ESTHER", "RUTH", "SAMSON", "GIDEON", "JONAH", "DANIEL",
@@ -103,7 +101,6 @@ const generateGrid = (seed: number) => {
 type Cell = { x: number, y: number };
 
 export default function DailyChallengePage() {
-    const { user } = useAuth();
     const [isClient, setIsClient] = useState(false);
     const [lastPlayed, setLastPlayed] = useState<string | null>(null);
     const [isSelecting, setIsSelecting] = useState(false);
@@ -118,40 +115,36 @@ export default function DailyChallengePage() {
        return generateGrid(dateSeed);
     }, [today]);
     
-    useEffect(() => {
-        setIsClient(true);
-        async function loadProgressFromDb() {
-            if (user) {
-                const progress = await loadGameProgress(user.uid);
-                const dailyProgress = progress?.dailyChallenge;
-                if (dailyProgress && dailyProgress.lastPlayed) {
-                    setLastPlayed(dailyProgress.lastPlayed);
-                    if (dailyProgress.lastPlayed === today) {
-                        setFoundWords(dailyProgress.words || []);
-                        setFoundCells(dailyProgress.cells || []);
-                    }
-                }
-            }
-        }
-        loadProgressFromDb();
-    }, [user, today]);
-
     const canPlay = lastPlayed !== today || foundWords.length < dailyWords.length;
     const isCompletedToday = lastPlayed === today && foundWords.length === dailyWords.length;
+    
+    const loadProgress = useCallback(() => {
+        const saved = localStorage.getItem(`dailyChallengeProgress_${today}`);
+        if (saved) {
+            const progress = JSON.parse(saved);
+            setLastPlayed(today);
+            setFoundWords(progress.words || []);
+            setFoundCells(progress.cells || []);
+        }
+    }, [today]);
 
-    const saveProgress = useCallback(async () => {
-        if (!isClient || !canPlay || !user) return;
+    const saveProgress = useCallback(() => {
+        if (!isClient || !canPlay) return;
         const progress = {
-            lastPlayed: today,
             words: foundWords,
             cells: foundCells
         };
-        await saveGameProgress(user.uid, { dailyChallenge: progress });
-    }, [isClient, canPlay, today, foundWords, foundCells, user]);
+        localStorage.setItem(`dailyChallengeProgress_${today}`, JSON.stringify(progress));
+    }, [isClient, canPlay, today, foundWords, foundCells]);
     
     useEffect(() => {
-        if (user) saveProgress();
-    }, [foundWords, foundCells, saveProgress, user]);
+        setIsClient(true);
+        loadProgress();
+    }, [loadProgress]);
+
+    useEffect(() => {
+        saveProgress();
+    }, [foundWords, foundCells, saveProgress]);
     
     const getSelectedCells = () => {
         if (!selection) return [];
@@ -201,7 +194,7 @@ export default function DailyChallengePage() {
         }
     };
 
-    const handleMouseUp = async () => {
+    const handleMouseUp = () => {
         if (!isSelecting || !selection) return;
         setIsSelecting(false);
         
@@ -224,13 +217,10 @@ export default function DailyChallengePage() {
             if (newFoundWords.length === dailyWords.length) {
                 setLastPlayed(today);
                 
-                if (user) {
-                    const progress = await loadGameProgress(user.uid);
-                    const verseMemoryProgress = progress?.verseMemory || { stars: 0 };
-                    const currentStars = verseMemoryProgress.stars || 0;
-                    verseMemoryProgress.stars = currentStars + BONUS_STARS;
-                    await saveGameProgress(user.uid, { verseMemory: verseMemoryProgress });
-                }
+                const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
+                const currentStars = verseMemoryProgress.stars || 0;
+                verseMemoryProgress.stars = currentStars + BONUS_STARS;
+                localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
             }
         }
         setSelection(null);

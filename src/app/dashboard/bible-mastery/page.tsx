@@ -10,8 +10,6 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useAuth } from '@/hooks/use-auth';
-import { saveGameProgress, loadGameProgress } from '@/lib/firestore';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -67,7 +65,6 @@ const TOTAL_ADVENTURE_LEVELS = 5;
 type Progress = { [level: number]: { [round: number]: boolean } };
 
 export default function BibleMasteryPage() {
-  const { user } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -88,59 +85,52 @@ export default function BibleMasteryPage() {
 
   useEffect(() => {
     setIsClient(true);
-    async function checkUnlockStatus() {
-      if (user) {
-        const gameProgress = await loadGameProgress(user.uid);
-        const charAdvProgress = gameProgress?.characterAdventures;
-        if (charAdvProgress?.scores) {
-          const completedLevels = Object.values(charAdvProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-          if (completedLevels >= TOTAL_ADVENTURE_LEVELS) {
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
+    if (characterAdventuresProgress.scores) {
+        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
+        if (completedLevels >= TOTAL_ADVENTURE_LEVELS) {
             setIsUnlocked(true);
-          }
         }
-      }
     }
-    checkUnlockStatus();
-  }, [user]);
+  }, [isClient]);
   
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   
   const totalStars = Object.values(progress).flatMap(levelProgress => Object.values(levelProgress)).filter(Boolean).length;
   const totalRounds = levels.reduce((acc, l) => acc + l.rounds, 0);
 
-  const loadProgress = useCallback(async () => {
-    if (user) {
-        const savedProgress = await loadGameProgress(user.uid);
-        const masteryProgress = savedProgress?.bibleMastery;
-        if (masteryProgress) {
-            setProgress(masteryProgress.progress || {});
-            setCurrentLevel(masteryProgress.level || 1);
-            setCurrentRound(masteryProgress.round || 1);
-        }
+  const loadProgress = useCallback(() => {
+    if(!isClient) return;
+    const savedProgress = localStorage.getItem('bibleMasteryProgress');
+    if (savedProgress) {
+        const parsedProgress = JSON.parse(savedProgress);
+        setProgress(parsedProgress.progress || {});
+        setCurrentLevel(parsedProgress.level || 1);
+        setCurrentRound(parsedProgress.round || 1);
     }
-  }, [user]);
+  }, [isClient]);
   
-  const saveProgress = useCallback(async () => {
-    if(!isClient || !user) return;
+  const saveProgress = useCallback(() => {
+    if(!isClient) return;
     const dataToSave = {
         progress,
         level: currentLevel,
         round: currentRound
     };
-    await saveGameProgress(user.uid, { bibleMastery: dataToSave });
-  }, [progress, currentLevel, currentRound, isClient, user]);
+    localStorage.setItem('bibleMasteryProgress', JSON.stringify(dataToSave));
+  }, [progress, currentLevel, currentRound, isClient]);
 
   useEffect(() => {
-    if(isClient && user) {
-      loadProgress();
-    }
-  }, [isClient, user, loadProgress]);
+    loadProgress();
+  }, [loadProgress]);
 
   useEffect(() => {
-    if (user) {
-      saveProgress();
-    }
-  }, [progress, saveProgress, user]);
+    saveProgress();
+  }, [progress, saveProgress]);
 
   const startRound = useCallback((level: number, round: number) => {
     setShowSuccessDialog(false);
@@ -221,7 +211,7 @@ export default function BibleMasteryPage() {
       setCurrentRound(1);
       setProgress({});
       setIsGameFinished(false);
-      if(user) saveGameProgress(user.uid, { bibleMastery: {} });
+      localStorage.removeItem('bibleMasteryProgress');
   };
 
   const toggleLanguage = () => {
