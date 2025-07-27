@@ -91,7 +91,6 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
               blankCounter++;
 
               let correctWordWithPunctuation = missingWords[currentBlankIndex];
-              // Ensure missingWords[currentBlankIndex] is not undefined before using it
               if (missingWords[currentBlankIndex]) {
                   for (let i = wordComponentIndex; i < originalWordsWithPunctuation.length; i++) {
                       const word = originalWordsWithPunctuation[i];
@@ -707,16 +706,9 @@ export default function VerseMemoryPage() {
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
            {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
-            {gameState !== 'incorrect' && attemptScore !== 3 ? (
-                <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
-                    Check My Answer
-                </Button>
-            ) : null}
-             {gameState === 'incorrect' && (
-                <Button onClick={tryAgain} variant="destructive">
-                    <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-                </Button>
-            )}
+             <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
+                Check My Answer
+            </Button>
             <Button variant="outline" onClick={handleHintClick} disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed'}>
                 <HelpCircle className="mr-2 h-4 w-4"/>
                 Hint ({hintsRemaining})
@@ -846,9 +838,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
-
-    
-
-    
