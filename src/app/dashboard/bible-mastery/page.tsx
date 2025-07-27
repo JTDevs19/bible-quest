@@ -4,16 +4,23 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-const allBooks = [
+const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
   "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"
 ];
-const oldTestamentBooks = allBooks.slice(0, 39);
-const newTestamentBooks = allBooks.slice(39);
+
+const bookTranslations: { [key: string]: string } = {
+  "Genesis": "Genesis", "Exodus": "Exodo", "Leviticus": "Levitico", "Numbers": "Mga Bilang", "Deuteronomy": "Deuteronomio", "Joshua": "Josue", "Judges": "Mga Hukom", "Ruth": "Ruth", "1 Samuel": "1 Samuel", "2 Samuel": "2 Samuel", "1 Kings": "1 Mga Hari", "2 Kings": "2 Mga Hari", "1 Chronicles": "1 Mga Cronica", "2 Chronicles": "2 Mga Cronica", "Ezra": "Ezra", "Nehemiah": "Nehemias", "Esther": "Esther", "Job": "Job", "Psalms": "Mga Awit", "Proverbs": "Mga Kawikaan", "Ecclesiastes": "Eclesiastes", "Song of Solomon": "Ang Awit ni Solomon", "Isaiah": "Isaias", "Jeremiah": "Jeremias", "Lamentations": "Mga Panaghoy", "Ezekiel": "Ezekiel", "Daniel": "Daniel", "Hosea": "Oseas", "Joel": "Joel", "Amos": "Amos", "Obadiah": "Obadias", "Jonah": "Jonas", "Micah": "Mikas", "Nahum": "Nahum", "Habakkuk": "Habacuc", "Zephaniah": "Sofonias", "Haggai": "Hagai", "Zechariah": "Zacarias", "Malachi": "Malakias",
+  "Matthew": "Mateo", "Mark": "Marcos", "Luke": "Lucas", "John": "Juan", "Acts": "Mga Gawa", "Romans": "Mga Taga-Roma", "1 Corinthians": "1 Mga Taga-Corinto", "2 Corinthians": "2 Mga Taga-Corinto", "Galatians": "Mga Taga-Galacia", "Ephesians": "Mga Taga-Efeso", "Philippians": "Mga Taga-Filipos", "Colossians": "Mga Taga-Colosas", "1 Thessalonians": "1 Mga Taga-Tesalonica", "2 Thessalonians": "2 Mga Taga-Tesalonica", "1 Timothy": "1 Timoteo", "2 Timothy": "2 Timoteo", "Titus": "Tito", "Philemon": "Filemon", "Hebrews": "Mga Hebreo", "James": "Santiago", "1 Peter": "1 Pedro", "2 Peter": "2 Pedro", "1 John": "1 Juan", "2 John": "2 Juan", "3 John": "3 Juan", "Jude": "Judas", "Revelation": "Pahayag"
+};
+
+
+const oldTestamentBooks = allBooksEnglish.slice(0, 39);
+const newTestamentBooks = allBooksEnglish.slice(39);
 
 const shuffleArray = (array: any[]) => {
   let currentIndex = array.length, randomIndex;
@@ -43,7 +50,7 @@ const generateLevelConfig = () => {
     // Master Levels
     config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks });
     config.push({ level: 32, booksToArrange: newTestamentBooks.length, rounds: 1, title: 'Master Level 2: New Testament', books: newTestamentBooks });
-    config.push({ level: 33, booksToArrange: allBooks.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooks });
+    config.push({ level: 33, booksToArrange: allBooksEnglish.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooksEnglish });
     
     return config;
 };
@@ -57,6 +64,7 @@ export default function BibleMasteryPage() {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [progress, setProgress] = useState<Progress>({});
+  const [language, setLanguage] = useState<'en' | 'fil'>('en');
   
   const [shuffledBooks, setShuffledBooks] = useState<string[]>([]);
   const [correctOrder, setCorrectOrder] = useState<string[]>([]);
@@ -107,14 +115,13 @@ export default function BibleMasteryPage() {
     if (config.books) {
         roundBooks = [...config.books];
     } else {
-        const startIndex = Math.floor(Math.random() * (allBooks.length - config.booksToArrange));
-        roundBooks = allBooks.slice(startIndex, startIndex + config.booksToArrange);
+        const startIndex = Math.floor(Math.random() * (allBooksEnglish.length - config.booksToArrange));
+        roundBooks = allBooksEnglish.slice(startIndex, startIndex + config.booksToArrange);
     }
 
     setCorrectOrder(roundBooks);
     
     let shuffled = shuffleArray([...roundBooks]);
-    // Ensure it's not already correct
     if(config.booksToArrange > 1) {
         while (JSON.stringify(shuffled) === JSON.stringify(roundBooks)) {
           shuffled = shuffleArray([...roundBooks]);
@@ -128,7 +135,6 @@ export default function BibleMasteryPage() {
   useEffect(() => {
     startRound(currentLevel, currentRound);
   }, [currentLevel, currentRound, startRound]);
-
 
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null) return;
@@ -179,6 +185,17 @@ export default function BibleMasteryPage() {
       localStorage.removeItem('bibleMasteryProgress');
   };
 
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'fil' : 'en');
+  };
+
+  const getTranslatedBook = (englishBook: string) => {
+      if (language === 'fil') {
+          return bookTranslations[englishBook] || englishBook;
+      }
+      return englishBook;
+  };
+
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
   }
@@ -211,28 +228,31 @@ export default function BibleMasteryPage() {
   }
   
   const hasCompletedRound = progress[currentLevel]?.[currentRound];
+  const pageTitle = language === 'en' ? "Books of the Bible Mastery" : "Kasanayan sa mga Aklat ng Bibliya";
+  const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
   return (
     <div className="max-w-md mx-auto">
         <div className="text-center mb-4">
-            <h1 className="font-headline text-3xl font-bold">Books of the Bible Mastery</h1>
-            <p className="text-muted-foreground">Drag and drop the books into the correct order.</p>
+            <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>
+            <p className="text-muted-foreground">{pageDescription}</p>
         </div>
 
         <div className="text-center mb-4 p-2 bg-muted rounded-lg font-semibold flex justify-around items-center">
-           <div>Level: {currentLevel} / {levels.length}</div>
-           <div>Round: {currentRound} / {levelConfig.rounds}</div>
+           <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
+           <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
            <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 text-yellow-500"/> {totalStars} / {totalRounds}
            </div>
+           <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
 
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="font-headline text-2xl">{levelConfig.title || `Arrange ${levelConfig.booksToArrange} Books`}</CardTitle>
-                        <CardDescription>Level {currentLevel}, Round {currentRound}</CardDescription>
+                        <CardTitle className="font-headline text-2xl">{levelConfig.title || (language === 'en' ? `Arrange ${levelConfig.booksToArrange} Books` : `Ayusin ang ${levelConfig.booksToArrange} na Aklat`)}</CardTitle>
+                        <CardDescription>{language === 'en' ? 'Level' : 'Antas'} {currentLevel}, {language === 'en' ? 'Round' : 'Ronda'} {currentRound}</CardDescription>
                     </div>
                     {hasCompletedRound && <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />}
                 </div>
@@ -255,17 +275,19 @@ export default function BibleMasteryPage() {
                             )}
                         >
                             <GripVertical className="mr-4 text-muted-foreground" />
-                            <span className="font-medium">{book}</span>
+                            <span className="font-medium">{getTranslatedBook(book)}</span>
                         </div>
                     ))}
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
-                    {isCorrect === null && <Button onClick={checkOrder}>Check Order</Button>}
-                    {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">Correct! Next</Button>}
-                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive"><Shuffle className="mr-2"/> Try Again</Button>}
+                    {isCorrect === null && <Button onClick={checkOrder}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
+                    {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{language === 'en' ? 'Correct! Next' : 'Tama! Susunod'}</Button>}
+                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive"><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
                 </div>
             </CardContent>
         </Card>
     </div>
   );
 }
+
+    
