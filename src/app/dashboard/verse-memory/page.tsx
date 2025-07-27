@@ -136,6 +136,7 @@ export default function VerseMemoryPage() {
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [totalStars, setTotalStars] = useState(0);
   const [revealsRemaining, setRevealsRemaining] = useState(INITIAL_REVEALS);
+  const [tradeAmount, setTradeAmount] = useState(1);
 
   const [userInputs, setUserInputs] = useState<string[]>([]);
   const [gameState, setGameState] = useState<GameState>('playing');
@@ -179,6 +180,10 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     saveProgress();
   }, [saveProgress]);
+
+  const recalculateTotalStars = (scores: VerseScores) => {
+    return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
+  };
   
   const resetAllProgress = () => {
     if (!isClient) return;
@@ -196,11 +201,10 @@ export default function VerseMemoryPage() {
     if (!isClient) return;
 
     const newScores = { ...verseScores };
-    const starsToSubtract = Object.values(newScores[currentLevel] || {}).reduce((sum, score) => sum + score, 0);
     delete newScores[currentLevel];
     
-    setTotalStars(prev => Math.max(0, prev - starsToSubtract));
     setVerseScores(newScores);
+    setTotalStars(recalculateTotalStars(newScores));
     setCurrentVerseIndex(0);
     setShowResetConfirm(null);
 };
@@ -265,7 +269,7 @@ export default function VerseMemoryPage() {
         setMissingWords(missing);
         setUserInputs(new Array(missing.length).fill(''));
     }
-  }, [currentVerseIndex, currentLevel, isClient, currentVerse, verseScores, wordsToBlankForCurrentLevel]);
+  }, [currentVerseIndex, currentLevel, isClient]);
 
   useEffect(() => {
     setupRound();
@@ -301,36 +305,26 @@ export default function VerseMemoryPage() {
     const score = calculateScore(userInputs);
     setAttemptScore(score);
 
+    const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+    if(score > oldScore) {
+       const newScores = {
+          ...verseScores,
+          [currentLevel]: {
+            ...(verseScores[currentLevel] || {}),
+            [currentVerseIndex]: score
+          }
+       };
+       setVerseScores(newScores);
+       setTotalStars(recalculateTotalStars(newScores));
+    }
+      
     if (score === 3) {
       setGameState('scored');
-      const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-      if(score > oldScore) {
-         setVerseScores(prevScores => ({
-            ...prevScores,
-            [currentLevel]: {
-              ...(prevScores[currentLevel] || {}),
-              [currentVerseIndex]: score
-            }
-         }));
-         setTotalStars(prevTotal => prevTotal + (score - oldScore));
-      }
       setIsVerseMastered(true);
-      setShowSummaryDialog(true);
     } else {
        setGameState('incorrect');
-       const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-       if(score > oldScore) {
-          setVerseScores(prevScores => ({
-              ...prevScores,
-              [currentLevel]: {
-                ...(prevScores[currentLevel] || {}),
-                [currentVerseIndex]: score
-              }
-          }));
-          setTotalStars(prevTotal => prevTotal + (score - oldScore));
-       }
-       setShowSummaryDialog(true);
     }
+    setShowSummaryDialog(true);
   };
 
   const handleNext = () => {
@@ -369,6 +363,7 @@ export default function VerseMemoryPage() {
         setRevealsRemaining(r => r - 1);
         performReveal();
     } else {
+        setTradeAmount(1); // Reset trade amount when opening dialog
         setShowTradeDialog(true);
     }
   };
@@ -381,12 +376,11 @@ export default function VerseMemoryPage() {
     setShowSummaryDialog(true);
   }
 
-  const handleTradeStarForReveal = () => {
-    setShowTradeDialog(false);
-    if (totalStars > 0) {
-        setTotalStars(s => s - 1);
-        // We don't increment reveals, we just immediately use it
-        performReveal();
+  const handleTradeForReals = () => {
+    if (totalStars >= tradeAmount && tradeAmount > 0) {
+        setTotalStars(s => s - tradeAmount);
+        setRevealsRemaining(r => r + tradeAmount);
+        setShowTradeDialog(false);
     }
   };
 
@@ -721,15 +715,23 @@ export default function VerseMemoryPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>No Reveals Remaining</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {totalStars > 0
-                            ? `You can trade 1 star for 1 reveal. You currently have ${totalStars} star(s).`
-                            : "You have no stars to trade for a reveal. Try earning more stars in other challenges!"}
+                        You can trade your stars for more reveals. You currently have {totalStars} star(s).
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="flex items-center gap-2">
+                    <Input 
+                        type="number"
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max={totalStars}
+                    />
+                    <Label>Star(s) for {tradeAmount} Reveal(s)</Label>
+                </div>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleTradeStarForReveal} disabled={totalStars <= 0}>
-                        Trade 1 <Star className="w-4 h-4 ml-1" />
+                    <AlertDialogAction onClick={handleTradeForReals} disabled={totalStars < tradeAmount || tradeAmount <= 0}>
+                        Trade {tradeAmount} <Star className="w-4 h-4 ml-1" />
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -739,3 +741,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
