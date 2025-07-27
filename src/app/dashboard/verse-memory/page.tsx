@@ -196,12 +196,11 @@ export default function VerseMemoryPage() {
     if (!isClient) return;
 
     const newScores = { ...verseScores };
+    const starsToSubtract = Object.values(newScores[currentLevel] || {}).reduce((sum, score) => sum + score, 0);
     delete newScores[currentLevel];
     
-    const newTotalStars = Object.values(newScores).flat().reduce((sum, score) => sum + (score || 0), 0);
-    
+    setTotalStars(prev => Math.max(0, prev - starsToSubtract));
     setVerseScores(newScores);
-    setTotalStars(newTotalStars);
     setCurrentVerseIndex(0);
     setShowResetConfirm(null);
 };
@@ -237,7 +236,20 @@ export default function VerseMemoryPage() {
             .filter(item => item.word.trim().length > 3 && /^[a-zA-Z]+$/.test(item.word.trim()))
             .map(item => item.index);
         
-        const shuffled = [...potentialBlankIndices].sort(() => 0.5 - Math.random());
+        // Seeded shuffle to make blank words consistent
+        const seedString = `${currentVerse.reference}-${currentLevel}`;
+        let h = 1779033703 ^ seedString.length;
+        for (let i = 0; i < seedString.length; i++) {
+            h = Math.imul(h ^ seedString.charCodeAt(i), 3432918353);
+            h = h << 13 | h >>> 19;
+        }
+        const pseudoRandom = () => {
+            h = Math.imul(h ^ h >>> 16, 2246822507);
+            h = Math.imul(h ^ h >>> 13, 3266489909);
+            return ((h ^= h >>> 16) >>> 0) / 4294967296;
+        };
+
+        const shuffled = [...potentialBlankIndices].sort(() => pseudoRandom() - 0.5);
         const blankIndices = new Set(shuffled.slice(0, wordsToBlankForCurrentLevel));
 
         words.forEach((word, index) => {
@@ -305,26 +317,19 @@ export default function VerseMemoryPage() {
       setIsVerseMastered(true);
       setShowSummaryDialog(true);
     } else {
-       if (currentLevel === 1) {
-        setGameState('incorrect');
-        // Allow partial credit for level 1 to be saved, but still require "try again"
-        if (score > 0) {
-           const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-           if(score > oldScore) {
-              setVerseScores(prevScores => ({
-                  ...prevScores,
-                  [currentLevel]: {
-                    ...(prevScores[currentLevel] || {}),
-                    [currentVerseIndex]: score
-                  }
-              }));
-              setTotalStars(prevTotal => prevTotal + (score - oldScore));
-           }
-        }
-      } else {
-        setGameState('checking');
-        setCheckAttempts(prev => prev - 1);
-      }
+       setGameState('incorrect');
+       const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
+       if(score > oldScore) {
+          setVerseScores(prevScores => ({
+              ...prevScores,
+              [currentLevel]: {
+                ...(prevScores[currentLevel] || {}),
+                [currentVerseIndex]: score
+              }
+          }));
+          setTotalStars(prevTotal => prevTotal + (score - oldScore));
+       }
+       setShowSummaryDialog(true);
     }
   };
 
@@ -599,14 +604,13 @@ export default function VerseMemoryPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
-           {gameState === 'incorrect' && currentLevel === 1 && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
+           {gameState === 'incorrect' && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
-            {gameState !== 'incorrect' && (
+            {gameState !== 'incorrect' ? (
                 <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)} onClick={handleSubmit}>
                     {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
                 </Button>
-            )}
-             {gameState === 'incorrect' && currentLevel === 1 && (
+            ) : (
                 <Button onClick={tryAgain} variant="destructive">
                     <RefreshCw className="mr-2 h-4 w-4" /> Try Again
                 </Button>
@@ -661,7 +665,7 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' || (gameState === 'scored' && attemptScore < 3) ? (
+               {gameState === 'revealed' || (gameState === 'incorrect') || (gameState === 'scored' && attemptScore < 3) ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
@@ -677,9 +681,9 @@ export default function VerseMemoryPage() {
              </CardContent>
           </Card>
           <AlertDialogFooter>
-            {gameState === 'scored' && attemptScore < 3 && (
-                 <AlertDialogCancel onClick={() => setShowSummaryDialog(false)}>Continue Practicing</AlertDialogCancel>
-            )}
+            {gameState === 'incorrect' || (gameState === 'scored' && attemptScore < 3) ? (
+                 <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
+            ) : null}
             <AlertDialogAction onClick={handleNext}>
                 {currentVerseIndex === verses.length - 1 ? (
                     totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL ? "Start Next Level!" : "Finish Level"
