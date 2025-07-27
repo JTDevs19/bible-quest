@@ -613,9 +613,8 @@ export default function VerseMemoryPage() {
       return "Keep trying! Memorization is a journey. You can do it!";
   }
 
-  const starsForNextLevel = currentLevel * verses.length * STARS_PER_VERSE;
   const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-  const canUnlockNextLevel = totalStars >= starsForNextLevel && currentLevel < MAX_LEVEL;
+  const canUnlockNextLevel = totalStars >= (currentLevel * verses.length * STARS_PER_VERSE) && currentLevel < MAX_LEVEL;
 
 
   if (!isClient || !currentVerse) {
@@ -711,15 +710,11 @@ export default function VerseMemoryPage() {
           {isVerseMastered && (
              <>
                 <div className="absolute -top-3 -left-3 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute top-0 left-0 h-2 w-2"></div>
-                    <div className="absolute bottom-0 right-0 h-2 w-2"></div>
                     <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
                         <CheckCircle className="w-4 h-4 mx-auto my-1"/>
                     </div>
                 </div>
                 <div className="absolute -top-3 -right-3 w-16 h-16 overflow-hidden z-10">
-                    <div className="absolute top-0 left-0 h-2 w-2"></div>
-                    <div className="absolute bottom-0 right-0 h-2 w-2"></div>
                     <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
                          <CheckCircle className="w-4 h-4 mx-auto my-1"/>
                     </div>
@@ -728,15 +723,20 @@ export default function VerseMemoryPage() {
           )}
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center gap-4">
+              <div className="flex justify-between items-start gap-4">
                   <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
                       <ChevronLeft className="w-5 h-5"/>
                   </Button>
-                  <div className="flex-grow text-center">
+                  <div className="flex-grow text-center space-y-2">
                     <CardTitle className="font-headline text-2xl">
                       {currentVerse.reference} ({currentVerse.version})
                     </CardTitle>
                     <CardDescription>Fill in the missing words from the verse below.</CardDescription>
+                     <div className="flex justify-center">
+                        {Array.from({length: 3}).map((_, i) => (
+                            <Star key={i} className={cn("h-6 w-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                        ))}
+                    </div>
                   </div>
                    <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
                       <ChevronRight className="w-5 h-5"/>
@@ -929,3 +929,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
