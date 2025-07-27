@@ -1,8 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { DragDropContext, Droppable, Draggable, type DropResult } from 'react-beautiful-dnd';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, GripVertical, Shuffle, Star, Trophy } from 'lucide-react';
@@ -58,6 +57,9 @@ export default function BibleMasteryPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
 
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
   const currentLevel = levels[currentLevelIndex];
   const totalStars = Object.values(progress).filter(Boolean).length;
 
@@ -69,8 +71,9 @@ export default function BibleMasteryPage() {
   }, []);
   
   const saveProgress = useCallback(() => {
+    if(!isClient) return;
     localStorage.setItem('bibleMasteryProgress', JSON.stringify(progress));
-  }, [progress]);
+  }, [progress, isClient]);
 
   useEffect(() => {
     setIsClient(true);
@@ -79,29 +82,34 @@ export default function BibleMasteryPage() {
 
   useEffect(() => {
     saveProgress();
-  }, [progress]);
+  }, [progress, saveProgress]);
 
-  useEffect(() => {
-    startLevel(currentLevelIndex);
-  }, [currentLevelIndex]);
-
-  const startLevel = (levelIndex: number) => {
+  const startLevel = useCallback((levelIndex: number) => {
     const levelBooks = levels[levelIndex].books;
     let shuffled = shuffleArray([...levelBooks]);
-    // Ensure it's not already sorted
-    while (shuffled.every((book, index) => book === levelBooks[index])) {
+    while (JSON.stringify(shuffled) === JSON.stringify(levelBooks)) {
       shuffled = shuffleArray([...levelBooks]);
     }
     setShuffledBooks(shuffled);
     setIsCorrect(null);
     setIsGameFinished(false);
-  }
+  }, []);
 
-  const handleOnDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    const items = Array.from(shuffledBooks);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  useEffect(() => {
+    startLevel(currentLevelIndex);
+  }, [currentLevelIndex, startLevel]);
+
+
+  const handleDragSort = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    
+    const items = [...shuffledBooks];
+    const [reorderedItem] = items.splice(dragItem.current, 1);
+    items.splice(dragOverItem.current, 0, reorderedItem);
+    
+    dragItem.current = null;
+    dragOverItem.current = null;
+    
     setShuffledBooks(items);
     setIsCorrect(null);
   };
@@ -146,6 +154,7 @@ export default function BibleMasteryPage() {
                           <Button onClick={() => {
                               setCurrentLevelIndex(0);
                               setIsGameFinished(false);
+                              setProgress({});
                           }} size="lg">
                               Play Again
                           </Button>
@@ -178,35 +187,27 @@ export default function BibleMasteryPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <DragDropContext onDragEnd={handleOnDragEnd}>
-                    <Droppable droppableId="books">
-                        {(provided) => (
-                            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                                {shuffledBooks.map((book, index) => (
-                                    <Draggable key={book} draggableId={book} index={index}>
-                                        {(provided, snapshot) => (
-                                            <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                className={cn(
-                                                    "flex items-center p-4 rounded-lg border bg-card transition-shadow",
-                                                    snapshot.isDragging && "shadow-lg",
-                                                    isCorrect === true && "bg-green-100 border-green-500",
-                                                    isCorrect === false && currentLevel.books[index] !== book && "bg-red-100 border-red-500 animate-shake"
-                                                )}
-                                            >
-                                                <GripVertical className="mr-4 text-muted-foreground" />
-                                                <span className="font-medium">{book}</span>
-                                            </div>
-                                        )}
-                                    </Draggable>
-                                ))}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-                </DragDropContext>
+                <div className="space-y-2">
+                    {shuffledBooks.map((book, index) => (
+                         <div
+                            key={book}
+                            draggable
+                            onDragStart={() => (dragItem.current = index)}
+                            onDragEnter={() => (dragOverItem.current = index)}
+                            onDragEnd={handleDragSort}
+                            onDragOver={(e) => e.preventDefault()}
+                            className={cn(
+                                "flex items-center p-4 rounded-lg border bg-card transition-all cursor-move",
+                                dragItem.current === index && "shadow-lg opacity-50",
+                                isCorrect === true && "bg-green-100 border-green-500",
+                                isCorrect === false && currentLevel.books[index] !== book && "bg-red-100 border-red-500 animate-shake"
+                            )}
+                        >
+                            <GripVertical className="mr-4 text-muted-foreground" />
+                            <span className="font-medium">{book}</span>
+                        </div>
+                    ))}
+                </div>
                 <div className="mt-6 flex flex-col gap-2">
                     {isCorrect === null && <Button onClick={checkOrder}>Check Order</Button>}
                     {isCorrect === true && <Button onClick={handleNextLevel} className="bg-green-600 hover:bg-green-700">Correct! Next Level</Button>}
