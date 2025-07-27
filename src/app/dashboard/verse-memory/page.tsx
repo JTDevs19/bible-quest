@@ -709,19 +709,22 @@ export default function VerseMemoryPage() {
 
       <div className="relative">
           {isVerseMastered && (
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-12 z-10 flex justify-center items-end pointer-events-none">
-                    <div className="absolute top-0 w-full h-full">
-                        {/* Ribbons */}
-                        <div className="absolute top-2 -left-4 w-16 h-8 bg-yellow-400 transform -rotate-45" style={{clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'}}/>
-                        <div className="absolute top-2 -right-4 w-16 h-8 bg-yellow-400 transform rotate-45" style={{clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)'}}/>
+             <>
+                <div className="absolute -top-3 -left-3 w-16 h-16 overflow-hidden z-10">
+                    <div className="absolute top-0 left-0 h-2 w-2"></div>
+                    <div className="absolute bottom-0 right-0 h-2 w-2"></div>
+                    <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', left: '-35%', top: '25%' }}>
+                        <CheckCircle className="w-4 h-4 mx-auto my-1"/>
                     </div>
-                     {/* Crown Stars */}
-                    <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-                        <Star className="w-8 h-8 text-yellow-400 fill-yellow-400 absolute bottom-4 left-1/2 -translate-x-1/2" />
-                        <Star className="w-7 h-7 text-yellow-400 fill-yellow-400 absolute bottom-1 left-8 transform -rotate-15" />
-                        <Star className="w-7 h-7 text-yellow-400 fill-yellow-400 absolute bottom-1 right-8 transform rotate-15" />
-                    </motion.div>
                 </div>
+                <div className="absolute -top-3 -right-3 w-16 h-16 overflow-hidden z-10">
+                    <div className="absolute top-0 left-0 h-2 w-2"></div>
+                    <div className="absolute bottom-0 right-0 h-2 w-2"></div>
+                    <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center" style={{ width: '150%', right: '-35%', top: '25%' }}>
+                         <CheckCircle className="w-4 h-4 mx-auto my-1"/>
+                    </div>
+                </div>
+             </>
           )}
           <Card>
             <CardHeader>
