@@ -166,6 +166,7 @@ export default function VerseMemoryPage() {
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
   const [showUnlockDialog, setShowUnlockDialog] = useState(false);
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
+  const [highlightNextButton, setHighlightNextButton] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -225,6 +226,15 @@ export default function VerseMemoryPage() {
   useEffect(() => {
     saveProgress();
   }, [verseScores, totalStars, revealsRemaining, hintsRemaining, saveProgress]);
+
+  useEffect(() => {
+    if (highlightNextButton) {
+      const timer = setTimeout(() => {
+        setHighlightNextButton(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightNextButton]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
     return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
@@ -382,6 +392,7 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         isMasteredNow = true;
         setGameState('scored');
+        setHighlightNextButton(true);
         
         const newTotalStars = oldTotalStars + (score - oldScore);
         if (oldTotalStars < STARS_TO_UNLOCK_ADVENTURES && newTotalStars >= STARS_TO_UNLOCK_ADVENTURES) {
@@ -748,7 +759,14 @@ export default function VerseMemoryPage() {
                {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
               <div className="flex flex-wrap gap-2 justify-center">
                  {isVerseMastered ? (
-                    <Button variant="secondary" onClick={handleNext} className="w-full">
+                    <Button 
+                      variant="secondary"
+                      onClick={handleNext}
+                      className={cn(
+                        "w-full transition-all duration-300",
+                        highlightNextButton && "bg-primary text-primary-foreground animate-pulse"
+                      )}
+                    >
                       {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
                     </Button>
                  ) : (
