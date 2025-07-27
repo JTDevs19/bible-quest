@@ -607,9 +607,9 @@ export default function VerseMemoryPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Use a Hint?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            <p>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</p>
-                            <p className="font-bold mt-2">You have {hintsRemaining} hint(s) remaining for this round.</p>
-                            <p>Are you sure you want to use a hint?</p>
+                            <div>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</div>
+                            <div className="font-bold mt-2">You have {hintsRemaining} hint(s) remaining for this round.</div>
+                            <div>Are you sure you want to use a hint?</div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
