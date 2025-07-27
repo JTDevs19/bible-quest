@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -133,12 +134,122 @@ export default function RegisterPage() {
                 <FormField control={form.control} name="password" render={({ field }) => ( <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder="••••••••" {...field} /></FormControl><FormMessage /></FormItem> )} />
               </div>
               
-              <FormField control={form.control} name="avatar" render={({ field }) => ( <FormItem><FormLabel>Choose an avatar</FormLabel><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2"> {avatars.map((avatar) => ( <FormItem key={avatar.name}><FormControl><Label htmlFor={avatar.name} className="flex flex-col items-center justify-center p-4 border rounded-lg cursor-pointer hover:bg-muted/50 has-[input:checked]:bg-muted has-[input:checked]:border-primary text-center"> <RadioGroupItem value={avatar.name} id={avatar.name} className="sr-only" /> <avatar.icon className="w-12 h-12 mb-2 text-primary" /> <span className="text-sm font-medium">{avatar.name}</span> </Label></FormControl></FormItem> ))} </RadioGroup><FormMessage /></FormItem> )} />
+              <FormField
+                control={form.control}
+                name="avatar"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Choose an avatar</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2"
+                      >
+                        {avatars.map((avatar) => (
+                          <FormItem key={avatar.name}>
+                            <Label
+                              htmlFor={avatar.name}
+                              className="flex flex-col items-center justify-center p-4 border rounded-lg cursor-pointer hover:bg-muted/50 has-[input:checked]:bg-muted has-[input:checked]:border-primary text-center"
+                            >
+                              <RadioGroupItem value={avatar.name} id={avatar.name} className="sr-only" />
+                              <avatar.icon className="w-12 h-12 mb-2 text-primary" />
+                              <span className="text-sm font-medium">{avatar.name}</span>
+                            </Label>
+                          </FormItem>
+                        ))}
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField control={form.control} name="ageGroup" render={({ field }) => ( <FormItem><FormLabel>Age Group</FormLabel><FormControl> <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2 pt-2">{ageGroups.map(group => <FormItem key={group} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={group} id={`age-${group}`} /></FormControl><Label htmlFor={`age-${group}`} className='font-normal'>{group}</Label></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="spiritualLevel" render={({ field }) => ( <FormItem><FormLabel>Spiritual Level</FormLabel><FormControl> <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2 pt-2">{spiritualLevels.map(level => <FormItem key={level} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={level} id={`level-${level}`} /></FormControl><Label htmlFor={`level-${level}`} className='font-normal'>{level}</Label></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="focus" render={({ field }) => ( <FormItem><FormLabel>Focus Area</FormLabel><FormControl> <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2 pt-2">{focusOptions.map(focus => <FormItem key={focus} className="flex items-center space-x-2"><FormControl><RadioGroupItem value={focus} id={`focus-${focus}`} /></FormControl><Label htmlFor={`focus-${focus}`} className='font-normal'>{focus}</Label></FormItem>)}</RadioGroup></FormControl><FormMessage /></FormItem>)} />
+                <FormField
+                  control={form.control}
+                  name="ageGroup"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Age Group</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="space-y-2 pt-2"
+                        >
+                          {ageGroups.map((group) => (
+                            <FormItem key={group} className="flex items-center space-x-2">
+                              <FormControl>
+                                <RadioGroupItem value={group} id={`age-${group}`} />
+                              </FormControl>
+                              <Label htmlFor={`age-${group}`} className="font-normal">
+                                {group}
+                              </Label>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="spiritualLevel"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Spiritual Level</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="space-y-2 pt-2"
+                        >
+                          {spiritualLevels.map((level) => (
+                            <FormItem key={level} className="flex items-center space-x-2">
+                              <FormControl>
+                                <RadioGroupItem value={level} id={`level-${level}`} />
+                              </FormControl>
+                              <Label htmlFor={`level-${level}`} className="font-normal">
+                                {level}
+                              </Label>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="focus"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Focus Area</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="space-y-2 pt-2"
+                        >
+                          {focusOptions.map((focus) => (
+                            <FormItem key={focus} className="flex items-center space-x-2">
+                              <FormControl>
+                                <RadioGroupItem value={focus} id={`focus-${focus}`} />
+                              </FormControl>
+                              <Label htmlFor={`focus-${focus}`} className="font-normal">
+                                {focus}
+                              </Label>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
             </CardContent>
