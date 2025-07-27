@@ -157,6 +157,7 @@ export default function CharacterAdventuresPage() {
     const [levelScores, setLevelScores] = useState<LevelScores>({});
     const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
+    const [showTour, setShowTour] = useState(false);
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [currentLevelScore, setCurrentLevelScore] = useState(0);
@@ -194,6 +195,12 @@ export default function CharacterAdventuresPage() {
             }
             setCurrentLevel(Math.min(highestUnlocked, MAX_LEVEL));
         }
+        
+        const tourSeen = localStorage.getItem('characterAdventuresTourSeen');
+        if (!tourSeen) {
+            setShowTour(true);
+        }
+
     }, []);
 
     useEffect(() => {
@@ -274,6 +281,11 @@ export default function CharacterAdventuresPage() {
         exit: { opacity: 0, scale: 0.9 }
     };
     
+    const closeTour = () => {
+        setShowTour(false);
+        localStorage.setItem('characterAdventuresTourSeen', 'true');
+    };
+
     if (!isClient) {
         return <div>Loading...</div>;
     }
@@ -326,6 +338,7 @@ export default function CharacterAdventuresPage() {
     }
 
   return (
+    <>
     <div className="max-w-2xl mx-auto">
         <div className="text-center mb-4">
             <h1 className="font-headline text-3xl font-bold">Bible Character Adventures</h1>
@@ -466,7 +479,27 @@ export default function CharacterAdventuresPage() {
               </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
     </div>
+    <AlertDialog open={showTour} onOpenChange={setShowTour}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
+                    <Users className="w-10 h-10 text-primary" />
+                </div>
+                <AlertDialogTitle className="font-headline text-2xl text-center">Welcome to Character Adventures!</AlertDialogTitle>
+                <AlertDialogDescription className="text-center space-y-2">
+                    <p>This game tests your knowledge of the people in the Bible.</p>
+                    <p>For each question, select the character you believe is the correct answer. You need a score of <strong>7 out of 10</strong> to unlock the next level.</p>
+                    <p>Master all 5 levels to unlock the final challenge: <strong>Bible Mastery</strong>!</p>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogAction onClick={closeTour} className="w-full">
+                    Let's Go!
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
