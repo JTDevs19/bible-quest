@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Gift, Star, CheckCircle, Clock } from 'lucide-react';
@@ -107,7 +107,8 @@ export default function DailyChallengePage() {
     const [selection, setSelection] = useState<{ start: Cell, end: Cell } | null>(null);
     const [foundWords, setFoundWords] = useState<string[]>([]);
     const [foundCells, setFoundCells] = useState<Cell[]>([]);
-    
+    const gridRef = useRef<HTMLDivElement>(null);
+
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     const { grid, words: dailyWords } = useMemo(() => {
@@ -156,11 +157,22 @@ export default function DailyChallengePage() {
         let x1 = end.x;
         let y1 = end.y;
 
-        // Bresenham's line algorithm
         const dx = Math.abs(x1 - x0);
         const dy = -Math.abs(y1 - y0);
-        const sx = x0 < x1 ? 1 : -1;
-        const sy = y0 < y1 ? 1 : -1;
+        let sx = x0 < x1 ? 1 : -1;
+        let sy = y0 < y1 ? 1 : -1;
+        
+        // Lock to straight line or 45-degree diagonal
+        if (dx > 0 && dy < 0 && dx !== Math.abs(dy)) {
+            if (dx > Math.abs(dy)) {
+                y1 = y0 + (Math.abs(dx) * sy);
+            } else {
+                x1 = x0 + (Math.abs(dy) * sx);
+            }
+        }
+
+
+        // Bresenham's line algorithm
         let err = dx + dy;
 
         while (true) {
@@ -168,10 +180,12 @@ export default function DailyChallengePage() {
             if (x0 === x1 && y0 === y1) break;
             let e2 = 2 * err;
             if (e2 >= dy) {
+                if (x0 === x1) break; // prevent infinite loop on vertical lines
                 err += dy;
                 x0 += sx;
             }
             if (e2 <= dx) {
+                if (y0 === y1) break; // prevent infinite loop on horizontal lines
                 err += dx;
                 y0 += sy;
             }
@@ -181,20 +195,8 @@ export default function DailyChallengePage() {
     };
     
     const selectedCells = useMemo(getSelectedCells, [selection]);
-
-    const handleMouseDown = (x: number, y: number) => {
-        if (!canPlay || isCompletedToday) return;
-        setIsSelecting(true);
-        setSelection({ start: { x, y }, end: { x, y } });
-    };
-
-    const handleMouseOver = (x: number, y: number) => {
-        if (isSelecting && selection) {
-            setSelection({ ...selection, end: { x, y } });
-        }
-    };
-
-    const handleMouseUp = () => {
+    
+    const finishSelection = () => {
         if (!isSelecting || !selection) return;
         setIsSelecting(false);
         
@@ -224,6 +226,58 @@ export default function DailyChallengePage() {
             }
         }
         setSelection(null);
+    }
+    
+    const getCellFromCoords = (clientX: number, clientY: number): Cell | null => {
+        if (!gridRef.current) return null;
+
+        const rect = gridRef.current.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+            return null;
+        }
+
+        const cellWidth = rect.width / GRID_SIZE;
+        const cellHeight = rect.height / GRID_SIZE;
+
+        const cellX = Math.floor(x / cellWidth);
+        const cellY = Math.floor(y / cellHeight);
+
+        return { x: cellX, y: cellY };
+    }
+
+
+    const handleMouseDown = (x: number, y: number) => {
+        if (!canPlay || isCompletedToday) return;
+        setIsSelecting(true);
+        setSelection({ start: { x, y }, end: { x, y } });
+    };
+
+    const handleMouseOver = (x: number, y: number) => {
+        if (isSelecting && selection) {
+            setSelection({ ...selection, end: { x, y } });
+        }
+    };
+    
+    const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (!canPlay || isCompletedToday) return;
+        const cell = getCellFromCoords(e.touches[0].clientX, e.touches[0].clientY);
+        if (cell) {
+            setIsSelecting(true);
+            setSelection({ start: cell, end: cell });
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        if (isSelecting && selection) {
+            e.preventDefault();
+            const cell = getCellFromCoords(e.touches[0].clientX, e.touches[0].clientY);
+            if (cell) {
+                setSelection({ ...selection, end: cell });
+            }
+        }
     };
 
     if (!isClient) return <div>Loading...</div>;
@@ -258,8 +312,13 @@ export default function DailyChallengePage() {
 
             <div className="flex flex-col md:flex-row gap-8 items-start">
                 <Card className="flex-grow">
-                    <CardContent className="p-4" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
-                        <div className="grid grid-cols-12 gap-1 bg-muted/50 p-2 rounded-lg aspect-square select-none">
+                    <CardContent className="p-2 md:p-4" onMouseUp={finishSelection} onMouseLeave={finishSelection} onTouchEnd={finishSelection} onTouchCancel={finishSelection}>
+                        <div
+                            ref={gridRef} 
+                            className="grid grid-cols-12 gap-1 bg-muted/50 p-2 rounded-lg aspect-square select-none"
+                            onTouchStart={handleTouchStart}
+                            onTouchMove={handleTouchMove}
+                         >
                             {grid.map((row, y) => 
                                 row.map((letter, x) => {
                                     const isSelected = selectedCells.some(cell => cell.x === x && cell.y === y);
@@ -270,9 +329,9 @@ export default function DailyChallengePage() {
                                             onMouseDown={() => handleMouseDown(x, y)}
                                             onMouseOver={() => handleMouseOver(x, y)}
                                             className={cn(
-                                                "flex items-center justify-center w-full aspect-square rounded-md text-lg font-bold uppercase cursor-pointer transition-colors",
+                                                "flex items-center justify-center w-full aspect-square rounded-sm md:rounded-md text-base md:text-lg font-bold uppercase cursor-pointer transition-colors",
                                                 isSelected ? "bg-primary text-primary-foreground" : "hover:bg-primary/10",
-                                                isFound && "bg-accent/50 border border-accent"
+                                                isFound && "bg-accent text-accent-foreground"
                                             )}
                                         >
                                             {letter}
