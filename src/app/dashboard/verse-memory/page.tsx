@@ -66,7 +66,7 @@ const verses = [
   },
 ];
 
-type GameState = 'playing' | 'checking' | 'scored' | 'revealed';
+type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect';
 type VerseParts = (string | null)[];
 type VerseScores = { [level: number]: { [verseIndex: number]: number } };
 
@@ -278,27 +278,27 @@ export default function VerseMemoryPage() {
     return 0;
   };
   
+ const tryAgain = () => {
+    setGameState('playing');
+    setEditingIndex(0);
+    setUserInputs(new Array(missingWords.length).fill(''));
+    setCheckAttempts(prev => prev -1);
+ }
 
   const handleSubmit = () => {
     if (checkAttempts <= 0 || isVerseMastered) return;
 
     setEditingIndex(null);
-    setGameState('checking');
+    const score = calculateScore(userInputs);
+    setAttemptScore(score);
 
-    const correctCount = userInputs.reduce((count, input, index) => {
-        const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
-        return isCorrect ? count + 1 : count;
-    }, 0);
+    const isPerfect = score === 3 && missingWords.length > 0;
 
-    if (correctCount === missingWords.length) {
-        const newScore = calculateScore(userInputs);
-        setAttemptScore(newScore);
-
+    if (isPerfect) {
         setVerseScores(prevScores => {
             const existingScore = prevScores[currentLevel]?.[currentVerseIndex] ?? 0;
-            const finalVerseScore = Math.max(existingScore, newScore);
+            const finalVerseScore = Math.max(existingScore, score);
 
-            // Only update total stars if the score for this verse has increased.
             if (finalVerseScore > existingScore) {
                 const scoreDiff = finalVerseScore - existingScore;
                 setTotalStars(s => s + scoreDiff);
@@ -311,17 +311,20 @@ export default function VerseMemoryPage() {
                     [currentVerseIndex]: finalVerseScore
                 }
             };
-
-            if (finalVerseScore === STARS_PER_VERSE) {
+             if (finalVerseScore === STARS_PER_VERSE) {
                 setIsVerseMastered(true);
             }
             return updatedScores;
         });
-
         setGameState('scored');
         setShowSummaryDialog(true);
     } else {
-        setCheckAttempts(prev => prev - 1);
+        if(currentLevel === 1){
+            setGameState('incorrect');
+        } else {
+            setGameState('checking');
+            setCheckAttempts(prev => prev - 1);
+        }
     }
 };
 
@@ -380,7 +383,7 @@ export default function VerseMemoryPage() {
     const newInputs = [...userInputs];
     newInputs[index] = value;
     setUserInputs(newInputs);
-    if(gameState === 'checking') setGameState('playing');
+    if(gameState === 'checking' || gameState === 'incorrect') setGameState('playing');
   };
 
   const handleLabelClick = (index: number) => {
@@ -429,7 +432,7 @@ export default function VerseMemoryPage() {
               onChange={(e) => handleInputChange(currentIndex, e.target.value)}
               onBlur={() => setEditingIndex(null)}
               autoFocus
-              className="w-32 h-8 text-base shrink-0 inline-block"
+              className={cn("w-32 h-8 text-base shrink-0 inline-block", gameState === 'incorrect' && 'border-destructive ring-destructive')}
               style={{ width: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch` }}
               disabled={isVerseMastered}
             />
@@ -439,7 +442,7 @@ export default function VerseMemoryPage() {
         const userInput = userInputs[currentIndex]?.trim().toLowerCase();
         const correctWord = missingWords[currentIndex]?.trim().toLowerCase();
         const isCorrect = userInput === correctWord;
-        const isWrong = gameState === 'checking' && !isCorrect;
+        const isWrong = (gameState === 'checking' || gameState === 'incorrect') && !isCorrect;
         const isCheckingAndCorrect = gameState === 'checking' && isCorrect;
 
         return (
@@ -574,28 +577,36 @@ export default function VerseMemoryPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderVerse()}</div>
+           {gameState === 'incorrect' && currentLevel === 1 && <p className="text-destructive text-center font-semibold">Incorrect. Please try again.</p>}
           <div className="flex flex-wrap gap-2 justify-center">
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || checkAttempts <= 0}>
-                        {gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleSubmit}>
-                            Yes, Check Answer
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {gameState !== 'incorrect' && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button disabled={isVerseMastered || gameState === 'scored' || gameState === 'revealed' || (currentLevel > 1 && checkAttempts <= 0)}>
+                            {currentLevel > 1 && gameState === 'checking' ? `Check My Answer (${checkAttempts})` : 'Check My Answer'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Check Your Answer?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                { currentLevel > 1 ? `This will use one of your 10 attempts. You can check your answers to see which are correct and then continue editing. After 10 attempts, this button will be disabled.` : 'Are you sure you want to submit your answer?'}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleSubmit}>
+                                Yes, Check Answer
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
+             {gameState === 'incorrect' && currentLevel === 1 && (
+                <Button onClick={tryAgain} variant="destructive">
+                    <RefreshCw className="mr-2 h-4 w-4" /> Try Again
+                </Button>
+            )}
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="outline" disabled={isVerseMastered || hintsRemaining <= 0 || gameState === 'scored' || gameState === 'revealed'}>
@@ -622,7 +633,7 @@ export default function VerseMemoryPage() {
             {gameState === 'scored' && !isVerseMastered && <Button variant="secondary" onClick={() => setShowSummaryDialog(true)}>Review Score</Button>}
             <Button variant="outline" onClick={handleReveal} disabled={isVerseMastered}>Reveal Answer</Button>
              <Button variant="secondary" onClick={handleNext}>
-              {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'} <RefreshCw className="ml-2 h-4 w-4" />
+              {currentVerseIndex === verses.length - 1 ? 'Finish Level' : 'Next Verse'}
             </Button>
           </div>
         </CardContent>
@@ -645,18 +656,18 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-               {gameState === 'revealed' ? (
-                  <>
-                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
-                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
-                  </>
-               ) : (
+               {gameState === 'revealed' || gameState === 'scored' ? (
                   <VerseReview 
                     verse={currentVerse} 
                     verseWithBlanks={verseWithBlanks} 
                     userInputs={userInputs} 
                     missingWords={missingWords}
                   />
+               ) : (
+                  <>
+                    <p className="text-center font-serif italic">"{currentVerse.text}"</p>
+                    <p className="text-center font-bold mt-2">- {currentVerse.reference}</p>
+                  </>
                )}
              </CardContent>
           </Card>
