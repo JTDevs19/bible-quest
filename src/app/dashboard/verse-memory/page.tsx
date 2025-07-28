@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from "@/hooks/use-toast"
 import { motion } from 'framer-motion';
@@ -212,7 +212,7 @@ export default function VerseMemoryPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isJourneyOpen, setIsJourneyOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
@@ -303,7 +303,7 @@ export default function VerseMemoryPage() {
     setRevealsRemaining(INITIAL_REVEALS);
     setHintsRemaining(INITIAL_HINTS);
     localStorage.removeItem('verseMemoryProgress');
-    setPopoverOpen(false);
+    setIsJourneyOpen(false);
     setShowResetConfirm(null);
     setupRound();
   };
@@ -483,8 +483,8 @@ export default function VerseMemoryPage() {
   
   const handleNext = () => {
     setShowSummaryDialog(false);
-    const versesInLevel = level <= 5 ? 10 : 20;
-    const startIndex = level <= 5 ? 0 : 10;
+    const versesInLevel = currentLevel <= 5 ? 10 : 20;
+    const startIndex = currentLevel <= 5 ? 0 : 10;
     
     if (currentVerseIndex < versesInLevel -1) {
       setCurrentVerseIndex(prev => prev + 1);
@@ -605,7 +605,7 @@ export default function VerseMemoryPage() {
       setCurrentLevel(level);
       const firstUnfinished = findFirstUnfinishedVerse(level, verseScores);
       setCurrentVerseIndex(firstUnfinished);
-      setPopoverOpen(false);
+      setIsJourneyOpen(false);
     }
   };
   
@@ -708,17 +708,16 @@ export default function VerseMemoryPage() {
            <div className="flex items-center gap-1">
                 <Star className="w-5 h-5 text-yellow-500"/> {totalStars}
            </div>
-           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
-                    <div className="text-center">
-                       <h4 className="font-medium leading-none font-headline">Verse Journey</h4>
-                       <p className="text-sm text-muted-foreground">Complete all levels to become a master!</p>
-                    </div>
-                    <div className="space-y-3">
+            <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md w-full">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
+                        <CardDescription className="text-center">Complete all levels to become a master!</CardDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
                        {Array.from({length: MAX_LEVEL}).map((_, i) => {
                            const levelNum = i + 1;
                            const versesPerSet = 10;
@@ -778,9 +777,8 @@ export default function VerseMemoryPage() {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
-              </PopoverContent>
-           </Popover>
+                </DialogContent>
+            </Dialog>
         </div>
 
       <div className="relative">
@@ -1026,5 +1024,7 @@ export default function VerseMemoryPage() {
 
 
 
+
+    
 
     
