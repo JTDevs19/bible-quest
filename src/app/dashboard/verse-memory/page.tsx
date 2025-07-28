@@ -842,7 +842,7 @@ export default function VerseMemoryPage() {
                     <CardDescription>Fill in the missing words from the verse below.</CardDescription>
                      <div className="flex justify-center items-center">
                         {Array.from({length: 3}).map((_, i) => (
-                            <Star key={i} className={cn(i === 1 ? "h-7 w-7" : "h-6 w-6", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
+                            <Star key={i} className={cn(i === 1 ? "h-10 w-10" : "h-8 w-8", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
                         ))}
                     </div>
                   </div>
