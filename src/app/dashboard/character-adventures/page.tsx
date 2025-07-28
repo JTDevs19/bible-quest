@@ -8,7 +8,8 @@ import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle,
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -396,7 +397,7 @@ const triviaLevelsFilipino = [
 ];
 
 const PERFECT_SCORE_PER_LEVEL = 10;
-const MAX_LEVEL = 10; // Updated from 5
+const MAX_LEVEL = 20; 
 const STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2 = 30; // 10 verses * 3 stars
 
 export default function CharacterAdventuresPage() {
@@ -410,7 +411,7 @@ export default function CharacterAdventuresPage() {
     const [levelScores, setLevelScores] = useState<{ [key: number]: number }>({});
     const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
-    const [showAdventureMap, setShowAdventureMap] = useState(false);
+    const [showAdventureMap, setShowAdventureMap] = useState(true);
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
     const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
     const router = useRouter();
@@ -508,7 +509,7 @@ export default function CharacterAdventuresPage() {
 
                 if (finalScore === PERFECT_SCORE_PER_LEVEL && levelScores[currentLevel] !== PERFECT_SCORE_PER_LEVEL) {
                     const completedLevels = Object.values({ ...levelScores, [currentLevel]: finalScore }).filter(s => s === PERFECT_SCORE_PER_LEVEL).length;
-                    if (completedLevels === 5) {
+                    if (completedLevels === 20) {
                         setShowUnlockDialog(true);
                     }
                 }
@@ -525,7 +526,11 @@ export default function CharacterAdventuresPage() {
     const nextLevel = () => {
         setShowLevelCompleteDialog(false);
         if (currentLevel < MAX_LEVEL) {
-            startLevel(currentLevel + 1);
+             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL) {
+                setShowAdventureMap(true);
+             } else {
+                startLevel(currentLevel + 1);
+             }
         } else {
             setShowAdventureMap(true);
         }
@@ -558,6 +563,57 @@ export default function CharacterAdventuresPage() {
                 </AlertDialogContent>
             </AlertDialog>
         );
+    }
+    
+    if (showAdventureMap) {
+        return (
+            <div className="max-w-4xl mx-auto space-y-6">
+                 <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                        <h1 className="font-headline text-3xl font-bold">{language === 'en' ? 'Adventure Map' : 'Mapa ng Pakikipagsapalaran'}</h1>
+                        <p className="text-muted-foreground">{language === 'en' ? 'Select a level to begin your quest.' : 'Pumili ng antas upang simulan ang iyong pakikipagsapalaran.'}</p>
+                    </div>
+                    <Button variant="outline" size="icon" onClick={() => setLanguage(l => l === 'en' ? 'fil' : 'en')}><Languages className="w-5 h-5"/></Button>
+                 </div>
+                 <Card>
+                    <CardContent className="p-4 md:p-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4 max-h-[60vh] overflow-y-auto">
+                            {Array.from({ length: MAX_LEVEL }).map((_, index) => {
+                                const level = index + 1;
+                                const isLocked = level > 1 && (levelScores[level - 1] || 0) < PERFECT_SCORE_PER_LEVEL;
+                                const bestScore = levelScores[level] || 0;
+                                const isPerfect = bestScore === PERFECT_SCORE_PER_LEVEL;
+
+                                return (
+                                    <div
+                                        key={level}
+                                        onClick={() => !isLocked && handleLevelSelect(level)}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center p-4 rounded-lg border-2 text-center aspect-square",
+                                            isLocked ? "bg-muted text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-secondary",
+                                            isPerfect && "border-yellow-400 bg-yellow-50"
+                                        )}
+                                    >
+                                        {isLocked ? (
+                                            <Lock className="w-8 h-8 mb-2" />
+                                        ) : (
+                                            isPerfect ? <Trophy className="w-8 h-8 mb-2 text-yellow-500" /> : <PlayCircle className="w-8 h-8 mb-2 text-primary" />
+                                        )}
+                                        <p className="font-bold">{language === 'en' ? `Level ${level}` : `Antas ${level}`}</p>
+                                        <p className="text-sm">
+                                            {isLocked
+                                                ? (language === 'en' ? 'Locked' : 'Nakasara')
+                                                : `${language === 'en' ? 'Best Score' : 'Pinakamataas'}: ${bestScore}/${PERFECT_SCORE_PER_LEVEL}`
+                                            }
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                 </Card>
+            </div>
+        )
     }
 
     const currentTriviaSet = language === 'en' ? triviaLevels[currentLevel - 1] : triviaLevelsFilipino[currentLevel - 1];
@@ -663,49 +719,6 @@ export default function CharacterAdventuresPage() {
                 </CardContent>
             </Card>
 
-            <Dialog open={showAdventureMap} onOpenChange={setShowAdventureMap}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="font-headline text-2xl text-center">{language === 'en' ? 'Adventure Map' : 'Mapa ng Pakikipagsapalaran'}</DialogTitle>
-                         <DialogDescription className="text-center">{language === 'en' ? 'Complete levels to unlock the next!' : 'Kumpletuhin ang mga antas para mabuksan ang susunod!'}</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 max-h-[60vh] overflow-y-auto">
-                        {Array.from({ length: MAX_LEVEL }).map((_, index) => {
-                            const level = index + 1;
-                            const isLocked = level > 1 && (levelScores[level - 1] || 0) < PERFECT_SCORE_PER_LEVEL;
-                            const bestScore = levelScores[level] || 0;
-                            const isPerfect = bestScore === PERFECT_SCORE_PER_LEVEL;
-
-                            return (
-                                <div
-                                    key={level}
-                                    onClick={() => !isLocked && handleLevelSelect(level)}
-                                    className={cn(
-                                        "flex flex-col items-center justify-center p-4 rounded-lg border-2 text-center aspect-square",
-                                        isLocked ? "bg-muted text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-secondary",
-                                        level === currentLevel && "border-primary",
-                                        isPerfect && "border-yellow-400 bg-yellow-50"
-                                    )}
-                                >
-                                    {isLocked ? (
-                                        <Lock className="w-8 h-8 mb-2" />
-                                    ) : (
-                                        isPerfect ? <Trophy className="w-8 h-8 mb-2 text-yellow-500" /> : <PlayCircle className="w-8 h-8 mb-2 text-primary" />
-                                    )}
-                                    <p className="font-bold">{language === 'en' ? `Level ${level}` : `Antas ${level}`}</p>
-                                    <p className="text-sm">
-                                        {isLocked
-                                            ? (language === 'en' ? 'Locked' : 'Nakasara')
-                                            : `${language === 'en' ? 'Best Score' : 'Pinakamataas'}: ${bestScore}/${PERFECT_SCORE_PER_LEVEL}`
-                                        }
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
             <AlertDialog open={showLevelCompleteDialog} onOpenChange={setShowLevelCompleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -727,6 +740,9 @@ export default function CharacterAdventuresPage() {
                         </Button>
                         <Button onClick={nextLevel} disabled={score < PERFECT_SCORE_PER_LEVEL && currentLevel < MAX_LEVEL}>
                            {language === 'en' ? 'Next Level' : 'Susunod na Antas'}
+                        </Button>
+                         <Button variant="secondary" onClick={() => setShowAdventureMap(true)}>
+                            {language === 'en' ? 'Back to Map' : 'Balik sa Mapa'}
                         </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -759,3 +775,5 @@ export default function CharacterAdventuresPage() {
         </div>
     );
 }
+
+    

@@ -60,7 +60,7 @@ const generateLevelConfig = () => {
 
 const levels = generateLevelConfig();
 const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 5;
+const TOTAL_ADVENTURE_LEVELS = 20;
 
 type Progress = { [level: number]: { [round: number]: boolean } };
 
@@ -245,7 +245,7 @@ export default function BibleMasteryPage() {
             <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Bible Mastery!</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
               To unlock this ultimate challenge, you must first prove your knowledge of Bible characters.
-              Achieve a perfect score (10/10) on all 5 levels of Character Adventures.
+              Achieve a perfect score (10/10) on all {TOTAL_ADVENTURE_LEVELS} levels of Character Adventures.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
@@ -387,3 +387,5 @@ export default function BibleMasteryPage() {
     </>
   );
 }
+
+    

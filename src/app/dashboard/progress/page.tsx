@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 
 const DAILY_CHALLENGE_STARS = 10;
 const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 5;
+const TOTAL_ADVENTURE_LEVELS = 20;
 const TOTAL_VERSE_MEMORY_LEVELS_FOR_BADGE = 5;
 const VERSES_PER_MEMORY_LEVEL = 10;
 const STARS_PER_VERSE = 3;
@@ -99,7 +99,7 @@ export default function ProgressPage() {
     
     setBadges([
         { name: 'Verse Memory Virtuoso', description: 'Mastered all verses in the first 5 levels.', icon: BookText, earned: verseMemoryBadgeEarned },
-        { name: 'Character Champion', description: 'Achieved a perfect score on all 5 Character Adventure levels.', icon: Users, earned: characterBadgeEarned },
+        { name: 'Character Champion', description: `Achieved a perfect score on all ${TOTAL_ADVENTURE_LEVELS} Character Adventure levels.`, icon: Users, earned: characterBadgeEarned },
         { name: 'Bible Scholar', description: 'Completed all master levels in Bible Mastery.', icon: Milestone, earned: masteryBadgeEarned }
     ]);
 
@@ -192,7 +192,8 @@ export default function ProgressPage() {
             <CardContent>
                 {earnedBadges.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {earnedBadges.map((badge) => (
+                        {badges.map((badge) => (
+                           badge.earned && (
                             <div key={badge.name} className="flex flex-col items-center text-center p-4 border rounded-lg bg-secondary/50">
                                 <div className="p-3 bg-accent rounded-full mb-3">
                                     <badge.icon className="w-8 h-8 text-accent-foreground" />
@@ -200,6 +201,7 @@ export default function ProgressPage() {
                                 <h3 className="font-bold font-headline">{badge.name}</h3>
                                 <p className="text-sm text-muted-foreground">{badge.description}</p>
                             </div>
+                           )
                         ))}
                     </div>
                 ) : (

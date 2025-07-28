@@ -33,7 +33,7 @@ import type { UserProfile } from '@/app/page';
 
 const STARS_TO_UNLOCK_LEVEL_4 = 90; 
 const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 5;
+const TOTAL_ADVENTURE_LEVELS = 20;
 
 function DashboardNav() {
   const pathname = usePathname();
@@ -174,5 +174,7 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
+
+    
 
     
