@@ -38,23 +38,24 @@ const TOTAL_ADVENTURE_LEVELS = 5;
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const [verseMemoryStars, setVerseMemoryStars] = useState(0);
-  const [completedAdventures, setCompletedAdventures] = useState(0);
+  const [characterAdventuresCompleted, setCharacterAdventuresCompleted] = useState(false);
+  const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
 
   useEffect(() => {
     // This effect runs on the client-side
-    const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-    setVerseMemoryStars(verseMemoryProgress.stars || 0);
-
     const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
     if (characterAdventuresProgress.scores) {
-        const completed = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-        setCompletedAdventures(completed);
+        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
+        if(completedLevels >= TOTAL_ADVENTURE_LEVELS) {
+            setBibleMasteryUnlocked(true);
+        }
     }
-  }, [pathname]); // Rerun on navigation to update lock status
+    
+    // Check if level 1 of character adventures is passed
+    const levelOneScore = characterAdventuresProgress.scores?.[1] || 0;
+    setCharacterAdventuresCompleted(levelOneScore >= PERFECT_SCORE_PER_LEVEL);
 
-  const characterAdventuresUnlocked = verseMemoryStars >= STARS_TO_UNLOCK_LEVEL_4;
-  const bibleMasteryUnlocked = completedAdventures >= TOTAL_ADVENTURE_LEVELS;
+  }, [pathname]); // Rerun on navigation to update lock status
 
   const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -63,8 +64,6 @@ function DashboardNav() {
       href: '/dashboard/character-adventures',
       icon: Users,
       label: 'Character Adventures',
-      isLocked: !characterAdventuresUnlocked,
-      tooltipText: 'Master all Verse Memory first'
     },
     { 
       href: '/dashboard/bible-mastery', 
@@ -175,3 +174,5 @@ export default function DashboardLayout({
     </SidebarProvider>
   );
 }
+
+    

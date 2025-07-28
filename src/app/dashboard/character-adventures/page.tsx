@@ -164,8 +164,6 @@ export default function CharacterAdventuresPage() {
     const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
     const [showTour, setShowTour] = useState(false);
-    const [verseMemoryCompleted, setVerseMemoryCompleted] = useState(false);
-
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [currentLevelScore, setCurrentLevelScore] = useState(0);
@@ -190,6 +188,10 @@ export default function CharacterAdventuresPage() {
 
     useEffect(() => {
         setIsClient(true);
+    }, []);
+    
+    useEffect(() => {
+        if (!isClient) return;
         const savedProgress = localStorage.getItem('characterAdventuresProgress');
         if (savedProgress) {
             const progress = JSON.parse(savedProgress);
@@ -198,7 +200,7 @@ export default function CharacterAdventuresPage() {
 
             let highestUnlocked = 1;
             for (let i = 1; i <= MAX_LEVEL; i++) {
-                if((progress.scores?.[i-1] || 0) >= LEVEL_PASS_SCORE) {
+                if((progress.scores?.[i] || 0) >= LEVEL_PASS_SCORE) {
                     highestUnlocked = i + 1;
                 } else {
                     break;
@@ -211,13 +213,6 @@ export default function CharacterAdventuresPage() {
         if (!tourSeen) {
             setShowTour(true);
         }
-
-        const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-        const verseStars = verseMemoryProgress.stars || 0;
-        if(verseStars === MAX_VERSE_STARS) {
-            setVerseMemoryCompleted(true);
-        }
-
     }, [isClient]);
 
     useEffect(() => {
@@ -282,23 +277,17 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
-        const levelOnePassed = (levelScores[level - 2] || 0) >= LEVEL_PASS_SCORE;
-        let isUnlocked = level === 1 || levelOnePassed;
-
-        if (level > 1) {
-          isUnlocked = isUnlocked && verseMemoryCompleted;
-        }
+        const previousLevelPassed = (levelScores[level - 1] || 0) >= LEVEL_PASS_SCORE;
+        const isUnlocked = level === 1 || previousLevelPassed;
 
         if (isUnlocked) {
             startLevel(level);
         } else {
-            if (!verseMemoryCompleted && level > 1) {
-                 toast({
-                    title: 'Level Locked',
-                    description: 'You must master all verses in the Verse Memory game first!',
-                    variant: 'destructive',
-                });
-            }
+            toast({
+                title: 'Level Locked',
+                description: `You must pass Level ${level - 1} to unlock this level.`,
+                variant: 'destructive',
+            });
         }
     }
     
@@ -322,7 +311,7 @@ export default function CharacterAdventuresPage() {
     }
     
     if (isGameFinished) {
-        const canUnlockNext = currentLevel < MAX_LEVEL && currentLevelScore >= LEVEL_PASS_SCORE && verseMemoryCompleted;
+        const canUnlockNext = currentLevel < MAX_LEVEL && currentLevelScore >= LEVEL_PASS_SCORE;
         return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
                  <motion.div initial="initial" animate="animate" variants={cardVariants}>
@@ -396,10 +385,8 @@ export default function CharacterAdventuresPage() {
                         <div className="space-y-3">
                            {Array.from({length: MAX_LEVEL}).map((_, i) => {
                                const levelNum = i + 1;
-                               let isUnlocked = levelNum === 1 || ((levelScores[levelNum - 1] || 0) >= LEVEL_PASS_SCORE);
-                                if (levelNum > 1) {
-                                  isUnlocked = isUnlocked && verseMemoryCompleted;
-                                }
+                               const previousLevelPassed = (levelScores[levelNum - 1] || 0) >= LEVEL_PASS_SCORE;
+                               const isUnlocked = levelNum === 1 || previousLevelPassed;
                                const isCurrent = levelNum === currentLevel;
                                return (
                                  <div 
@@ -419,9 +406,7 @@ export default function CharacterAdventuresPage() {
                                         <p className="text-sm text-muted-foreground">
                                            {isUnlocked 
                                               ? `Best Score: ${levelScores[levelNum] || 0}/${triviaLevels[levelNum-1].length}` 
-                                              : (levelNum > 1 && !verseMemoryCompleted) 
-                                                ? "Finish Verse Memory first" 
-                                                : "Locked"
+                                              : "Locked"
                                             }
                                         </p>
                                     </div>
@@ -528,7 +513,7 @@ export default function CharacterAdventuresPage() {
                 <AlertDialogTitle className="font-headline text-2xl text-center">Welcome to Character Adventures!</AlertDialogTitle>
                 <AlertDialogDescription className="text-center space-y-2">
                     <p>This game tests your knowledge of the people in the Bible.</p>
-                    <p>For each question, select the character you believe is the correct answer. You need a score of <strong>7 out of 10</strong> to unlock the next level.</p>
+                    <p>For each question, select the character you believe is the correct answer. You need a score of <strong>{LEVEL_PASS_SCORE} out of 10</strong> to unlock the next level.</p>
                     <p>Master all 5 levels to unlock the final challenge: <strong>Bible Mastery</strong>!</p>
                 </AlertDialogDescription>
             </AlertDialogHeader>
@@ -542,3 +527,5 @@ export default function CharacterAdventuresPage() {
     </>
   );
 }
+
+    
