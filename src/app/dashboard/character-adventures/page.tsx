@@ -504,31 +504,31 @@ export default function CharacterAdventuresPage() {
         if (option === correctAnswer) {
             setScore(s => s + 1);
         }
+    };
 
-        setTimeout(() => {
-            if (questionIndex < 9) {
-                setQuestionIndex(q => q + 1);
-                setSelectedAnswer(null);
-                setIsAnswered(false);
-            } else {
-                const finalScore = option === correctAnswer ? score + 1 : score;
-                const oldLevelScore = levelScores[currentLevel] || 0;
+    const handleNextQuestion = () => {
+        if (questionIndex < 9) {
+            setQuestionIndex(q => q + 1);
+            setSelectedAnswer(null);
+            setIsAnswered(false);
+        } else {
+            const finalScore = score;
+            const oldLevelScore = levelScores[currentLevel] || 0;
 
-                if (finalScore > oldLevelScore) {
-                    const scoreDifference = finalScore - oldLevelScore;
-                    setTotalScore(ts => ts + scoreDifference);
-                    setLevelScores(ls => ({ ...ls, [currentLevel]: finalScore }));
-                }
-
-                if (finalScore === PERFECT_SCORE_PER_LEVEL && levelScores[currentLevel] !== PERFECT_SCORE_PER_LEVEL) {
-                    const completedLevels = Object.values({ ...levelScores, [currentLevel]: finalScore }).filter(s => s === PERFECT_SCORE_PER_LEVEL).length;
-                    if (completedLevels === 20) {
-                        setShowUnlockDialog(true);
-                    }
-                }
-                setShowLevelCompleteDialog(true);
+            if (finalScore > oldLevelScore) {
+                const scoreDifference = finalScore - oldLevelScore;
+                setTotalScore(ts => ts + scoreDifference);
+                setLevelScores(ls => ({ ...ls, [currentLevel]: finalScore }));
             }
-        }, 1500);
+
+            if (finalScore === PERFECT_SCORE_PER_LEVEL && levelScores[currentLevel] !== PERFECT_SCORE_PER_LEVEL) {
+                const completedLevels = Object.values({ ...levelScores, [currentLevel]: finalScore }).filter(s => s === PERFECT_SCORE_PER_LEVEL).length;
+                if (completedLevels === 20) {
+                    setShowUnlockDialog(true);
+                }
+            }
+            setShowLevelCompleteDialog(true);
+        }
     };
 
     const restartLevel = () => {
@@ -700,34 +700,40 @@ export default function CharacterAdventuresPage() {
                                     );
                                 })}
                             </div>
-                             {isAnswered && currentTrivia.trivia && (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="link" className="mx-auto flex items-center gap-2">
-                                            <HelpCircle /> {language === 'en' ? 'Did you know?' : 'Alam mo ba?'}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-80">
-                                    <div className="grid gap-4">
-                                        <div className="space-y-2">
-                                            {selectedAnswer === currentTrivia.answer ? (
-                                                <p className="text-sm font-semibold text-green-600">Correct!</p>
-                                            ) : (
-                                                 <p className="text-sm font-semibold text-destructive">
-                                                     {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
-                                                 </p>
+                             {isAnswered && (
+                                <div className="space-y-4">
+                                    <Popover open={isAnswered}>
+                                        <PopoverContent className="w-full max-w-md mx-auto" align="center">
+                                        <div className="grid gap-4">
+                                            <div className="space-y-2">
+                                                {selectedAnswer === currentTrivia.answer ? (
+                                                    <p className="text-sm font-semibold text-green-600">Correct!</p>
+                                                ) : (
+                                                     <p className="text-sm font-semibold text-destructive">
+                                                         {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
+                                                     </p>
+                                                )}
+                                                {currentTrivia.trivia && (
+                                                    <>
+                                                        <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
+                                                        <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                            {currentTrivia.reference && (
+                                                <div className="space-y-2">
+                                                    <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
+                                                    <p className="text-sm font-bold">{currentTrivia.reference}</p>
+                                                    <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
+                                                </div>
                                             )}
-                                            <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
-                                            <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
                                         </div>
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
-                                            <p className="text-sm font-bold">{currentTrivia.reference}</p>
-                                            <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
-                                        </div>
-                                    </div>
-                                    </PopoverContent>
-                                </Popover>
+                                        </PopoverContent>
+                                    </Popover>
+                                    <Button onClick={handleNextQuestion} className="w-full">
+                                        {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
+                                    </Button>
+                                </div>
                              )}
                         </motion.div>
                     </AnimatePresence>
