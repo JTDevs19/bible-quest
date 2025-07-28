@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2 } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from "@/hooks/use-toast"
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 const verses = [
@@ -219,6 +220,7 @@ export default function VerseMemoryPage() {
   const [showUnlockDialog, setShowUnlockDialog] = useState(false);
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
   const [highlightNextButton, setHighlightNextButton] = useState(false);
+  const [isCompletedLevelsOpen, setIsCompletedLevelsOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -664,7 +666,7 @@ export default function VerseMemoryPage() {
             onClick={() => handleLabelClick(currentIndex)}
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
-               userInputs[currentIndex] ? "border-primary/50 text-primary bg-primary/20" : "border-muted-foreground/50",
+               userInputs[currentIndex] ? "border-primary/50 bg-primary/20 text-primary" : "border-muted-foreground/50",
               (gameState === 'scored' || gameState === 'revealed' || isVerseMastered) ? 'cursor-default' : '',
               isWrong ? 'bg-destructive/20 border-destructive' : '',
               isCheckingAndCorrect ? 'bg-green-500/20 border-green-500' : '',
@@ -695,6 +697,22 @@ export default function VerseMemoryPage() {
   if (!isClient || !currentVerse) {
     return <div>Loading...</div>;
   }
+  
+    const allLevels = Array.from({length: MAX_LEVEL}).map((_, i) => {
+        const levelNum = i + 1;
+        const versesPerSet = 10;
+        const requiredStars = (levelNum - 1) * versesPerSet * STARS_PER_VERSE;
+        const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
+        const isCurrent = levelNum === currentLevel;
+        const levelScoresData = verseScores[levelNum] || {};
+        const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
+        const totalVersesInLevel = levelNum <= 5 ? 10 : 10;
+        const isLevelComplete = masteredInLevel === totalVersesInLevel;
+        return { levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars };
+    });
+
+    const completedLevels = allLevels.filter(l => l.isLevelComplete);
+    const otherLevels = allLevels.filter(l => !l.isLevelComplete);
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
@@ -718,49 +736,64 @@ export default function VerseMemoryPage() {
                         <CardDescription className="text-center">Complete all levels to become a master!</CardDescription>
                     </DialogHeader>
                     <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
-                       {Array.from({length: MAX_LEVEL}).map((_, i) => {
-                           const levelNum = i + 1;
-                           const versesPerSet = 10;
-                           const requiredStars = (levelNum - 1) * versesPerSet * STARS_PER_VERSE;
-                           const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
-                           const isCurrent = levelNum === currentLevel;
-                           const levelScoresData = verseScores[levelNum] || {};
-                           const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
-                           const totalVersesInLevel = levelNum <= 5 ? 10 : 10;
-                           const isLevelComplete = masteredInLevel === totalVersesInLevel;
+                        {completedLevels.length > 0 && (
+                            <Collapsible open={isCompletedLevelsOpen} onOpenChange={setIsCompletedLevelsOpen}>
+                                <CollapsibleTrigger asChild>
+                                    <button className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold">
+                                        <span>{completedLevels.length} Completed Level(s)</span>
+                                        <ChevronsUpDown className="w-4 h-4" />
+                                    </button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="space-y-2 pt-2">
+                                    {completedLevels.map(({ levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars }) => (
+                                     <div 
+                                        key={levelNum} 
+                                        onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                                        className={cn(
+                                          "flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                          isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                          isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
+                                        )}
+                                      >
+                                        <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                          {isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold">Level {levelNum}</p>
+                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                               {isLevelComplete ? <><CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!</> : '...'}
+                                            </p>
+                                        </div>
+                                      </div>
+                                   ))}
+                                </CollapsibleContent>
+                            </Collapsible>
+                        )}
 
-                           return (
-                             <div 
-                                key={levelNum} 
-                                onClick={() => isUnlocked && handleLevelSelect(levelNum)}
-                                className={cn(
-                                  "flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                  isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                  isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
-                                )}
-                              >
-                                <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                  {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
-                                </div>
-                                <div>
-                                    <p className="font-semibold">Level {levelNum}</p>
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                       {isUnlocked ? (
-                                         isLevelComplete ? (
-                                            <>
-                                              <CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!
-                                            </>
-                                         ) : (
-                                            `${masteredInLevel}/${totalVersesInLevel} Mastered`
-                                         )
-                                       ) : (
-                                        `Requires ${requiredStars} stars`
-                                       )}
-                                    </p>
-                                </div>
-                              </div>
-                           )
-                       })}
+                       {otherLevels.map(({ levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars }) => (
+                         <div 
+                            key={levelNum} 
+                            onClick={() => isUnlocked && handleLevelSelect(levelNum)}
+                            className={cn(
+                              "flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                              isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                              isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
+                            )}
+                          >
+                            <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                              {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                            </div>
+                            <div>
+                                <p className="font-semibold">Level {levelNum}</p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                   {isUnlocked 
+                                      ? `${masteredInLevel}/${totalVersesInLevel} Mastered`
+                                      : `Requires ${requiredStars} stars`
+                                   }
+                                </p>
+                            </div>
+                          </div>
+                       ))}
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1024,6 +1057,8 @@ export default function VerseMemoryPage() {
 
 
 
+
+    
 
     
 
