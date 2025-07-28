@@ -1052,14 +1052,4 @@ export default function VerseMemoryPage() {
 
     </div>
   );
-
-    
-
-
-
-
-    
-
-    
-
-    
+}
