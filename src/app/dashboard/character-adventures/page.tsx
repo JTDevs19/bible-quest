@@ -687,12 +687,7 @@ export default function CharacterAdventuresPage() {
                                     );
                                 })}
                             </div>
-                             {isAnswered && selectedAnswer !== currentTrivia.answer && (
-                                <p className="text-destructive text-center font-semibold">
-                                    {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
-                                </p>
-                            )}
-                             {isAnswered && selectedAnswer === currentTrivia.answer && currentTrivia.trivia && (
+                             {isAnswered && currentTrivia.trivia && (
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button variant="link" className="mx-auto flex items-center gap-2">
@@ -702,6 +697,13 @@ export default function CharacterAdventuresPage() {
                                     <PopoverContent className="w-80">
                                     <div className="grid gap-4">
                                         <div className="space-y-2">
+                                            {selectedAnswer === currentTrivia.answer ? (
+                                                <p className="text-sm font-semibold text-green-600">Correct!</p>
+                                            ) : (
+                                                 <p className="text-sm font-semibold text-destructive">
+                                                     {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
+                                                 </p>
+                                            )}
                                             <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
                                             <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
                                         </div>
