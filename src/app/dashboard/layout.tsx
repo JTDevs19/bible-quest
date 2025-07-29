@@ -30,6 +30,7 @@ import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/app/page';
+import AppTour from '@/components/tour/AppTour';
 
 const STARS_TO_UNLOCK_LEVEL_4 = 90; 
 const PERFECT_SCORE_PER_LEVEL = 10;
@@ -58,23 +59,25 @@ function DashboardNav() {
   }, [pathname]); // Rerun on navigation to update lock status
 
   const navItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
+    { id: 'nav-dashboard', href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'nav-verse-memory', href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
     {
+      id: 'nav-character-adventures',
       href: '/dashboard/character-adventures',
       icon: Users,
       label: 'Character Adventures',
     },
     { 
+      id: 'nav-bible-mastery',
       href: '/dashboard/bible-mastery', 
       icon: Milestone, 
       label: 'Bible Mastery',
       isLocked: !bibleMasteryUnlocked,
       tooltipText: 'Master all Character Adventures first'
     },
-    { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
-    { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
-    { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+    { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
+    { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
+    { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
   ];
 
   return (
@@ -82,6 +85,7 @@ function DashboardNav() {
       {navItems.map((item) => {
         const buttonContent = (
           <SidebarMenuButton
+            id={item.id}
             isActive={pathname === item.href}
             tooltip={item.isLocked ? `${item.label} (${item.tooltipText})` : item.label}
             onClick={() => !item.isLocked && setOpenMobile(false)}
@@ -132,8 +136,9 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
+      <AppTour />
       <Sidebar>
-        <SidebarHeader>
+        <SidebarHeader id="sidebar-header">
           <div className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-2 rounded-lg">
               <Sparkles className="w-6 h-6" />
@@ -160,7 +165,7 @@ export default function DashboardLayout({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
+        <header id="main-header" className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
            <SidebarTrigger className="md:hidden" />
            <div className="flex items-center gap-2">
             <Avatar>
@@ -169,12 +174,8 @@ export default function DashboardLayout({
             <span className="font-semibold">{userProfile.username}</span>
            </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main id="main-content" className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
 }
-
-    
-
-    
