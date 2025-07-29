@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -431,8 +432,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
         <div className="space-y-6">
             {!viewOnly && (
                  <div className="text-center font-bold text-primary text-xl flex items-center justify-center gap-2">
-                    <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-                </div>
+                    <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}</div>
             )}
             
             <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50 flex flex-wrap items-start content-start gap-2">
@@ -797,11 +797,15 @@ export default function VerseMemoryPage() {
 
   const calculateScore = useCallback((inputs: string[]) => {
     if (missingWords.length === 0) return 0;
-    return inputs.reduce((count, input, index) => {
+    const correctCount = inputs.reduce((count, input, index) => {
       const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
       return isCorrect ? count + 1 : count;
     }, 0);
-  }, [missingWords]);
+    
+    // Score is number of correct words, up to the level number
+    return Math.min(correctCount, currentLevel);
+
+  }, [missingWords, currentLevel]);
   
   const tryAgain = () => {
     const newInputs = userInputs.map((input, index) => {
@@ -984,19 +988,32 @@ export default function VerseMemoryPage() {
     setGameMode('puzzle');
   };
   
-  const handleBonusComplete = (timeRemaining: number) => {
-    if (activeBonusLevel === null) return;
-    
-    let timeBonus = 0;
-    const timeTaken = BONUS_ROUND_TIME - timeRemaining;
-    if (timeTaken <= 30) {
-        timeBonus = 15;
-    } else if (timeTaken <= 60) {
-        timeBonus = 10;
-    } else if (timeTaken <= 90) {
-        timeBonus = 5;
-    }
+    const handleBonusComplete = (timeRemaining: number) => {
+        if (activeBonusLevel === null) return;
 
+        const timeTaken = BONUS_ROUND_TIME - timeRemaining;
+
+        let timeBonus = 0;
+        
+        const levelBonusBrackets = [
+            { level: 1, tiers: [{ time: 30, points: 15 }, { time: 60, points: 10 }, { time: 90, points: 5 }] },
+            { level: 2, tiers: [{ time: 45, points: 20 }, { time: 75, points: 15 }, { time: 105, points: 10 }] },
+            { level: 3, tiers: [{ time: 60, points: 25 }, { time: 90, points: 20 }, { time: 120, points: 15 }] },
+            { level: 4, tiers: [{ time: 75, points: 30 }, { time: 105, points: 25 }, { time: 135, points: 20 }] },
+            { level: 5, tiers: [{ time: 90, points: 35 }, { time: 120, points: 30 }, { time: 150, points: 25 }] },
+        ];
+        
+        const currentLevelBrackets = levelBonusBrackets.find(b => b.level === activeBonusLevel);
+
+        if (currentLevelBrackets) {
+            for (const tier of currentLevelBrackets.tiers) {
+                if (timeTaken <= tier.time) {
+                    timeBonus = tier.points;
+                    break;
+                }
+            }
+        }
+    
     const baseReward = stage1BonusRewards[activeBonusLevel - 1] || 0;
     const totalReward = baseReward + timeBonus;
     
@@ -1004,7 +1021,7 @@ export default function VerseMemoryPage() {
     setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
-        newProgress[currentStage][activeBonusLevel] = 'completed';
+        newProgress[currentStage][activeBonusLevel!] = 'completed';
         return newProgress;
     });
     
@@ -1111,7 +1128,7 @@ export default function VerseMemoryPage() {
 
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
-      return `You got ${attemptScore} out of ${missingWords.length} words correct!`;
+      return `You got ${attemptScore} out of ${currentLevel} words correct!`;
   }
 
   const currentVerseScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
@@ -1521,3 +1538,6 @@ export default function VerseMemoryPage() {
 
     
 
+
+
+    
