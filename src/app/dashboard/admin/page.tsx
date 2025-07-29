@@ -54,6 +54,8 @@ function Fab({ onReset }: { onReset: () => void }) {
 export default function AdminPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const { reset: resetUserProgress } = useUserProgress();
+
 
     const resetAllData = () => {
         try {
@@ -63,8 +65,8 @@ export default function AdminPage() {
             localStorage.removeItem('bibleMasteryProgress');
             
             // Clear the Zustand-persisted user progress (Level, EXP, Keys)
-            localStorage.removeItem('userProgress');
-
+            resetUserProgress();
+            
             // Clear the user profile, effectively logging them out
             localStorage.removeItem('bibleQuestsUser');
 

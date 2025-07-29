@@ -12,6 +12,14 @@ const getExpForLevel = (level: number) => {
 
 const KEYS_PER_LEVEL_UP = 5;
 
+const initialState = {
+    level: 1,
+    exp: 0,
+    wisdomKeys: 5,
+    lastLevelUpExp: 0,
+    expForNextLevel: getExpForLevel(1),
+}
+
 interface UserProgressState {
     level: number;
     exp: number;
@@ -21,16 +29,13 @@ interface UserProgressState {
     addExp: (amount: number) => void;
     setWisdomKeys: (setter: (currentKeys: number) => number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
+    reset: () => void;
 }
 
 export const useUserProgress = create<UserProgressState>()(
     persist(
         (set, get) => ({
-            level: 1,
-            exp: 0,
-            wisdomKeys: 5, // Start with some keys
-            lastLevelUpExp: 0,
-            expForNextLevel: getExpForLevel(1),
+            ...initialState,
             addExp: (amount: number) => {
                 set(state => {
                     const newExp = state.exp + amount;
@@ -60,6 +65,9 @@ export const useUserProgress = create<UserProgressState>()(
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));
+            },
+            reset: () => {
+                set(initialState);
             }
         }),
         {
