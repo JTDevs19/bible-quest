@@ -659,7 +659,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = JSON.parse(JSON.stringify(prevScores));
+            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -673,10 +673,16 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        const updatedScores = { ...verseScores };
-        if (!updatedScores[currentStage]) updatedScores[currentStage] = {};
-        if (!updatedScores[currentStage][currentLevel]) updatedScores[currentStage][currentLevel] = {};
+        // We need to construct the new state for isStageComplete check manually
+        const updatedScores = JSON.parse(JSON.stringify(verseScores));
+         if (!updatedScores[currentStage]) {
+            updatedScores[currentStage] = {};
+        }
+        if (!updatedScores[currentStage][currentLevel]) {
+            updatedScores[currentStage][currentLevel] = {};
+        }
         updatedScores[currentStage][currentLevel][currentVerseIndex] = score;
+
 
         if(!localStorage.getItem('stage1UnlockShown') && isStageComplete(1, updatedScores)) {
             setShowUnlockDialog('stage1');
@@ -1137,7 +1143,7 @@ export default function VerseMemoryPage() {
                                 <div className="space-y-2">
                                     <h4 className="font-medium leading-none">Wisdom Keys</h4>
                                     <p className="text-sm text-muted-foreground">
-                                        Use these keys for hints or to reveal answers in games. You earn more Wisdom Keys every time you level up!
+                                        Use these keys for hints in games. You earn more Wisdom Keys every time you level up!
                                     </p>
                                 </div>
                             </PopoverContent>
@@ -1490,6 +1496,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
