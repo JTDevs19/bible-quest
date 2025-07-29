@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp } from 'lucide-react';
+import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp, Key } from 'lucide-react';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Progress } from '@/components/ui/progress';
 
@@ -32,7 +32,7 @@ type BadgeInfo = {
 
 
 export default function ProgressPage() {
-  const { level, exp, expForNextLevel, lastLevelUpExp, stars } = useUserProgress();
+  const { level, exp, expForNextLevel, lastLevelUpExp, wisdomKeys } = useUserProgress();
   const [badges, setBadges] = useState<BadgeInfo[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -41,8 +41,8 @@ export default function ProgressPage() {
     
     // Verse Memory
     const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || 'null');
-    const stage1Complete = isStageComplete(1, verseMemoryProgress?.scores);
-    const stage2Complete = isStageComplete(2, verseMemoryProgress?.scores);
+    const stage1Complete = verseMemoryProgress ? isStageComplete(1, verseMemoryProgress.scores) : false;
+    const stage2Complete = verseMemoryProgress ? isStageComplete(2, verseMemoryProgress.scores) : false;
     
     // Character Adventures
     const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || 'null');
@@ -76,7 +76,6 @@ export default function ProgressPage() {
 
   }, []);
 
-  const earnedBadges = badges.filter(b => b.earned);
   const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
 
@@ -111,13 +110,13 @@ export default function ProgressPage() {
         <Card>
             <CardHeader>
                  <div className="flex items-center justify-between">
-                    <CardTitle className="font-headline text-xl">Usable Stars</CardTitle>
-                    <Star className="w-6 h-6 text-muted-foreground"/>
+                    <CardTitle className="font-headline text-xl">Wisdom Keys</CardTitle>
+                    <Key className="w-6 h-6 text-muted-foreground"/>
                 </div>
-                 <CardDescription>Stars are earned alongside EXP. Use them for hints and reveals in games.</CardDescription>
+                 <CardDescription>Earn Keys by leveling up. Use them for hints and reveals in games.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-4xl font-bold">{stars}</p>
+                <p className="text-4xl font-bold">{wisdomKeys}</p>
             </CardContent>
         </Card>
 

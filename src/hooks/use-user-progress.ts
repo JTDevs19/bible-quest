@@ -6,17 +6,20 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Define the experience required for each level
 const getExpForLevel = (level: number) => {
-    return 100;
+    // Simple linear progression for now
+    return 100 * level;
 };
+
+const KEYS_PER_LEVEL_UP = 5;
 
 interface UserProgressState {
     level: number;
     exp: number;
-    stars: number;
+    wisdomKeys: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
     addExp: (amount: number) => void;
-    setStars: (setter: (currentStars: number) => number) => void;
+    setWisdomKeys: (setter: (currentKeys: number) => number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
 }
 
@@ -25,34 +28,35 @@ export const useUserProgress = create<UserProgressState>()(
         (set, get) => ({
             level: 1,
             exp: 0,
-            stars: 0,
+            wisdomKeys: 5, // Start with some keys
             lastLevelUpExp: 0,
             expForNextLevel: getExpForLevel(1),
             addExp: (amount: number) => {
                 set(state => {
                     const newExp = state.exp + amount;
-                    const newStars = state.stars + amount;
                     let newLevel = state.level;
                     let newLastLevelUpExp = state.lastLevelUpExp;
                     let newExpForNextLevel = state.expForNextLevel;
+                    let newWisdomKeys = state.wisdomKeys;
 
                     while (newExp >= newExpForNextLevel) {
                         newLevel++;
                         newLastLevelUpExp = newExpForNextLevel;
                         newExpForNextLevel += getExpForLevel(newLevel);
+                        newWisdomKeys += KEYS_PER_LEVEL_UP; // Award keys on level up
                     }
 
                     return { 
                         exp: newExp, 
-                        stars: newStars,
                         level: newLevel,
                         lastLevelUpExp: newLastLevelUpExp,
-                        expForNextLevel: newExpForNextLevel
+                        expForNextLevel: newExpForNextLevel,
+                        wisdomKeys: newWisdomKeys
                     };
                 });
             },
-            setStars: (setter) => {
-                 set(state => ({ stars: setter(state.stars) }));
+            setWisdomKeys: (setter) => {
+                 set(state => ({ wisdomKeys: setter(state.wisdomKeys) }));
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));

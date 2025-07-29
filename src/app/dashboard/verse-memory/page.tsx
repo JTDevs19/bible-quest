@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -508,7 +508,7 @@ export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [bonusProgress, setBonusProgress] = useState<BonusProgress>({});
-  const { stars, addExp, setStars, setProgress } = useUserProgress();
+  const { exp, addExp, wisdomKeys, setWisdomKeys, setProgress } = useUserProgress();
   const [revealsRemaining, setRevealsRemaining] = useState(INITIAL_REVEALS);
   const [hintsRemaining, setHintsRemaining] = useState(INITIAL_HINTS);
   const [tradeAmount, setTradeAmount] = useState(1);
@@ -621,7 +621,7 @@ export default function VerseMemoryPage() {
     setCurrentVerseIndex(0);
     setVerseScores({});
     setBonusProgress({});
-    setProgress({ level: 1, exp: 0, stars: 0, lastLevelUpExp: 0 });
+    setProgress({ level: 1, exp: 0, wisdomKeys: 5, lastLevelUpExp: 0 });
     setRevealsRemaining(INITIAL_REVEALS);
     setHintsRemaining(INITIAL_HINTS);
     localStorage.removeItem('verseMemoryProgress');
@@ -636,12 +636,12 @@ export default function VerseMemoryPage() {
       const newBonusProgress = { ...bonusProgress };
 
       const starsToSubtract = Object.values(newScores[currentStage]?.[currentLevel] || {}).reduce((sum: number, score: number) => sum + score, 0);
-      let bonusStarsToSubtract = 0;
+      let bonusExpToSubtract = 0;
       if (newBonusProgress[currentStage]?.[currentLevel] === 'completed') {
         // Note: This won't subtract the time bonus, only the base reward. This is a simplification.
-        bonusStarsToSubtract = stage1BonusRewards[currentLevel - 1] || 0;
+        bonusExpToSubtract = stage1BonusRewards[currentLevel - 1] || 0;
       }
-      addExp(-(starsToSubtract + bonusStarsToSubtract));
+      addExp(-(starsToSubtract + bonusExpToSubtract));
 
       if(newScores[currentStage]?.[currentLevel]) {
         delete newScores[currentStage][currentLevel];
@@ -665,7 +665,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = { ...prevScores };
+            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -679,7 +679,7 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        const updatedScores = {...verseScores, [currentStage]: {...verseScores[currentStage], [currentLevel]: { ...verseScores[currentStage]?.[currentLevel], [currentVerseIndex]: score } } };
+        const updatedScores = {...verseScores, [currentStage]: {...(verseScores[currentStage] || {}), [currentLevel]: { ...(verseScores[currentStage]?.[currentLevel] || {}), [currentVerseIndex]: score } } };
 
         if(!localStorage.getItem('stage1UnlockShown') && isStageComplete(1, updatedScores)) {
             setShowUnlockDialog('stage1');
@@ -700,7 +700,7 @@ export default function VerseMemoryPage() {
             ),
             description: (
                  <div className="flex items-center gap-2">
-                    Congratulations! You earned {score} star(s)!
+                    Congratulations! You earned {score} EXP!
                  </div>
             ),
         });
@@ -890,16 +890,16 @@ export default function VerseMemoryPage() {
   }
 
   const handleTradeForReveals = () => {
-    if (stars >= tradeAmount && tradeAmount > 0) {
-        setStars(s => s - tradeAmount);
+    if (wisdomKeys >= tradeAmount && tradeAmount > 0) {
+        setWisdomKeys(s => s - tradeAmount);
         setRevealsRemaining(r => r + tradeAmount);
         setShowTradeDialog(null);
     }
   };
   
   const handleTradeForHints = () => {
-    if (stars >= tradeAmount && tradeAmount > 0) {
-        setStars(s => s - tradeAmount);
+    if (wisdomKeys >= tradeAmount && tradeAmount > 0) {
+        setWisdomKeys(s => s - tradeAmount);
         setHintsRemaining(r => r + tradeAmount);
         setShowTradeDialog(null);
     }
@@ -1158,7 +1158,7 @@ export default function VerseMemoryPage() {
                     <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
                         <div>{`Stage ${currentStage} - Level ${currentLevel}`}</div>
                         <div className="flex items-center gap-1">
-                                <Star className="w-5 h-5 text-yellow-500"/> {stars}
+                                <Key className="w-5 h-5 text-yellow-500"/> {wisdomKeys}
                         </div>
                             <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
                                 <DialogTrigger asChild>
@@ -1344,7 +1344,7 @@ export default function VerseMemoryPage() {
                                             </CardHeader>
                                             <CardContent className="space-y-2">
                                                  <div className="text-center">
-                                                    <p className="text-xs text-muted-foreground">Reward: {bonusReward} Stars</p>
+                                                    <p className="text-xs text-muted-foreground">Reward: {bonusReward} EXP</p>
                                                  </div>
                                                  {bonusStatus === 'completed' ? (
                                                     <Button disabled className="w-full bg-green-600 hover:bg-green-600"><CheckCircle className="mr-2"/> Completed</Button>
@@ -1430,8 +1430,8 @@ export default function VerseMemoryPage() {
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         {showResetConfirm === 'current'
-                            ? "This will reset all your scores and stars for the current level. This action cannot be undone."
-                            : "This will permanently delete all your progress, including all scores and stars across all levels. This action cannot be undone."
+                            ? "This will reset all your scores and EXP for the current level. This action cannot be undone."
+                            : "This will permanently delete all your progress, including all scores and EXP across all levels. This action cannot be undone."
                         }
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -1469,7 +1469,7 @@ export default function VerseMemoryPage() {
                         <AlertDialogHeader>
                             <AlertDialogTitle>No {showTradeDialog ? `${showTradeDialog.charAt(0).toUpperCase()}${showTradeDialog.slice(1)}` : ''} Remaining</AlertDialogTitle>
                             <AlertDialogDescription>
-                                You can trade your stars for more {showTradeDialog}. You currently have {stars} star(s).
+                                You can trade your Wisdom Keys for more {showTradeDialog}. You currently have {wisdomKeys} key(s).
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <div className="flex items-center gap-2">
@@ -1478,14 +1478,14 @@ export default function VerseMemoryPage() {
                                 value={tradeAmount}
                                 onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value) || 1))}
                                 min="1"
-                                max={stars}
+                                max={wisdomKeys}
                             />
-                            <Label>Star(s) for {tradeAmount} {showTradeDialog}</Label>
+                            <Label>Key(s) for {tradeAmount} {showTradeDialog}</Label>
                         </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel onClick={() => setShowTradeDialog(null)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={showTradeDialog === 'hints' ? handleTradeForHints : handleTradeForReveals} disabled={stars < tradeAmount || tradeAmount <= 0}>
-                                Trade {tradeAmount} <Star className="w-4 h-4 ml-1" />
+                            <AlertDialogAction onClick={showTradeDialog === 'hints' ? handleTradeForHints : handleTradeForReveals} disabled={wisdomKeys < tradeAmount || tradeAmount <= 0}>
+                                Trade {tradeAmount} <Key className="w-4 h-4 ml-1" />
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </>
@@ -1530,6 +1530,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
