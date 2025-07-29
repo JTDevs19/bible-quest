@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast"
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 
 
 const verses = [
@@ -223,6 +224,7 @@ export default function VerseMemoryPage() {
   const [isCompletedLevelsOpen, setIsCompletedLevelsOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -425,6 +427,7 @@ export default function VerseMemoryPage() {
 
     if (userInputs.some(input => input.trim() === '')) {
       setGameState('incomplete');
+      playIncorrectSound();
       return;
     }
 
@@ -443,6 +446,12 @@ export default function VerseMemoryPage() {
         newScores[currentLevel][currentVerseIndex] = score;
         return newScores;
       });
+    }
+
+    if (score > 0) {
+      playCorrectSound();
+    } else {
+      playIncorrectSound();
     }
 
     if (score === STARS_PER_VERSE) {

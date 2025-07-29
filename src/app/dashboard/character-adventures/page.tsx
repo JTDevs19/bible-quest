@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
 
 const triviaLevels = [
   // Level 1
@@ -429,6 +430,7 @@ export default function CharacterAdventuresPage() {
     const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
+    const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
     useEffect(() => {
         setIsClient(true);
@@ -503,6 +505,9 @@ export default function CharacterAdventuresPage() {
 
         if (option === correctAnswer) {
             setScore(s => s + 1);
+            playCorrectSound();
+        } else {
+            playIncorrectSound();
         }
     };
 
