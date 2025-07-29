@@ -507,7 +507,7 @@ export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [bonusProgress, setBonusProgress] = useState<BonusProgress>({});
-  const { exp, addExp, wisdomKeys, setWisdomKeys, setProgress } = useUserProgress();
+  const { addExp, wisdomKeys, setWisdomKeys, setProgress } = useUserProgress();
   const [hintsRemaining, setHintsRemaining] = useState(INITIAL_HINTS);
   const [tradeAmount, setTradeAmount] = useState(1);
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
@@ -532,7 +532,6 @@ export default function VerseMemoryPage() {
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
   
   const [highlightNextButton, setHighlightNextButton] = useState(false);
-  const [isCompletedLevelsOpen, setIsCompletedLevelsOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
@@ -660,7 +659,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
+            const newScores = JSON.parse(JSON.stringify(prevScores));
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -674,7 +673,10 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        const updatedScores = {...verseScores, [currentStage]: {...(verseScores[currentStage] || {}), [currentLevel]: { ...(verseScores[currentStage]?.[currentLevel] || {}), [currentVerseIndex]: score } } };
+        const updatedScores = { ...verseScores };
+        if (!updatedScores[currentStage]) updatedScores[currentStage] = {};
+        if (!updatedScores[currentStage][currentLevel]) updatedScores[currentStage][currentLevel] = {};
+        updatedScores[currentStage][currentLevel][currentVerseIndex] = score;
 
         if(!localStorage.getItem('stage1UnlockShown') && isStageComplete(1, updatedScores)) {
             setShowUnlockDialog('stage1');
@@ -1488,6 +1490,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
