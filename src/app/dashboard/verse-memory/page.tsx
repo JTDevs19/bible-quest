@@ -233,14 +233,22 @@ type BonusProgress = { [stage: number]: { [level: number]: boolean } };
 const VERSES_PER_STAGE = 20;
 const LEVELS_PER_STAGE = 5;
 const MAX_STAGES = 2;
-const BONUS_ROUND_STARS = 20;
 const BONUS_ROUND_TIME = 180; // 3 minutes
 
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
 
-// Bonus verses for each level in Stage 1
-const stage1BonusVerseIndices = [14, 15, 16, 17, 18]; // Hebrews 12, Joshua 1, Isaiah 40, Psalm 46, 1 Peter 5
+// Bonus verses for each level in Stage 1, selected based on length
+// Level 1: <10 words, Level 2: <=15, Level 3: <=20, Level 4: <=25, Level 5: >30
+const stage1BonusVerseIndices = [
+    2,  // Philippians 4:13 (9 words)
+    5,  // Matthew 6:33 (15 words)
+    12, // John 14:6 (18 words)
+    9,  // Psalm 23:1-2 (21 words)
+    8,  // 2 Timothy 3:16-17 (32 words)
+]; 
+
+const stage1BonusRewards = [10, 20, 30, 40, 50];
 
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
@@ -468,8 +476,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
                  {status === 'correct' && (
                      <div className="text-green-600 font-bold flex flex-col items-center gap-2">
                          <p className="flex items-center gap-2"><CheckCircle/> Bonus Complete!</p>
-                         <p className="text-sm">You earned {BONUS_ROUND_STARS} extra stars!</p>
-                    </div>
+                     </div>
                  )}
             </div>
         </div>
@@ -596,7 +603,8 @@ export default function VerseMemoryPage() {
      for (const stage in bonus) {
         for (const level in bonus[stage]) {
             if (bonus[stage][level]) {
-                sum += BONUS_ROUND_STARS;
+                const reward = stage === '1' ? stage1BonusRewards[parseInt(level)-1] : 0; // Add logic for stage 2 if needed
+                sum += reward;
             }
         }
     }
@@ -950,7 +958,8 @@ export default function VerseMemoryPage() {
   
   const handleBonusComplete = () => {
     if (activeBonusLevel === null) return;
-    setTotalStars(s => s + BONUS_ROUND_STARS);
+    const bonusReward = stage1BonusRewards[activeBonusLevel - 1] || 0;
+    setTotalStars(s => s + bonusReward);
     setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
@@ -960,7 +969,7 @@ export default function VerseMemoryPage() {
     
     toast({
         title: <div className="flex items-center gap-2 font-headline"><Trophy className="text-primary" /> Bonus Complete!</div>,
-        description: `You earned ${BONUS_ROUND_STARS} extra stars!`,
+        description: `You earned ${bonusReward} extra stars!`,
     });
     
     setActiveBonusLevel(null);
@@ -1243,7 +1252,12 @@ export default function VerseMemoryPage() {
                         </div>
                         {activeBonusLevel !== null && bonusVerse ? (
                              <Card>
-                                <CardHeader><CardTitle className="text-center font-headline">{bonusVerse.reference}</CardTitle></CardHeader>
+                                <CardHeader>
+                                    <div className="flex justify-between items-center">
+                                        <CardTitle className="text-center font-headline">{bonusVerse.reference}</CardTitle>
+                                        <Button size="sm" variant="ghost" onClick={() => { setActiveBonusLevel(null); setGameMode('fillInTheBlank'); }}>Back</Button>
+                                    </div>
+                                </CardHeader>
                                 <CardContent>
                                     <VersePuzzle 
                                         verse={bonusVerse}
@@ -1259,6 +1273,7 @@ export default function VerseMemoryPage() {
                                     const level = i + 1;
                                     const isUnlocked = isLevelComplete(currentStage, level, verseScores);
                                     const isCompleted = bonusProgress[currentStage]?.[level];
+                                    const bonusReward = stage1BonusRewards[i] || 0;
 
                                     return (
                                         <Card 
@@ -1280,7 +1295,7 @@ export default function VerseMemoryPage() {
                                                 ) : (
                                                     <p className="text-sm text-muted-foreground">Complete Level {level} to unlock</p>
                                                 )}
-                                                <p className="text-xs text-muted-foreground mt-2">Reward: {BONUS_ROUND_STARS} Stars</p>
+                                                <p className="text-xs text-muted-foreground mt-2">Reward: {bonusReward} Stars</p>
                                             </CardContent>
                                         </Card>
                                     )
