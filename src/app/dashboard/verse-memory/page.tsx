@@ -205,6 +205,9 @@ function VersePuzzle({ verse, onComplete, isMastered }: { verse: typeof verses[n
     const [solution, setSolution] = useState<string[]>([]);
     const [status, setStatus] = useState<'playing' | 'correct' | 'incorrect'>('playing');
 
+    const dragWord = useRef<number | null>(null);
+    const dragOverWord = useRef<number | null>(null);
+
     const originalWords = useMemo(() => verse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean), [verse.text]);
 
     useEffect(() => {
@@ -240,6 +243,20 @@ function VersePuzzle({ verse, onComplete, isMastered }: { verse: typeof verses[n
         setStatus('playing');
     };
 
+    const handleDragSort = () => {
+        if (dragWord.current === null || dragOverWord.current === null) return;
+        
+        const solutionWords = [...solution];
+        const [reorderedItem] = solutionWords.splice(dragWord.current, 1);
+        solutionWords.splice(dragOverWord.current, 0, reorderedItem);
+        
+        dragWord.current = null;
+        dragOverWord.current = null;
+        
+        setSolution(solutionWords);
+        setStatus('playing');
+    };
+
     const checkAnswer = () => {
         if (solution.join(' ') === originalWords.join(' ')) {
             setStatus('correct');
@@ -257,50 +274,51 @@ function VersePuzzle({ verse, onComplete, isMastered }: { verse: typeof verses[n
 
     return (
         <div className="space-y-6">
-            <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50">
-                <AnimatePresence>
-                    {solution.map((word, index) => (
-                        <motion.button
-                            key={`${word}-${index}`}
-                            onClick={() => status === 'playing' && handleSolutionWordSelect(word, index)}
-                            className={cn(
-                                "p-2 m-1 rounded-lg font-medium",
-                                status === 'playing' && "cursor-pointer bg-primary/20 text-primary-foreground",
-                                status === 'correct' && "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
-                                status === 'incorrect' && "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 animate-shake"
-                            )}
-                            layout
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            {word}
-                        </motion.button>
-                    ))}
-                </AnimatePresence>
-                {solution.length === 0 && <p className="text-center text-muted-foreground p-8">Drag or click words from the word bank to build the verse here.</p>}
+            <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50 flex flex-wrap items-start content-start gap-2">
+                {solution.length === 0 && <p className="text-center text-muted-foreground p-8 w-full">Click or drag words from the word bank to build the verse here.</p>}
+                {solution.map((word, index) => (
+                    <motion.button
+                        key={`${word}-${index}`}
+                        onClick={() => status === 'playing' && handleSolutionWordSelect(word, index)}
+                        draggable
+                        onDragStart={() => (dragWord.current = index)}
+                        onDragEnter={() => (dragOverWord.current = index)}
+                        onDragEnd={handleDragSort}
+                        onDragOver={(e) => e.preventDefault()}
+                        className={cn(
+                            "p-2 rounded-lg font-medium",
+                            status === 'playing' && "cursor-move bg-primary/20 text-primary-foreground",
+                            status === 'correct' && "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
+                            status === 'incorrect' && "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 animate-shake"
+                        )}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {word}
+                    </motion.button>
+                ))}
             </div>
 
-            <div className="p-4 border-2 rounded-lg min-h-[120px]">
-                <AnimatePresence>
-                    {shuffledWords.map((word, index) => (
-                        <motion.button
-                            key={`${word}-${index}`}
-                            onClick={() => status === 'playing' && handleWordSelect(word, index)}
-                            className="p-2 m-1 rounded-lg font-medium bg-secondary hover:bg-secondary/80 cursor-pointer"
-                            layout
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            {word}
-                        </motion.button>
-                    ))}
-                </AnimatePresence>
-                {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8">All words used. Check your answer!</p>}
-                {status === 'correct' && <p className="text-center font-bold text-green-600 p-8">Verse constructed perfectly!</p>}
+            <div className="p-4 border-2 rounded-lg min-h-[120px] flex flex-wrap items-start content-start gap-2">
+                {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8 w-full">All words used. Check your answer!</p>}
+                {status === 'correct' && <p className="text-center font-bold text-green-600 p-8 w-full">Verse constructed perfectly!</p>}
+                {shuffledWords.map((word, index) => (
+                    <motion.button
+                        key={`${word}-${index}`}
+                        onClick={() => status === 'playing' && handleWordSelect(word, index)}
+                        className="p-2 rounded-lg font-medium bg-secondary hover:bg-secondary/80 cursor-pointer"
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {word}
+                    </motion.button>
+                ))}
             </div>
 
              <div className="flex flex-wrap gap-2 justify-center">
@@ -1014,7 +1032,7 @@ export default function VerseMemoryPage() {
                                     <Button variant="outline" onClick={handleReveal}>
                                         Reveal Answer ({revealsRemaining})
                                     </Button>
-                                    <Button variant="secondary" onClick={handleNext}>
+                                    <Button variant="default" onClick={handleNext}>
                                         {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
                                     </Button>
                                     </>
@@ -1201,5 +1219,3 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
-
-    
