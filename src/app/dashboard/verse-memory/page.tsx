@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProgress } from '@/hooks/use-user-progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 const verses = [
@@ -1157,66 +1158,78 @@ export default function VerseMemoryPage() {
                 <TabsContent value="fillInTheBlank">
                     <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
                         <div>{`Stage ${currentStage} - Level ${currentLevel}`}</div>
-                        <div className="flex items-center gap-1">
-                                <Key className="w-5 h-5 text-yellow-500"/> {wisdomKeys}
-                        </div>
-                            <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-md w-full">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
-                                        <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
-                                       {allStagesAndLevels.map(stage => (
-                                           <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
-                                               <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
-                                                   <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
-                                                   <ChevronsUpDown className="w-4 h-4" />
-                                               </CollapsibleTrigger>
-                                               <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
-                                                    {stage.levels.map(level => (
-                                                        <div 
-                                                            key={`${stage.stageNum}-${level.levelNum}`} 
-                                                            onClick={() => stage.isUnlocked && handleLevelSelect(stage.stageNum, level.levelNum)}
-                                                            className={cn("flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                                            level.isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                                            stage.isUnlocked ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed"
-                                                            )}
-                                                        >
-                                                            <div className={cn("p-2 rounded-full", stage.isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                                                {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-semibold">Level {level.levelNum}</p>
-                                                                <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
-                                                            </div>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <div className="flex items-center gap-1 cursor-pointer" role="button">
+                                    <Key className="w-5 h-5 text-yellow-500"/> {wisdomKeys}
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none">Wisdom Keys</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Use these keys for hints or to reveal answers in games. You earn more Wisdom Keys every time you level up!
+                                    </p>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                        <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md w-full">
+                                <DialogHeader>
+                                    <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
+                                    <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
+                                </DialogHeader>
+                                <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
+                                   {allStagesAndLevels.map(stage => (
+                                       <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
+                                           <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
+                                               <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
+                                               <ChevronsUpDown className="w-4 h-4" />
+                                           </CollapsibleTrigger>
+                                           <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
+                                                {stage.levels.map(level => (
+                                                    <div 
+                                                        key={`${stage.stageNum}-${level.levelNum}`} 
+                                                        onClick={() => stage.isUnlocked && handleLevelSelect(stage.stageNum, level.levelNum)}
+                                                        className={cn("flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                                        level.isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                                        stage.isUnlocked ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed"
+                                                        )}
+                                                    >
+                                                        <div className={cn("p-2 rounded-full", stage.isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                                            {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
                                                         </div>
-                                                    ))}
-                                               </CollapsibleContent>
-                                           </Collapsible>
-                                       ))}
-                                    </div>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="w-full">
-                                                <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-56">
-                                            <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
-                                                Reset Current Level
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
-                                                Reset All Progress
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
+                                                        <div>
+                                                            <p className="font-semibold">Level {level.levelNum}</p>
+                                                            <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                           </CollapsibleContent>
+                                       </Collapsible>
+                                   ))}
+                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="w-full">
+                                            <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-56">
+                                        <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
+                                            Reset Current Level
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
+                                            Reset All Progress
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                         <div className="relative">
                             {isVerseMastered && (
                                 <div className="pointer-events-none">
@@ -1530,6 +1543,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
