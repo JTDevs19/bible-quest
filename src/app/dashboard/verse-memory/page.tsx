@@ -320,7 +320,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
 
 function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = false }: {
     verse: typeof verses[number];
-    onComplete: () => void;
+    onComplete: (timeRemaining: number) => void;
     onBonusFail: () => void;
     initialTimer: number;
     viewOnly?: boolean;
@@ -404,7 +404,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
             setStatus('correct');
             playCorrectSound();
             if(timerRef.current) clearInterval(timerRef.current);
-            setTimeout(() => onComplete(), 1500);
+            setTimeout(() => onComplete(timer), 1500);
         } else {
             setStatus('incorrect');
             playIncorrectSound();
@@ -984,10 +984,23 @@ export default function VerseMemoryPage() {
     setGameMode('puzzle');
   };
   
-  const handleBonusComplete = () => {
+  const handleBonusComplete = (timeRemaining: number) => {
     if (activeBonusLevel === null) return;
-    const bonusReward = stage1BonusRewards[activeBonusLevel - 1] || 0;
-    setTotalStars(s => s + bonusReward);
+    
+    let timeBonus = 0;
+    const timeTaken = BONUS_ROUND_TIME - timeRemaining;
+    if (timeTaken <= 30) {
+        timeBonus = 15;
+    } else if (timeTaken <= 60) {
+        timeBonus = 10;
+    } else if (timeTaken <= 90) {
+        timeBonus = 5;
+    }
+
+    const baseReward = stage1BonusRewards[activeBonusLevel - 1] || 0;
+    const totalReward = baseReward + timeBonus;
+    
+    setTotalStars(s => s + totalReward);
     setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
@@ -997,7 +1010,7 @@ export default function VerseMemoryPage() {
     
     toast({
         title: <div className="flex items-center gap-2 font-headline"><Trophy className="text-primary" /> Bonus Complete!</div>,
-        description: `You earned ${bonusReward} extra stars!`,
+        description: `You earned ${baseReward} + ${timeBonus} (time bonus) = ${totalReward} extra stars!`,
     });
     
     setActiveBonusLevel(null);
@@ -1271,7 +1284,7 @@ export default function VerseMemoryPage() {
                                                 Reveal Answer ({revealsRemaining})
                                             </Button>
                                             <Button variant="default" onClick={handleNext}>
-                                                {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
+                                                {isLastVerseInSet ? "Finish Level" : "Skip Verse"}
                                             </Button>
                                             </>
                                         )}
@@ -1507,3 +1520,4 @@ export default function VerseMemoryPage() {
 }
 
     
+
