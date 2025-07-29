@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -659,7 +660,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
+            const newScores = { ...prevScores };
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -673,8 +674,7 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        // We need to construct the new state for isStageComplete check manually
-        const updatedScores = JSON.parse(JSON.stringify(verseScores));
+        const updatedScores = {...verseScores};
          if (!updatedScores[currentStage]) {
             updatedScores[currentStage] = {};
         }
@@ -1496,6 +1496,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
