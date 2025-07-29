@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key, Languages } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -26,208 +26,328 @@ const verses = [
   // Stage 1 Verses (20)
   {
     reference: 'John 3:16',
+    reference_fil: 'Juan 3:16',
     text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t gayon na lamang ang pagsinta ng Dios sa sanglibutan, na ibinigay niya ang kaniyang bugtong na Anak, upang ang sinomang sa kaniya\'y sumampalataya ay huwag mapahamak, kundi magkaroon ng buhay na walang hanggan.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Proverbs 3:5-6',
+    reference_fil: 'Mga Kawikaan 3:5-6',
     text: 'Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.',
-    version: 'NIV'
+    text_fil: 'Tumiwala ka sa Panginoon ng buong puso mo, at huwag kang manalig sa iyong sariling kaunawaan. Sa lahat ng iyong mga lakad ay kilalanin mo siya, at kaniyang ituturo ang iyong mga landas.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Philippians 4:13',
+    reference_fil: 'Mga Taga-Filipos 4:13',
     text: 'I can do all this through him who gives me strength.',
-    version: 'NIV'
+    text_fil: 'Lahat ng mga bagay ay aking magagawa doon sa nagpapalakas sa akin.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Romans 8:28',
+    reference_fil: 'Mga Taga-Roma 8:28',
     text: 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.',
-    version: 'NIV'
+    text_fil: 'At nalalaman natin na ang lahat ng mga bagay ay nagkakalakip na gumagawa sa ikabubuti ng mga nagsisiibig sa Dios, sa makatuwid baga\'y niyaong mga tinawag alinsunod sa kaniyang nais.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Jeremiah 29:11',
+    reference_fil: 'Jeremias 29:11',
     text: 'For I know the plans I have for you,” declares the LORD, “plans to prosper you and not to harm you, plans to give you hope and a future.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t nalalaman ko ang mga pag-iisip na aking iniisip sa inyo, sabi ng Panginoon, mga pag-iisip tungkol sa kapayapaan, at hindi tungkol sa kasamaan, upang bigyan kayo ng pag-asa sa inyong huling wakas.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Matthew 6:33',
+    reference_fil: 'Mateo 6:33',
     text: 'But seek first his kingdom and his righteousness, and all these things will be given to you as well.',
-    version: 'NIV'
+    text_fil: 'Datapuwa\'t hanapin muna ninyo ang kaniyang kaharian, at ang kaniyang katuwiran; at ang lahat ng mga bagay na ito ay pawang idaragdag sa inyo.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Galatians 5:22-23',
+    reference_fil: 'Mga Taga-Galacia 5:22-23',
     text: 'But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control. Against such things there is no law.',
-    version: 'NIV'
+    text_fil: 'Datapuwa\'t ang bunga ng Espiritu ay pagibig, katuwaan, kapayapaan, pagpapahinuhod, kagandahang-loob, kabutihan, pagtatapat, kaamuan, pagpipigil; laban sa mga gayong bagay ay walang kautusan.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Ephesians 2:8-9',
+    reference_fil: 'Mga Taga-Efeso 2:8-9',
     text: 'For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God— not by works, so that no one can boast.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t sa biyaya kayo\'y nangaligtas sa pamamagitan ng pananampalataya; at ito\'y hindi sa inyong sarili, ito\'y kaloob ng Dios; Hindi sa pamamagitan ng mga gawa, upang ang sinoman ay huwag magmapuri.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: '2 Timothy 3:16-17',
+    reference_fil: '2 Timoteo 3:16-17',
     text: 'All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness, so that the servant of God may be thoroughly equipped for every good work.',
-    version: 'NIV'
+    text_fil: 'Ang lahat ng mga kasulatan na kinasihan ng Dios ay mapapakinabangan din naman sa pagtuturo, sa pagsansala, sa pagsaway, sa ikatututo na nasa katuwiran: Upang ang tao ng Dios ay maging sakdal, tinuruang lubos sa lahat ng mga gawang mabuti.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Psalm 23:1-2',
+    reference_fil: 'Mga Awit 23:1-2',
     text: 'The LORD is my shepherd, I shall not be in want. He makes me lie down in green pastures, he leads me beside quiet waters,',
-    version: 'NIV'
+    text_fil: 'Ang Panginoon ay aking pastor; hindi ako mangangailangan. Kaniyang pinahihiga ako sa sariwang pastulan: pinapatnubayan niya ako sa siping ng mga tubig na pahingahan,',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Romans 3:23',
+    reference_fil: 'Mga Taga-Roma 3:23',
     text: 'for all have sinned and fall short of the glory of God,',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t ang lahat ay nangagkasala nga, at hindi nangakaabot sa kaluwalhatian ng Dios;',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Romans 6:23',
+    reference_fil: 'Mga Taga-Roma 6:23',
     text: 'For the wages of sin is death, but the gift of God is eternal life in Christ Jesus our Lord.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t ang kabayaran ng kasalanan ay kamatayan; datapuwa\'t ang kaloob na walang bayad ng Dios ay buhay na walang hanggan kay Cristo Jesus na Panginoon natin.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'John 14:6',
+    reference_fil: 'Juan 14:6',
     text: 'Jesus answered, “I am the way and the truth and the life. No one comes to the Father except through me.”',
-    version: 'NIV'
+    text_fil: 'Sinabi sa kaniya ni Jesus, Ako ang daan, at ang katotohanan, at ang buhay: sinoman ay di makaparoroon sa Ama, kundi sa pamamagitan ko.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Matthew 28:19-20',
+    reference_fil: 'Mateo 28:19-20',
     text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you.',
-    version: 'NIV'
+    text_fil: 'Dahil dito magsiyaon nga kayo, at gawin ninyong mga alagad ang lahat ng mga bansa, na sila\'y inyong bautismuhan sa pangalan ng Ama at ng Anak at ng Espiritu Santo: Na ituro ninyo sa kanila na kanilang ganapin ang lahat ng mga bagay na iniutos ko sa inyo.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Hebrews 12:1-2',
+    reference_fil: 'Mga Hebreo 12:1-2',
     text: 'Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off everything that hinders and the sin that so easily entangles. And let us run with perseverance the race marked out for us, fixing our eyes on Jesus, the pioneer and perfecter of faith.',
-    version: 'NIV'
+    text_fil: 'Kaya\'t yamang napapalibutan tayo ng gayong kakapal na bilang ng mga saksi, itabi namang walang liwag ang bawa\'t pasan, at ang kasalanang pumipigil sa atin, at ating takbuhing may pagtitiis ang takbuhing inilagay sa harapan natin, Na masdan natin si Jesus na gumawa at sumakdal ng ating pananampalataya,',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Joshua 1:9',
+    reference_fil: 'Josue 1:9',
     text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
-    version: 'NIV'
+    text_fil: 'Hindi ba kita inutusan? Ikaw ay magpakalakas at magpakatapang na mabuti; huwag kang matakot, ni manglupaypay: sapagka\'t ang Panginoon mong Dios ay sumasaiyo saan ka man pumaroon.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Isaiah 40:31',
+    reference_fil: 'Isaias 40:31',
     text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
-    version: 'NIV'
+    text_fil: 'Nguni\'t silang nangaghihintay sa Panginoon ay mangagbabagong lakas; sila\'y paiilanglang na may mga pakpak na parang mga agila; sila\'y magsisitakbo, at hindi mangapapagod; sila\'y magsisilakad, at hindi manganghihina.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Psalm 46:10',
+    reference_fil: 'Mga Awit 46:10',
     text: 'He says, “Be still, and know that I am God; I will be exalted among the nations, I will be exalted in the earth.”',
-    version: 'NIV'
+    text_fil: 'Kayo\'y magsitigil, at kilalanin ninyo na ako ang Dios: ako\'y mabubunyi sa gitna ng mga bansa, ako\'y mabubunyi sa lupa.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: '1 Peter 5:7',
+    reference_fil: '1 Pedro 5:7',
     text: 'Cast all your anxiety on him because he cares for you.',
-    version: 'NIV'
+    text_fil: 'Na inyong ilagak sa kaniya ang lahat ng inyong kabalisahan, sapagka\'t kayo\'y ipinagmamalasakit niya.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Micah 6:8',
+    reference_fil: 'Mikas 6:8',
     text: 'He has shown you, O mortal, what is good. And what does the LORD require of you? To act justly and to love mercy and to walk humbly with your God.',
-    version: 'NIV'
+    text_fil: 'Kaniyang ipinakilala sa iyo, Oh tao, kung ano ang mabuti; at ano ang hinihingi sa iyo ng Panginoon, kundi gumawa na may kaganapan, at ibigin ang kaawaan, at lumakad na may kababaan na kasama ng iyong Dios.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   // Stage 2 Verses (20 new verses)
   {
     reference: 'Genesis 1:1',
+    reference_fil: 'Genesis 1:1',
     text: 'In the beginning God created the heavens and the earth.',
-    version: 'NIV'
+    text_fil: 'Nang pasimula ay nilikha ng Dios ang langit at ang lupa.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Psalm 119:105',
+    reference_fil: 'Mga Awit 119:105',
     text: 'Your word is a lamp for my feet, a light on my path.',
-    version: 'NIV'
+    text_fil: 'Ang salita mo\'y ilawan sa aking mga paa, at liwanag sa aking landas.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Isaiah 53:5',
+    reference_fil: 'Isaias 53:5',
     text: 'But he was pierced for our transgressions, he was crushed for our iniquities; the punishment that brought us peace was on him, and by his wounds we are healed.',
-    version: 'NIV'
+    text_fil: 'Nguni\'t siya\'y nasugatan dahil sa ating mga pagsalangsang, siya\'y nabugbog dahil sa ating mga kasamaan: ang parusa ng tungkol sa ating kapayapaan ay nasa kaniya; at sa pamamagitan ng kaniyang mga latay ay nagsigaling tayo.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'John 1:1',
+    reference_fil: 'Juan 1:1',
     text: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
-    version: 'NIV'
+    text_fil: 'Nang pasimula siya ang Verbo, at ang Verbo ay sumasa Dios, at ang Verbo ay Dios.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Acts 1:8',
+    reference_fil: 'Mga Gawa 1:8',
     text: 'But you will receive power when the Holy Spirit comes on you; and you will be my witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth.',
-    version: 'NIV'
+    text_fil: 'Datapuwa\'t tatanggapin ninyo ang kapangyarihan, pagdating sa inyo ng Espiritu Santo: at kayo\'y magiging mga saksi ko sa Jerusalem, at sa buong Judea at Samaria, at hanggang sa kahulihulihang hangganan ng lupa.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: '1 Corinthians 10:13',
+    reference_fil: '1 Corinto 10:13',
     text: 'No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear. But when you are tempted, he will also provide a way out so that you can endure it.',
-    version: 'NIV'
+    text_fil: 'Hindi dumating sa inyo ang anomang tukso kundi yaong karaniwan sa tao: datapuwa\'t tapat ang Dios, na hindi niya itutulot na kayo\'y tuksuhin ng higit sa inyong makakaya; kundi kalakip din ng tukso ay gagawin naman ang paraan ng pagilag, upang ito\'y inyong matiis.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Ephesians 6:11',
+    reference_fil: 'Mga Taga-Efeso 6:11',
     text: 'Put on the full armor of God, so that you can take your stand against the devil’s schemes.',
-    version: 'NIV'
+    text_fil: 'Mangagbihis kayo ng buong kagayakan ng Dios, upang kayo\'y magsitibay laban sa mga lalang ng diablo.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Hebrews 11:1',
+    reference_fil: 'Mga Hebreo 11:1',
     text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
-    version: 'NIV'
+    text_fil: 'Ngayon, ang pananampalataya ay siyang kapanatagan sa mga bagay na hinihintay, ang katunayan ng mga bagay na hindi nakikita.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'James 1:5',
+    reference_fil: 'Santiago 1:5',
     text: 'If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.',
-    version: 'NIV'
+    text_fil: 'Nguni\'t kung nagkukulang ng karunungan ang sinoman sa inyo, ay humingi sa Dios, na nagbibigay ng sagana sa lahat at hindi nanunumbat; at ito\'y ibibigay sa kaniya.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Revelation 21:4',
+    reference_fil: 'Pahayag 21:4',
     text: '‘He will wipe every tear from their eyes. There will be no more death’ or mourning or crying or pain, for the old order of things has passed away.',
-    version: 'NIV'
+    text_fil: 'At papahirin niya ang bawa\'t luha sa kanilang mga mata; at hindi na magkakaroon ng kamatayan; hindi na magkakaroon pa ng dalamhati, o ng pananambitan man, o ng hirap pa man: ang mga bagay ng una ay naparam na.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Psalm 19:1',
+    reference_fil: 'Mga Awit 19:1',
     text: 'The heavens declare the glory of God; the skies proclaim the work of his hands.',
-    version: 'NIV'
+    text_fil: 'Ang langit ay nagpapahayag ng kaluwalhatian ng Dios; at ipinakikilala ng kalawakan ang gawa ng kaniyang kamay.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Isaiah 9:6',
+    reference_fil: 'Isaias 9:6',
     text: 'For to us a child is born, to us a son is given, and the government will be on his shoulders. And he will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t sa atin ay ipinanganak ang isang bata, sa atin ay ibinigay ang isang anak na lalake; at ang pamamahala ay maaatang sa kaniyang balikat: at ang kaniyang pangalan ay tatawaging Kamanghamangha, Tagapayo, Makapangyarihang Dios, Walang hanggang Ama, Pangulo ng Kapayapaan.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Matthew 11:28-30',
+    reference_fil: 'Mateo 11:28-30',
     text: 'Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls. For my yoke is easy and my burden is light.',
-    version: 'NIV'
+    text_fil: 'Magsiparito sa akin, kayong lahat na nangapapagal at nangabibigatang lubha, at kayo\'y aking papagpapahingahin. Pasanin ninyo ang aking pamatok, at magaral kayo sa akin; sapagka\'t ako\'y maamo at mapagpakumbabang puso: at masusumpungan ninyo ang kapahingahan ng inyong mga kaluluwa. Sapagka\'t malambot ang aking pamatok, at magaan ang aking pasan.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'John 15:5',
+    reference_fil: 'Juan 15:5',
     text: 'I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing.',
-    version: 'NIV'
+    text_fil: 'Ako ang puno ng ubas, kayo ang mga sanga: Ang nananatili sa akin, at ako\'y sa kaniya, ay siyang nagbubunga ng marami: sapagka\'t kung kayo\'y hiwalay sa akin ay wala kayong magagawa.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Romans 10:9',
+    reference_fil: 'Mga Taga-Roma 10:9',
     text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t kung ipahahayag mo ng iyong bibig si Jesus na Panginoon, at sasampalataya ka sa iyong puso na binuhay siyang maguli ng Dios sa mga patay, ay maliligtas ka.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Galatians 2:20',
+    reference_fil: 'Mga Taga-Galacia 2:20',
     text: 'I have been crucified with Christ and I no longer live, but Christ lives in me. The life I now live in the body, I live by faith in the Son of God, who loved me and gave himself for me.',
-    version: 'NIV'
+    text_fil: 'Ako\'y napako sa krus na kasama ni Cristo; at hindi na ako ang nabubuhay, kundi si Cristo ang nabubuhay sa akin: at ang buhay na ikinabubuhay ko ngayon sa laman ay ikinabubuhay ko sa pananampalataya, ang pananampalataya na ito\'y sa Anak ng Dios, na sa akin ay umibig, at ibinigay ang kaniyang sarili dahil sa akin.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Philippians 2:3-4',
+    reference_fil: 'Mga Taga-Filipos 2:3-4',
     text: 'Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves, not looking to your own interests but each of you to the interests of the others.',
-    version: 'NIV'
+    text_fil: 'Huwag ninyong gawin ang anoman sa pagkakampi o sa pagpapalalo, kundi sa kababaan ng pagiisip, na ipalagay ng bawa\'t isa ang iba na lalong mabuti kay sa kaniyang sarili; Huwag tingnan ng bawa\'t isa sa inyo ang sa kaniyang sarili, kundi ang bawa\'t isa naman ay sa mga iba.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Colossians 3:23',
+    reference_fil: 'Mga Taga-Colosas 3:23',
     text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
-    version: 'NIV'
+    text_fil: 'Anomang inyong ginagawa, ay inyong gawin ng buong puso, na gaya ng sa Panginoon, at hindi sa mga tao;',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: 'Hebrews 4:12',
+    reference_fil: 'Mga Hebreo 4:12',
     text: 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.',
-    version: 'NIV'
+    text_fil: 'Sapagka\'t ang salita ng Dios ay buhay, at mabisa, at matalas kay sa alin mang tabak na may dalawang talim, at bumabaon hanggang sa paghihiwalay ng kaluluwa at espiritu, ng mga kasukasuan at ng utak, at madaling kumilala ng mga pagiisip at mga haka ng puso.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   },
   {
     reference: '1 John 1:9',
+    reference_fil: '1 Juan 1:9',
     text: 'If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.',
-    version: 'NIV'
+    text_fil: 'Kung ipinahahayag natin ang ating mga kasalanan, ay tapat at banal siya na tayo\'y patatawarin sa ating mga kasalanan, at tayo\'y lilinisin sa lahat ng kalikuan.',
+    version: 'NIV',
+    version_fil: 'Ang Dating Biblia (1905)'
   }
 ];
 
-type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect' | 'incomplete';
+type GameState = 'playing' | 'checking' | 'scored' | 'incorrect' | 'incomplete';
 type VerseParts = (string | null)[];
 type VerseScores = { [stage: number]: { [level: number]: { [verseIndex: number]: number } } };
 type BonusStatus = 'completed' | 'attempted';
@@ -254,12 +374,22 @@ const stage1BonusVerseIndices = [
 const stage1BonusRewards = [10, 20, 30, 40, 50];
 
 
-function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
+function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false, language }: { 
+    verse: typeof verses[number], 
+    verseWithBlanks: VerseParts, 
+    userInputs: string[], 
+    missingWords: string[], 
+    showCorrectAnswer?: boolean,
+    language: 'en' | 'fil'
+}) {
   let blankCounter = 0;
   
+  const verseText = language === 'en' ? verse.text : verse.text_fil;
+  const verseRef = language === 'en' ? verse.reference : verse.reference_fil;
+
   const originalWordsWithPunctuation = useMemo(() => {
-      return verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
-  }, [verse.text]);
+      return verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+  }, [verseText]);
 
   const reviewContent = useMemo(() => {
       let wordComponentIndex = 0;
@@ -314,18 +444,19 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
   return (
       <div className="text-center font-serif italic text-lg leading-relaxed">
           <p>{reviewContent}</p>
-          <p className="text-center font-bold mt-2 text-base not-italic">- {verse.reference}</p>
+          <p className="text-center font-bold mt-2 text-base not-italic">- {verseRef}</p>
       </div>
   );
 }
 
 
-function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = false }: {
+function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = false, language }: {
     verse: typeof verses[number];
     onComplete: (timeRemaining: number) => void;
     onBonusFail: () => void;
     initialTimer: number;
     viewOnly?: boolean;
+    language: 'en' | 'fil';
 }) {
     const [solution, setSolution] = useState<string[]>([]);
     const [shuffledWords, setShuffledWords] = useState<string[]>([]);
@@ -333,7 +464,8 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
     const [timer, setTimer] = useState(initialTimer);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const originalWords = useMemo(() => verse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean), [verse.text]);
+    const verseText = language === 'en' ? verse.text : verse.text_fil;
+    const originalWords = useMemo(() => verseText.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean), [verseText]);
 
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
@@ -418,13 +550,18 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
         setSolution([]);
         setStatus('playing');
     }
+    
+    const puzzleTitle = language === 'fil' ? 'Buuin ang Talata' : 'Construct the Verse';
+    const timerUpText = language === 'fil' ? 'Oras na!' : "Time's up!";
+    const timerUpSubtext = language === 'fil' ? 'Subukan sa susunod na bonus round.' : "Better luck on the next level's bonus round.";
+    const backButtonText = language === 'fil' ? 'Bumalik sa Laro' : 'Back to Game';
 
     if (!viewOnly && timer <= 0 && status !== 'correct') {
         return (
             <div className="text-center py-10">
-                <p className="text-destructive font-bold text-2xl mb-4">Time's up!</p>
-                <p>Better luck on the next level's bonus round.</p>
-                <Button onClick={onBonusFail} className="mt-4">Back to Game</Button>
+                <p className="text-destructive font-bold text-2xl mb-4">{timerUpText}</p>
+                <p>{timerUpSubtext}</p>
+                <Button onClick={onBonusFail} className="mt-4">{backButtonText}</Button>
             </div>
         );
     }
@@ -437,7 +574,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
             )}
             
             <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50 flex flex-wrap items-start content-start gap-2">
-                {solution.length === 0 && !viewOnly && <p className="text-center text-muted-foreground p-8 w-full">Click or drag words from the word bank to build the verse here.</p>}
+                {solution.length === 0 && !viewOnly && <p className="text-center text-muted-foreground p-8 w-full">{language === 'fil' ? 'I-click o i-drag ang mga salita mula sa word bank dito.' : 'Click or drag words from the word bank to build the verse here.'}</p>}
                 {solution.map((word, index) => (
                     <motion.button
                         key={`${word}-${index}`}
@@ -467,8 +604,8 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
             {!viewOnly && (
                 <>
                     <div className="p-4 border-2 rounded-lg min-h-[120px] flex flex-wrap items-start content-start gap-2">
-                        {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8 w-full">All words used. Check your answer!</p>}
-                        {status === 'correct' && <p className="text-center font-bold text-green-600 p-8 w-full">Verse constructed perfectly!</p>}
+                        {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8 w-full">{language === 'fil' ? 'Lahat ng salita ay nagamit na. Suriin ang iyong sagot!' : 'All words used. Check your answer!'}</p>}
+                        {status === 'correct' && <p className="text-center font-bold text-green-600 p-8 w-full">{language === 'fil' ? 'Perpektong nabuo ang talata!' : 'Verse constructed perfectly!'}</p>}
                         {shuffledWords.map((word, index) => (
                             <motion.button
                                 key={`${word}-${index}`}
@@ -486,11 +623,11 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
                     </div>
 
                     <div className="flex flex-wrap gap-2 justify-center">
-                        {status === 'playing' && <Button onClick={checkAnswer} disabled={shuffledWords.length > 0}>Check My Answer</Button>}
-                        {status === 'incorrect' && <Button variant="destructive" onClick={handleTryAgain}>Try Again</Button>}
+                        {status === 'playing' && <Button onClick={checkAnswer} disabled={shuffledWords.length > 0}>{language === 'fil' ? 'Suriin ang Sagot' : 'Check My Answer'}</Button>}
+                        {status === 'incorrect' && <Button variant="destructive" onClick={handleTryAgain}>{language === 'fil' ? 'Subukang Muli' : 'Try Again'}</Button>}
                         {status === 'correct' && (
                             <div className="text-green-600 font-bold flex flex-col items-center gap-2">
-                                <p className="flex items-center gap-2"><CheckCircle/> Bonus Complete!</p>
+                                <p className="flex items-center gap-2"><CheckCircle/> {language === 'fil' ? 'Tapos na ang Bonus!' : 'Bonus Complete!'}</p>
                             </div>
                         )}
                     </div>
@@ -512,6 +649,7 @@ export default function VerseMemoryPage() {
   const [hintsRemaining, setHintsRemaining] = useState(INITIAL_HINTS);
   const [tradeAmount, setTradeAmount] = useState(1);
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
+  const [language, setLanguage] = useState<'en' | 'fil'>('en');
   const [isTester, setIsTester] = useState(false);
 
   // Fill in the blank state
@@ -554,6 +692,11 @@ export default function VerseMemoryPage() {
   const loadProgress = useCallback(() => {
     if (!isClient) return;
     const savedProgress = localStorage.getItem('verseMemoryProgress');
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    if (profileStr) {
+        const profile = JSON.parse(profileStr);
+        setLanguage(profile.language || 'en');
+    }
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
       const loadedStage = progress.stage || 1;
@@ -660,7 +803,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = { ...prevScores };
+            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -674,7 +817,7 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        const updatedScores = {...verseScores};
+        const updatedScores = JSON.parse(JSON.stringify(verseScores));
          if (!updatedScores[currentStage]) {
             updatedScores[currentStage] = {};
         }
@@ -698,12 +841,12 @@ export default function VerseMemoryPage() {
             title: (
                 <div className="flex items-center gap-2 font-headline">
                     <Trophy className="text-primary" />
-                    Verse Attempt Scored!
+                    {language === 'fil' ? 'Nakuha ang Puntos!' : 'Verse Attempt Scored!'}
                 </div>
             ),
             description: (
                  <div className="flex items-center gap-2">
-                    Congratulations! You earned {score} EXP!
+                    {language === 'fil' ? `Binabati kita! Nakakuha ka ng ${score} EXP!` : `Congratulations! You earned ${score} EXP!`}
                  </div>
             ),
         });
@@ -716,7 +859,7 @@ export default function VerseMemoryPage() {
     }
   };
 
-  const setupRoundLogic = (verse: typeof verses[number], stage: number, level: number, scores: VerseScores, verseIdx: number) => {
+  const setupRoundLogic = (verse: typeof verses[number], stage: number, level: number, scores: VerseScores, verseIdx: number, lang: 'en' | 'fil') => {
     const currentVerseScore = scores[stage]?.[level]?.[verseIdx] ?? 0;
     const isMastered = currentVerseScore > 0;
     setIsVerseMastered(isMastered);
@@ -726,12 +869,14 @@ export default function VerseMemoryPage() {
     setAttemptScore(0);
     setShowSummaryDialog(false);
 
+    const verseText = lang === 'en' ? verse.text : verse.text_fil;
+
     if (isMastered || !verse) {
-        setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
+        setVerseWithBlanks(verse ? verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
         setMissingWords([]);
         setUserInputs([]);
     } else {
-        const words = verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+        const words = verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
@@ -776,9 +921,9 @@ export default function VerseMemoryPage() {
     const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
     const verse = verses[verseSetIndex + currentVerseIndex];
     if (verse) {
-      setupRoundLogic(verse, currentStage, currentLevel, verseScores, currentVerseIndex);
+      setupRoundLogic(verse, currentStage, currentLevel, verseScores, currentVerseIndex, language);
     }
-  }, [currentVerseIndex, currentStage, currentLevel, isClient, verseScores]);
+  }, [currentVerseIndex, currentStage, currentLevel, isClient, verseScores, language]);
 
   useEffect(() => {
     if (gameMode === 'fillInTheBlank') {
@@ -991,8 +1136,8 @@ export default function VerseMemoryPage() {
     });
     
     toast({
-        title: <div className="flex items-center gap-2 font-headline"><Trophy className="text-primary" /> Bonus Complete!</div>,
-        description: `You earned ${baseReward} + ${timeBonus} (time bonus) = ${totalReward} extra EXP!`,
+        title: <div className="flex items-center gap-2 font-headline"><Trophy className="text-primary" /> {language === 'fil' ? 'Bonus, Kumpleto!' : 'Bonus Complete!'}</div>,
+        description: `${language === 'fil' ? 'Nakakuha ka ng' : 'You earned'} ${baseReward} + ${timeBonus} (time bonus) = ${totalReward} ${language === 'fil' ? 'dagdag na EXP!' : 'extra EXP!'}`,
     });
     
     setActiveBonusLevel(null);
@@ -1027,15 +1172,16 @@ export default function VerseMemoryPage() {
   
   const renderFillInTheBlankVerse = () => {
     if (!isClient || !currentVerse) {
-      return <div>Loading verse...</div>;
+      return <div>{language === 'fil' ? 'Nagloload ng talata...' : 'Loading verse...'}</div>;
     }
     
+    const verseText = language === 'en' ? currentVerse.text : currentVerse.text_fil;
     if (isVerseMastered) {
-      return <p className="font-serif italic text-lg leading-relaxed">"{currentVerse.text}"</p>;
+      return <p className="font-serif italic text-lg leading-relaxed">"{verseText}"</p>;
     }
 
     if (verseWithBlanks.length === 0) {
-      return <div>Loading verse...</div>;
+      return <div>{language === 'fil' ? 'Nagloload ng talata...' : 'Loading verse...'}</div>;
     }
 
     let inputIndex = 0;
@@ -1075,10 +1221,9 @@ export default function VerseMemoryPage() {
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
                userInputs[currentIndex] ? "border-primary/50 bg-primary/20 text-primary" : "border-muted-foreground/50",
-              (gameState === 'scored' || gameState === 'revealed' || isVerseMastered) ? 'cursor-default' : '',
+              (isVerseMastered) ? 'cursor-default' : '',
               isWrong ? 'bg-destructive/20 border-destructive' : '',
               isCheckingAndCorrect ? 'bg-green-500/20 border-green-500' : '',
-              gameState === 'revealed' ? 'bg-blue-500/20 border-blue-500' : '',
               isVerseMastered ? 'bg-green-500/20 border-green-500 !cursor-default' : ''
             )}
             style={{ minWidth: `${Math.max(missingWords[currentIndex]?.length || 0, 5) + 2}ch`}}
@@ -1092,14 +1237,15 @@ export default function VerseMemoryPage() {
   };
 
   const getDialogMessage = () => {
-      if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
-      return `You got ${attemptScore} out of ${currentLevel} words correct!`;
+      return language === 'fil' 
+        ? `Nakuha mo ang ${attemptScore} sa ${currentLevel} na mga salita nang tama!`
+        : `You got ${attemptScore} out of ${currentLevel} words correct!`;
   }
 
   const currentVerseScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
   
   if (!isClient || !currentVerse) {
-    return <div>Loading...</div>;
+    return <div>{language === 'fil' ? 'Nagloload...' : 'Loading...'}</div>;
   }
   
     const allStagesAndLevels = Array.from({length: MAX_STAGES}).map((_, i) => {
@@ -1120,19 +1266,20 @@ export default function VerseMemoryPage() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
        <div className="space-y-2 text-center">
-        <h1 className="font-headline text-3xl font-bold">Verse Memory Challenge</h1>
-        <p className="text-muted-foreground">Master verses through different games and challenges.</p>
+        <h1 className="font-headline text-3xl font-bold">{language === 'fil' ? 'Hamon sa Pagmemorya ng Talata' : 'Verse Memory Challenge'}</h1>
+        <p className="text-muted-foreground">{language === 'fil' ? 'Kabisaduhin ang mga talata sa iba\'t ibang laro at hamon.' : 'Master verses through different games and challenges.'}</p>
       </div>
       
        <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null || viewOnlyBonusLevel !== null}><Feather/> Fill in the Blanks</TabsTrigger>
-                <TabsTrigger value="puzzle" className="gap-2"><Puzzle /> Bonus Puzzles</TabsTrigger>
+                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null || viewOnlyBonusLevel !== null}><Feather/>{language === 'fil' ? 'Punan ang Patlang' : 'Fill in the Blanks'}</TabsTrigger>
+                <TabsTrigger value="puzzle" className="gap-2"><Puzzle />{language === 'fil' ? 'Mga Bonus na Puzzle' : 'Bonus Puzzles'}</TabsTrigger>
             </TabsList>
             <div className="mt-4">
                 <TabsContent value="fillInTheBlank">
                     <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
-                        <div>{`Stage ${currentStage} - Level ${currentLevel}`}</div>
+                        <div>{language === 'fil' ? `Yugto ${currentStage} - Antas ${currentLevel}` : `Stage ${currentStage} - Level ${currentLevel}`}</div>
+                         <Button variant="outline" size="icon" onClick={() => setLanguage(l => l === 'en' ? 'fil' : 'en')}><Languages className="w-5 h-5"/></Button>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <div className="flex items-center gap-1 cursor-pointer" role="button">
@@ -1141,9 +1288,9 @@ export default function VerseMemoryPage() {
                             </PopoverTrigger>
                             <PopoverContent className="w-64">
                                 <div className="space-y-2">
-                                    <h4 className="font-medium leading-none">Wisdom Keys</h4>
+                                    <h4 className="font-medium leading-none">{language === 'fil' ? 'Mga Susi ng Karunungan' : 'Wisdom Keys'}</h4>
                                     <p className="text-sm text-muted-foreground">
-                                        Use these keys for hints in games. You earn more Wisdom Keys every time you level up!
+                                        {language === 'fil' ? 'Gamitin ang mga susing ito para sa mga pahiwatig sa mga laro. Makakakuha ka ng mas maraming Susi ng Karunungan sa tuwing tataas ang iyong antas!' : 'Use these keys for hints in games. You earn more Wisdom Keys every time you level up!'}
                                     </p>
                                 </div>
                             </PopoverContent>
@@ -1154,14 +1301,14 @@ export default function VerseMemoryPage() {
                             </DialogTrigger>
                             <DialogContent className="max-w-md w-full">
                                 <DialogHeader>
-                                    <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
-                                    <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
+                                    <DialogTitle className="font-headline text-2xl text-center">{language === 'fil' ? 'Paglalakbay sa Talata' : 'Verse Journey'}</DialogTitle>
+                                    <CardDescription className="text-center">{language === 'fil' ? 'Kumpletuhin ang lahat ng yugto upang maging isang dalubhasa!' : 'Complete all stages to become a master!'}</CardDescription>
                                 </DialogHeader>
                                 <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
                                    {allStagesAndLevels.map(stage => (
                                        <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
                                            <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
-                                               <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
+                                               <span>{language === 'fil' ? `Yugto ${stage.stageNum}` : `Stage ${stage.stageNum}`} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
                                                <ChevronsUpDown className="w-4 h-4" />
                                            </CollapsibleTrigger>
                                            <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
@@ -1178,8 +1325,8 @@ export default function VerseMemoryPage() {
                                                             {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
                                                         </div>
                                                         <div>
-                                                            <p className="font-semibold">Level {level.levelNum}</p>
-                                                            <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
+                                                            <p className="font-semibold">{language === 'fil' ? `Antas ${level.levelNum}` : `Level ${level.levelNum}`}</p>
+                                                            <p className="text-sm text-muted-foreground">{`${level.masteredInLevel}/${level.totalVersesInLevel} ${language === 'fil' ? 'Talata ang Kabisado' : 'Verses Mastered'}`}</p>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -1190,15 +1337,15 @@ export default function VerseMemoryPage() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="w-full">
-                                            <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                                            <RefreshCw className="mr-2 h-4 w-4" /> {language === 'fil' ? 'I-reset ang Progreso' : 'Reset Progress'}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-56">
                                         <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
-                                            Reset Current Level
+                                            {language === 'fil' ? 'I-reset ang Kasalukuyang Antas' : 'Reset Current Level'}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
-                                            Reset All Progress
+                                            {language === 'fil' ? 'I-reset Lahat ng Progreso' : 'Reset All Progress'}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -1228,17 +1375,17 @@ export default function VerseMemoryPage() {
                                     </Button>
                                     <div className="flex-grow text-center space-y-2">
                                         <CardTitle className="font-headline text-2xl">
-                                        {currentVerse.reference} ({currentVerse.version})
+                                        {language === 'en' ? currentVerse.reference : currentVerse.reference_fil} ({language === 'en' ? currentVerse.version : currentVerse.version_fil})
                                         </CardTitle>
-                                         <CardDescription>Verse {currentVerseIndex + 1} of {VERSES_PER_STAGE}</CardDescription>
+                                         <CardDescription>{language === 'fil' ? `Talata ${currentVerseIndex + 1} ng ${VERSES_PER_STAGE}` : `Verse ${currentVerseIndex + 1} of ${VERSES_PER_STAGE}`}</CardDescription>
                                         <div className="flex justify-center items-center">
                                            {currentVerseScore > 0 ? (
                                                <div className="flex items-center gap-1 font-bold text-yellow-500">
-                                                   <Star className="w-5 h-5 fill-current" /> {currentVerseScore} Star(s)
+                                                   <Star className="w-5 h-5 fill-current" /> {currentVerseScore} {language === 'fil' ? 'Bituin' : 'Star(s)'}
                                                </div>
                                            ) : (
                                                <div className="flex items-center gap-1 text-muted-foreground">
-                                                   <Star className="w-5 h-5" /> Not Mastered
+                                                   <Star className="w-5 h-5" /> {language === 'fil' ? 'Hindi pa Kabisado' : 'Not Mastered'}
                                                </div>
                                            )}
                                         </div>
@@ -1250,7 +1397,7 @@ export default function VerseMemoryPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-6">
                                     <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderFillInTheBlankVerse()}</div>
-                                    {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
+                                    {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">{language === 'fil' ? 'Pakiusap, punan ang lahat ng patlang bago suriin.' : 'Please fill in all the blanks before checking.'}</p>}
                                     <div className="flex flex-wrap gap-2 justify-center pt-6">
                                         {isVerseMastered ? (
                                             <Button
@@ -1262,20 +1409,20 @@ export default function VerseMemoryPage() {
                                                 )}
                                                 >
                                                 <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
-                                                    {isLastVerseInSet ? 'Go to Next Level' : 'Next Verse'}
+                                                    {isLastVerseInSet ? (language === 'fil' ? 'Pumunta sa Susunod na Antas' : 'Go to Next Level') : (language === 'fil' ? 'Susunod na Talata' : 'Next Verse')}
                                                 </span>
                                             </Button>
                                         ) : (
                                             <>
-                                            <Button disabled={gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
-                                                Check My Answer
+                                            <Button onClick={handleSubmit}>
+                                                {language === 'fil' ? 'Suriin ang Sagot' : 'Check My Answer'}
                                             </Button>
-                                            <Button variant="outline" onClick={handleHintClick} disabled={gameState === 'scored' || gameState === 'revealed'}>
+                                            <Button variant="outline" onClick={handleHintClick}>
                                                 <HelpCircle className="mr-2 h-4 w-4"/>
-                                                Hint ({hintsRemaining})
+                                                {language === 'fil' ? `Pahiwatig (${hintsRemaining})` : `Hint (${hintsRemaining})`}
                                             </Button>
                                             <Button variant="default" onClick={handleNext}>
-                                                {isLastVerseInSet ? "Finish Level" : "Skip Verse"}
+                                                {isLastVerseInSet ? (language === 'fil' ? 'Tapusin ang Antas' : 'Finish Level') : (language === 'fil' ? 'Laktawan ang Talata' : 'Skip Verse')}
                                             </Button>
                                             </>
                                         )}
@@ -1287,15 +1434,15 @@ export default function VerseMemoryPage() {
                 <TabsContent value="puzzle">
                      <div className="space-y-4">
                         <div className="text-center">
-                            <h2 className="font-headline text-2xl">Bonus Puzzles</h2>
-                            <p className="text-muted-foreground">Complete a level in 'Fill in the Blanks' to unlock its bonus puzzle.</p>
+                            <h2 className="font-headline text-2xl">{language === 'fil' ? 'Mga Bonus na Puzzle' : 'Bonus Puzzles'}</h2>
+                            <p className="text-muted-foreground">{language === 'fil' ? 'Kumpletuhin ang isang antas sa \'Punan ang Patlang\' para mabuksan ang bonus puzzle nito.' : 'Complete a level in \'Fill in the Blanks\' to unlock its bonus puzzle.'}</p>
                         </div>
                         {(activeBonusLevel !== null || viewOnlyBonusLevel !== null) && bonusVerse ? (
                              <Card>
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
-                                        <CardTitle className="text-center font-headline">{bonusVerse.reference}</CardTitle>
-                                        <Button size="sm" variant="ghost" onClick={() => { setActiveBonusLevel(null); setViewOnlyBonusLevel(null); setGameMode('fillInTheBlank'); }}>Back</Button>
+                                        <CardTitle className="text-center font-headline">{language === 'en' ? bonusVerse.reference : bonusVerse.reference_fil}</CardTitle>
+                                        <Button size="sm" variant="ghost" onClick={() => { setActiveBonusLevel(null); setViewOnlyBonusLevel(null); setGameMode('fillInTheBlank'); }}>{language === 'fil' ? 'Bumalik' : 'Back'}</Button>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -1305,6 +1452,7 @@ export default function VerseMemoryPage() {
                                         onBonusFail={handleBonusFail}
                                         initialTimer={BONUS_ROUND_TIME}
                                         viewOnly={viewOnlyBonusLevel !== null}
+                                        language={language}
                                     />
                                 </CardContent>
                              </Card>
@@ -1325,25 +1473,25 @@ export default function VerseMemoryPage() {
                                                 <div className="mx-auto bg-primary/10 p-3 rounded-full mb-2">
                                                     {isUnlocked ? <Puzzle className="w-8 h-8 text-primary"/> : <Lock className="w-8 h-8 text-muted-foreground"/>}
                                                 </div>
-                                                <CardTitle className="font-headline">Level {level} Bonus</CardTitle>
+                                                <CardTitle className="font-headline">{language === 'fil' ? `Bonus sa Antas ${level}` : `Level ${level} Bonus`}</CardTitle>
                                             </CardHeader>
                                             <CardContent className="space-y-2">
                                                  <div className="text-center">
-                                                    <p className="text-xs text-muted-foreground">Reward: {bonusReward} EXP</p>
+                                                    <p className="text-xs text-muted-foreground">{language === 'fil' ? 'Gantimpala' : 'Reward'}: {bonusReward} EXP</p>
                                                  </div>
                                                  {bonusStatus === 'completed' ? (
-                                                    <Button disabled className="w-full bg-green-600 hover:bg-green-600"><CheckCircle className="mr-2"/> Completed</Button>
+                                                    <Button disabled className="w-full bg-green-600 hover:bg-green-600"><CheckCircle className="mr-2"/>{language === 'fil' ? 'Natapos' : 'Completed'}</Button>
                                                 ) : bonusStatus === 'attempted' ? (
                                                     <div className="flex flex-col gap-2">
-                                                        <p className="text-sm font-semibold text-destructive">Time's up!</p>
-                                                        <Button onClick={() => viewBonusRound(level)} variant="secondary" className="w-full"><Eye className="mr-2"/>View Puzzle</Button>
+                                                        <p className="text-sm font-semibold text-destructive">{language === 'fil' ? 'Oras na!' : 'Time\'s up!'}</p>
+                                                        <Button onClick={() => viewBonusRound(level)} variant="secondary" className="w-full"><Eye className="mr-2"/>{language === 'fil' ? 'Tingnan ang Puzzle' : 'View Puzzle'}</Button>
                                                     </div>
                                                 ) : isUnlocked ? (
                                                     <Button onClick={() => startBonusRound(level)} className="w-full">
-                                                        <PlayCircle className="mr-2"/> Start Challenge
+                                                        <PlayCircle className="mr-2"/>{language === 'fil' ? 'Simulan ang Hamon' : 'Start Challenge'}
                                                     </Button>
                                                 ) : (
-                                                     <p className="text-sm text-muted-foreground">Complete Level {level} to unlock</p>
+                                                     <p className="text-sm text-muted-foreground">{language === 'fil' ? `Kumpletuhin ang Antas ${level} para mabuksan` : `Complete Level ${level} to unlock`}</p>
                                                 )}
                                             </CardContent>
                                         </Card>
@@ -1360,7 +1508,7 @@ export default function VerseMemoryPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-headline text-2xl text-center">
-              {gameState === 'revealed' ? "Verse Revealed" : "Score"}
+                {language === 'fil' ? 'Puntos' : 'Score'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base">
                 {getDialogMessage()}
@@ -1368,23 +1516,24 @@ export default function VerseMemoryPage() {
           </AlertDialogHeader>
           <Card className="bg-muted/50">
              <CardContent className="p-4">
-                {(gameState === 'scored' || gameState === 'incorrect' || gameState === 'revealed') && (
+                {(gameState === 'scored' || gameState === 'incorrect') && (
                     <VerseReview 
                         verse={currentVerse} 
                         verseWithBlanks={verseWithBlanks} 
                         userInputs={userInputs} 
                         missingWords={missingWords}
                         showCorrectAnswer={true}
+                        language={language}
                     />
                 )}
              </CardContent>
           </Card>
           <AlertDialogFooter>
             {(gameState === 'scored' || gameState === 'incorrect' ) && !isVerseMastered ? (
-                 <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
+                 <AlertDialogAction onClick={tryAgain}>{language === 'fil' ? 'Subukang Muli' : 'Try Again'}</AlertDialogAction>
             ) : null}
             <AlertDialogAction onClick={handleNext}>
-                {isLastVerseInSet ? "Finish Level" : "Next Verse"}
+                {isLastVerseInSet ? (language === 'fil' ? 'Tapusin ang Antas' : 'Finish Level') : (language === 'fil' ? 'Susunod na Talata' : 'Next Verse')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1396,14 +1545,14 @@ export default function VerseMemoryPage() {
             <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
                 <Trophy className="w-10 h-10 text-primary" />
             </div>
-            <AlertDialogTitle className="font-headline text-2xl text-center">Level {currentLevel} Complete!</AlertDialogTitle>
+            <AlertDialogTitle className="font-headline text-2xl text-center">{language === 'fil' ? `Natapos ang Antas ${currentLevel}!` : `Level ${currentLevel} Complete!`}</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Excellent work! You've mastered all the verses in this level. The bonus puzzle is now unlocked in the 'Bonus Puzzles' tab.
+              {language === 'fil' ? 'Magaling! Nakuha mo na ang lahat ng talata sa antas na ito. Ang bonus puzzle ay bukas na sa tab na \'Mga Bonus na Puzzle\'.' : 'Excellent work! You\'ve mastered all the verses in this level. The bonus puzzle is now unlocked in the \'Bonus Puzzles\' tab.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={startNextLevel} className="w-full">
-                {currentLevel < LEVELS_PER_STAGE ? `Start Level ${currentLevel + 1}` : `Start Stage ${currentStage + 1}`}
+                {currentLevel < LEVELS_PER_STAGE ? `${language === 'fil' ? 'Simulan ang Antas' : 'Start Level'} ${currentLevel + 1}` : `${language === 'fil' ? 'Simulan ang Yugto' : 'Start Stage'} ${currentStage + 1}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1412,21 +1561,21 @@ export default function VerseMemoryPage() {
       <AlertDialog open={showResetConfirm !== null} onOpenChange={(open) => !open && setShowResetConfirm(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{language === 'fil' ? 'Sigurado ka ba?' : 'Are you sure?'}</AlertDialogTitle>
                     <AlertDialogDescription>
                         {showResetConfirm === 'current'
-                            ? "This will reset all your scores and EXP for the current level. This action cannot be undone."
-                            : "This will permanently delete all your progress, including all scores and EXP across all levels. This action cannot be undone."
+                            ? (language === 'fil' ? "Ire-reset nito ang lahat ng iyong mga score at EXP para sa kasalukuyang antas. Hindi na maibabalik ang aksyon na ito." : "This will reset all your scores and EXP for the current level. This action cannot be undone.")
+                            : (language === 'fil' ? "Permanente nitong tatanggalin ang lahat ng iyong progreso, kasama ang lahat ng score at EXP sa lahat ng antas. Hindi na maibabalik ang aksyon na ito." : "This will permanently delete all your progress, including all scores and EXP across all levels. This action cannot be undone.")
                         }
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setShowResetConfirm(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setShowResetConfirm(null)}>{language === 'fil' ? 'Kanselahin' : 'Cancel'}</AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={showResetConfirm === 'current' ? resetCurrentLevelProgress : resetAllProgress}
                       className={cn(showResetConfirm === 'all' && 'bg-destructive text-destructive-foreground hover:bg-destructive/90')}
                     >
-                        Confirm
+                        {language === 'fil' ? 'Kumpirmahin' : 'Confirm'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -1435,9 +1584,9 @@ export default function VerseMemoryPage() {
         <AlertDialog open={showTradeDialog} onOpenChange={setShowTradeDialog}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Not enough hints</AlertDialogTitle>
+                    <AlertDialogTitle>{language === 'fil' ? 'Kulang ang mga pahiwatig' : 'Not enough hints'}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        You can trade your Wisdom Keys for more hints. You currently have {wisdomKeys} key(s).
+                        {language === 'fil' ? `Maaari mong ipagpalit ang iyong mga Susi ng Karunungan para sa mas maraming pahiwatig. Kasalukuyan kang may ${wisdomKeys} na susi.` : `You can trade your Wisdom Keys for more hints. You currently have ${wisdomKeys} key(s).`}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="flex items-center gap-2">
@@ -1448,12 +1597,12 @@ export default function VerseMemoryPage() {
                         min="1"
                         max={wisdomKeys}
                     />
-                    <Label>Key(s) for {tradeAmount * 3} hints</Label>
+                    <Label>{language === 'fil' ? `Susi para sa ${tradeAmount * 3} pahiwatig` : `Key(s) for ${tradeAmount * 3} hints`}</Label>
                 </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setShowTradeDialog(false)}>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel onClick={() => setShowTradeDialog(false)}>{language === 'fil' ? 'Kanselahin' : 'Cancel'}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleTradeForHints} disabled={wisdomKeys < tradeAmount || tradeAmount <= 0}>
-                        Trade {tradeAmount} <Key className="w-4 h-4 ml-1" />
+                        {language === 'fil' ? `Ipagpalit ang ${tradeAmount}` : `Trade ${tradeAmount}`} <Key className="w-4 h-4 ml-1" />
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -1466,10 +1615,12 @@ export default function VerseMemoryPage() {
                     <Trophy className="w-10 h-10 text-primary" />
                 </div>
               <AlertDialogTitle className="font-headline text-2xl text-center">
-                {showUnlockDialog === 'stage1' ? "Stage 1 Complete!" : "Stage 2 Complete!"}
+                {showUnlockDialog === 'stage1' ? (language === 'fil' ? "Natapos ang Yugto 1!" : "Stage 1 Complete!") : (language === 'fil' ? "Natapos ang Yugto 2!" : "Stage 2 Complete!")}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Congratulations! You've unlocked {showUnlockDialog === 'stage1' ? 'Stage 2 and the' : 'the'} <strong>{showUnlockDialog === 'stage1' ? "Character Adventures" : "Bible Mastery"}</strong> game.
+                {language === 'fil' ? 'Binabati kita! Na-unlock mo ang ' : 'Congratulations! You\'ve unlocked '} 
+                {showUnlockDialog === 'stage1' ? (language === 'fil' ? 'Yugto 2 at ang larong' : 'Stage 2 and the') : (language === 'fil' ? 'larong' : 'the')} 
+                <strong> {showUnlockDialog === 'stage1' ? (language === 'fil' ? "Pakikipagsapalaran ng mga Tauhan" : "Character Adventures") : (language === 'fil' ? "Kasanayan sa Bibliya" : "Bible Mastery")}</strong>.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
@@ -1477,33 +1628,14 @@ export default function VerseMemoryPage() {
                   setShowUnlockDialog(null);
                   handleNext();
                 }}>
-                    Continue Journey
+                    {language === 'fil' ? 'Ipagpatuloy ang Paglalakbay' : 'Continue Journey'}
                 </AlertDialogCancel>
               <AlertDialogAction onClick={() => router.push(showUnlockDialog === 'stage1' ? '/dashboard/character-adventures' : '/dashboard/bible-mastery')}>
-                <Users className="mr-2" /> Explore New Game
+                <Users className="mr-2" /> {language === 'fil' ? 'Tuklasin ang Bagong Laro' : 'Explore New Game'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-
     </div>
   );
 }
-
-    
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
