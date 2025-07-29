@@ -62,6 +62,21 @@ const levels = generateLevelConfig();
 const PERFECT_SCORE_PER_LEVEL = 10;
 const TOTAL_ADVENTURE_LEVELS = 20;
 
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
+
 type Progress = { [level: number]: { [round: number]: boolean } };
 
 export default function BibleMasteryPage() {
@@ -89,12 +104,9 @@ export default function BibleMasteryPage() {
 
   useEffect(() => {
     if (!isClient) return;
-    const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
-    if (characterAdventuresProgress.scores) {
-        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-        if (completedLevels >= TOTAL_ADVENTURE_LEVELS) {
-            setIsUnlocked(true);
-        }
+    const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
+    if (isStageComplete(2, verseMemoryProgress.scores)) {
+        setIsUnlocked(true);
     }
   }, [isClient]);
   
@@ -244,14 +256,13 @@ export default function BibleMasteryPage() {
             </div>
             <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Bible Mastery!</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              To unlock this ultimate challenge, you must first prove your knowledge of Bible characters.
-              Achieve a perfect score (10/10) on all {TOTAL_ADVENTURE_LEVELS} levels of Character Adventures.
+              To unlock this ultimate challenge, you must first complete <strong>Stage 2</strong> of the Verse Memory game.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogCancel onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push('/dashboard/character-adventures')}>
-              <Users className="mr-2" /> Go to Character Adventures
+            <AlertDialogAction onClick={() => router.push('/dashboard/verse-memory')}>
+              <BookOpen className="mr-2" /> Go to Verse Memory
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -387,5 +398,3 @@ export default function BibleMasteryPage() {
     </>
   );
 }
-
-    

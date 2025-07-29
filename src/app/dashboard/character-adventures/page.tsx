@@ -411,8 +411,22 @@ const triviaLevelsFilipino = [
 ];
 
 const PERFECT_SCORE_PER_LEVEL = 10;
-const MAX_LEVEL = 20; 
-const STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2 = 30; // 10 verses * 3 stars
+const MAX_LEVEL = 20;
+
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
 
 export default function CharacterAdventuresPage() {
     const [isClient, setIsClient] = useState(false);
@@ -441,7 +455,7 @@ export default function CharacterAdventuresPage() {
         if (!isClient) return;
 
         const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-        if ((verseMemoryProgress.stars || 0) >= STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2) {
+        if (isStageComplete(1, verseMemoryProgress.scores)) {
             setIsUnlocked(true);
         }
 
@@ -576,8 +590,7 @@ export default function CharacterAdventuresPage() {
                         </div>
                         <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Character Adventures!</AlertDialogTitle>
                         <AlertDialogDescription className="text-center">
-                            To begin your adventure into the lives of Bible characters, you must first prove your foundational knowledge.
-                            Achieve at least <strong>{STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2} stars</strong> in the Verse Memory game.
+                            To begin your adventure into the lives of Bible characters, you must first complete <strong>Stage 1</strong> of the Verse Memory game.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-center">
@@ -819,5 +832,3 @@ export default function CharacterAdventuresPage() {
         </div>
     );
 }
-
-    

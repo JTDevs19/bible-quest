@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const verses = [
-  // Level 1-5 Verses
+  // Stage 1 Verses
   {
     reference: 'John 3:16',
     text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
@@ -71,7 +71,6 @@ const verses = [
     text: 'The LORD is my shepherd, I shall not be in want. He makes me lie down in green pastures, he leads me beside quiet waters,',
     version: 'NIV'
   },
-  // Level 6-10 Verses
   {
     reference: 'Romans 3:23',
     text: 'for all have sinned and fall short of the glory of God,',
@@ -121,18 +120,120 @@ const verses = [
     reference: 'Micah 6:8',
     text: 'He has shown you, O mortal, what is good. And what does the LORD require of you? To act justly and to love mercy and to walk humbly with your God.',
     version: 'NIV'
+  },
+  // Stage 2 Verses
+  {
+    reference: 'Genesis 1:1',
+    text: 'In the beginning God created the heavens and the earth.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 119:105',
+    text: 'Your word is a lamp for my feet, a light on my path.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Isaiah 53:5',
+    text: 'But he was pierced for our transgressions, he was crushed for our iniquities; the punishment that brought us peace was on him, and by his wounds we are healed.',
+    version: 'NIV'
+  },
+  {
+    reference: 'John 1:1',
+    text: 'In the beginning was the Word, and the Word was with God, and the Word was God.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Acts 1:8',
+    text: 'But you will receive power when the Holy Spirit comes on you; and you will be my witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth.',
+    version: 'NIV'
+  },
+  {
+    reference: '1 Corinthians 10:13',
+    text: 'No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear. But when you are tempted, he will also provide a way out so that you can endure it.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Ephesians 6:11',
+    text: 'Put on the full armor of God, so that you can take your stand against the devil’s schemes.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Hebrews 11:1',
+    text: 'Now faith is confidence in what we hope for and assurance about what we do not see.',
+    version: 'NIV'
+  },
+  {
+    reference: 'James 1:5',
+    text: 'If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Revelation 21:4',
+    text: '‘He will wipe every tear from their eyes. There will be no more death’ or mourning or crying or pain, for the old order of things has passed away.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Psalm 19:1',
+    text: 'The heavens declare the glory of God; the skies proclaim the work of his hands.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Isaiah 9:6',
+    text: 'For to us a child is born, to us a son is given, and the government will be on his shoulders. And he will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Matthew 11:28-30',
+    text: 'Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls. For my yoke is easy and my burden is light.',
+    version: 'NIV'
+  },
+  {
+    reference: 'John 15:5',
+    text: 'I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Romans 10:9',
+    text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Galatians 2:20',
+    text: 'I have been crucified with Christ and I no longer live, but Christ lives in me. The life I now live in the body, I live by faith in the Son of God, who loved me and gave himself for me.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Philippians 2:3-4',
+    text: 'Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves, not looking to your own interests but each of you to the interests of the others.',
+    version: 'NIV'
+  },
+  {
+    reference: 'Colossians 3:23',
+    text: 'Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,',
+    version: 'NIV'
+  },
+  {
+    reference: 'Hebrews 4:12',
+    text: 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.',
+    version: 'NIV'
+  },
+  {
+    reference: '1 John 1:9',
+    text: 'If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.',
+    version: 'NIV'
   }
 ];
 
 type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect' | 'incomplete';
 type VerseParts = (string | null)[];
-type VerseScores = { [level: number]: { [verseIndex: number]: number } };
+type VerseScores = { [stage: number]: { [level: number]: { [verseIndex: number]: number } } };
 
-const MAX_LEVEL = 10;
-const STARS_PER_VERSE = 3;
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+const MAX_STAGES = 2;
+
 const INITIAL_HINTS = 5;
 const INITIAL_REVEALS = 3;
-const STARS_TO_UNLOCK_ADVENTURES = 150; // Updated for 10 levels
 
 function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCorrectAnswer = false }: { verse: typeof verses[number], verseWithBlanks: VerseParts, userInputs: string[], missingWords: string[], showCorrectAnswer?: boolean }) {
   let blankCounter = 0;
@@ -212,7 +313,6 @@ function VersePuzzle({ verse, onComplete, isMastered }: { verse: typeof verses[n
 
     useEffect(() => {
         const words = [...originalWords];
-        // Simple shuffle
         for (let i = words.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [words[i], words[j]] = [words[j], words[i]];
@@ -334,6 +434,7 @@ function VersePuzzle({ verse, onComplete, isMastered }: { verse: typeof verses[n
 
 export default function VerseMemoryPage() {
   const [isClient, setIsClient] = useState(false);
+  const [currentStage, setCurrentStage] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
@@ -364,17 +465,14 @@ export default function VerseMemoryPage() {
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
   
-  const findFirstUnfinishedVerse = (level: number, scores: VerseScores) => {
-    const levelScores = scores[level] || {};
-    const versesInLevel = level <= 5 ? 10 : 20;
-    const startIndex = level <= 5 ? 0 : 10;
-    
-    for (let i = startIndex; i < versesInLevel; i++) {
-        if ((levelScores[i] || 0) < STARS_PER_VERSE) {
+  const findFirstUnfinishedVerse = (stage: number, level: number, scores: VerseScores) => {
+    const levelScores = scores[stage]?.[level] || {};
+    for (let i = 0; i < VERSES_PER_STAGE; i++) {
+        if (!levelScores[i]) { // If a verse hasn't been attempted or scored
             return i;
         }
     }
-    return startIndex; // Default to first verse of the set if all are complete
+    return 0; // Default to first verse if all are complete
   };
 
   const loadProgress = useCallback(() => {
@@ -382,16 +480,18 @@ export default function VerseMemoryPage() {
     const savedProgress = localStorage.getItem('verseMemoryProgress');
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
+      const loadedStage = progress.stage || 1;
       const loadedLevel = progress.level || 1;
       const loadedScores = progress.scores || {};
       
+      setCurrentStage(loadedStage);
       setCurrentLevel(loadedLevel);
       setVerseScores(loadedScores);
       setTotalStars(progress.stars || 0);
       setRevealsRemaining(progress.reveals ?? INITIAL_REVEALS);
       setHintsRemaining(progress.hints ?? INITIAL_HINTS);
 
-      const firstUnfinished = findFirstUnfinishedVerse(loadedLevel, loadedScores);
+      const firstUnfinished = findFirstUnfinishedVerse(loadedStage, loadedLevel, loadedScores);
       setCurrentVerseIndex(firstUnfinished);
     }
   }, [isClient]);
@@ -399,6 +499,7 @@ export default function VerseMemoryPage() {
   const saveProgress = useCallback(() => {
     if (!isClient) return;
     const progress = {
+      stage: currentStage,
       level: currentLevel,
       scores: verseScores,
       stars: totalStars,
@@ -406,7 +507,7 @@ export default function VerseMemoryPage() {
       hints: hintsRemaining,
     };
     localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [isClient, currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining]);
+  }, [isClient, currentStage, currentLevel, verseScores, totalStars, revealsRemaining, hintsRemaining]);
 
   useEffect(() => {
     setIsClient(true);
@@ -430,10 +531,19 @@ export default function VerseMemoryPage() {
   }, [highlightNextButton]);
 
   const recalculateTotalStars = (scores: VerseScores) => {
-    return Object.values(scores).flatMap(level => Object.values(level)).reduce((sum, score) => sum + score, 0);
+    let sum = 0;
+    for (const stage in scores) {
+        for (const level in scores[stage]) {
+            for (const verse in scores[stage][level]) {
+                sum += scores[stage][level][verse];
+            }
+        }
+    }
+    return sum;
   };
   
   const resetAllProgress = () => {
+    setCurrentStage(1);
     setCurrentLevel(1);
     setCurrentVerseIndex(0);
     setVerseScores({});
@@ -448,7 +558,9 @@ export default function VerseMemoryPage() {
   
   const resetCurrentLevelProgress = () => {
       const newScores = { ...verseScores };
-      delete newScores[currentLevel];
+      if(newScores[currentStage]?.[currentLevel]) {
+        delete newScores[currentStage][currentLevel];
+      }
       
       const newTotalStars = recalculateTotalStars(newScores);
       
@@ -459,59 +571,57 @@ export default function VerseMemoryPage() {
   };
   
   const handleMastery = (score: number) => {
-    const oldScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-    
-    if (score > oldScore) {
-        const scoreDifference = score - oldScore;
+    const oldScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
+    const isPuzzleMode = gameMode === 'puzzle';
+    const scoreToAward = isPuzzleMode ? currentLevel : score;
+
+    if (scoreToAward > oldScore) {
+        const scoreDifference = scoreToAward - oldScore;
         const newTotalStars = totalStars + scoreDifference;
-        
         setTotalStars(newTotalStars);
+        
         setVerseScores(prevScores => {
-            const newScores = { ...prevScores };
-            if (!newScores[currentLevel]) newScores[currentLevel] = {};
-            newScores[currentLevel][currentVerseIndex] = score;
+            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
+            if (!newScores[currentStage]) newScores[currentStage] = {};
+            if (!newScores[currentStage][currentLevel]) newScores[currentStage][currentLevel] = {};
+            newScores[currentStage][currentLevel][currentVerseIndex] = scoreToAward;
             return newScores;
         });
-        
-        if (score === STARS_PER_VERSE) {
-            setIsVerseMastered(true);
-            setHighlightNextButton(true);
 
-            if (totalStars < STARS_TO_UNLOCK_ADVENTURES && newTotalStars >= STARS_TO_UNLOCK_ADVENTURES) {
-                setShowUnlockDialog(true);
-            }
-            
-             toast({
-                title: (
-                    <div className="flex items-center gap-2 font-headline">
-                        <Trophy className="text-primary" />
-                        Verse Mastered!
-                    </div>
-                ),
-                description: (
-                     <div className="flex items-center gap-2">
-                        Congratulations! You earned 3 stars!
-                         <motion.div className="flex" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, staggerChildren: 0.1 }}>
-                            <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
-                            <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
-                            <motion.div initial={{ scale:0 }} animate={{ scale:1 }}><Star className="w-5 h-5 text-yellow-400 fill-yellow-400" /></motion.div>
-                         </motion.div>
-                     </div>
-                ),
-            });
+        setIsVerseMastered(true);
+        setHighlightNextButton(true);
+
+        const stage1Complete = isStageComplete(1, verseScores);
+        if(currentStage === 1 && !localStorage.getItem('stage1UnlockShown') && isStageComplete(1, {...verseScores, [currentStage]: {...verseScores[currentStage], [currentLevel]: { ...verseScores[currentStage]?.[currentLevel], [currentVerseIndex]: scoreToAward } } })) {
+            setShowUnlockDialog(true);
+            localStorage.setItem('stage1UnlockShown', 'true');
         }
+
+        toast({
+            title: (
+                <div className="flex items-center gap-2 font-headline">
+                    <Trophy className="text-primary" />
+                    {isPuzzleMode ? "Verse Puzzle Complete!" : "Verse Attempt Scored!"}
+                </div>
+            ),
+            description: (
+                 <div className="flex items-center gap-2">
+                    Congratulations! You earned {scoreToAward} star(s)!
+                 </div>
+            ),
+        });
     }
 
-    if (score > 0) {
+    if (score > 0 || isPuzzleMode) {
         playCorrectSound();
     } else {
         playIncorrectSound();
     }
   };
 
-  const setupRoundLogic = (verse: typeof verses[number], level: number, scores: VerseScores, verseIdx: number) => {
-    const currentVerseScore = scores[level]?.[verseIdx] ?? 0;
-    const isMastered = currentVerseScore === STARS_PER_VERSE;
+  const setupRoundLogic = (verse: typeof verses[number], stage: number, level: number, scores: VerseScores, verseIdx: number) => {
+    const currentVerseScore = scores[stage]?.[level]?.[verseIdx] ?? 0;
+    const isMastered = currentVerseScore > 0;
     setIsVerseMastered(isMastered);
 
     setGameState('playing');
@@ -566,11 +676,12 @@ export default function VerseMemoryPage() {
 
   const setupRound = useCallback(() => {
     if (!isClient) return;
-    const verse = verses[currentVerseIndex];
+    const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
+    const verse = verses[verseSetIndex + currentVerseIndex];
     if (verse) {
-      setupRoundLogic(verse, currentLevel, verseScores, currentVerseIndex);
+      setupRoundLogic(verse, currentStage, currentLevel, verseScores, currentVerseIndex);
     }
-  }, [currentVerseIndex, currentLevel, isClient, verseScores]);
+  }, [currentVerseIndex, currentStage, currentLevel, isClient, verseScores]);
 
   useEffect(() => {
     setupRound();
@@ -579,16 +690,10 @@ export default function VerseMemoryPage() {
 
   const calculateScore = useCallback((inputs: string[]) => {
     if (missingWords.length === 0) return 0;
-    
-    const correctCount = inputs.reduce((count, input, index) => {
+    return inputs.reduce((count, input, index) => {
       const isCorrect = input.toLowerCase().trim() === missingWords[index]?.toLowerCase().trim();
       return isCorrect ? count + 1 : count;
     }, 0);
-    
-    if (correctCount === missingWords.length) return 3;
-    if (correctCount > 0 && correctCount / missingWords.length >= 0.5) return 2;
-    if (correctCount > 0) return 1;
-    return 0;
   }, [missingWords]);
   
   const tryAgain = () => {
@@ -618,42 +723,39 @@ export default function VerseMemoryPage() {
 
     const score = calculateScore(userInputs);
     handleMastery(score);
-    
-    if (score < STARS_PER_VERSE) {
-        setAttemptScore(score);
-        setGameState(score > 0 ? 'scored' : 'incorrect');
-        setShowSummaryDialog(true);
-    }
+    setAttemptScore(score);
+    setShowSummaryDialog(true);
   };
   
   const handleNext = () => {
     setShowSummaryDialog(false);
-    const versesInLevel = currentLevel <= 5 ? 10 : 20;
-    const startIndex = currentLevel <= 5 ? 0 : 10;
-    
-    if (currentVerseIndex < versesInLevel -1) {
+    if (currentVerseIndex < VERSES_PER_STAGE - 1) {
       setCurrentVerseIndex(prev => prev + 1);
     } else {
-        setShowLevelCompleteDialog(true);
+        if (isLevelComplete(currentStage, currentLevel, verseScores)) {
+            setShowLevelCompleteDialog(true);
+        } else {
+            // Find first unfinished verse in this level
+            const firstUnfinished = findFirstUnfinishedVerse(currentStage, currentLevel, verseScores);
+            setCurrentVerseIndex(firstUnfinished);
+        }
     }
   };
 
   const startNextLevel = () => {
     setShowLevelCompleteDialog(false);
-    const requiredStarsForNextLevel = currentLevel * (currentLevel <= 5 ? 10 : 10) * STARS_PER_VERSE;
-
-    if (totalStars >= requiredStarsForNextLevel && currentLevel < MAX_LEVEL) {
-        setCurrentLevel(l => {
-        const newLevel = l + 1;
-        const firstUnfinished = findFirstUnfinishedVerse(newLevel, verseScores);
-        setCurrentVerseIndex(firstUnfinished);
-        return newLevel;
-        });
-    } else {
-        // This case handles finishing the last level, or if they haven't unlocked the next one.
-        // It just resets to the first unfinished verse of the current level.
-        const firstUnfinished = findFirstUnfinishedVerse(currentLevel, verseScores);
-        setCurrentVerseIndex(firstUnfinished); 
+    if (currentLevel < LEVELS_PER_STAGE) {
+        setCurrentLevel(l => l + 1);
+        setCurrentVerseIndex(0);
+    } else { // Stage complete
+        if(currentStage < MAX_STAGES) {
+            setCurrentStage(s => s + 1);
+            setCurrentLevel(1);
+            setCurrentVerseIndex(0);
+        } else {
+            // All stages and levels complete!
+             setIsJourneyOpen(true);
+        }
     }
   };
 
@@ -664,7 +766,7 @@ export default function VerseMemoryPage() {
   };
 
   const handleNextVerse = () => {
-    if (currentVerseIndex < verses.length - 1) {
+    if (currentVerseIndex < VERSES_PER_STAGE - 1) {
       setCurrentVerseIndex(prev => prev + 1);
     }
   };
@@ -743,22 +845,34 @@ export default function VerseMemoryPage() {
     }
   };
 
-  const handleLevelSelect = (level: number) => {
-    const versesPerSet = 10;
-    const requiredStars = (level - 1) * versesPerSet * STARS_PER_VERSE;
-    if (level === 1 || totalStars >= requiredStars) {
+  const handleLevelSelect = (stage: number, level: number) => {
+    const isUnlocked = stage === 1 || isStageComplete(stage - 1, verseScores);
+    if (isUnlocked) {
+      setCurrentStage(stage);
       setCurrentLevel(level);
-      const firstUnfinished = findFirstUnfinishedVerse(level, verseScores);
+      const firstUnfinished = findFirstUnfinishedVerse(stage, level, verseScores);
       setCurrentVerseIndex(firstUnfinished);
       setIsJourneyOpen(false);
     }
   };
   
-  const currentVerse = verses[currentVerseIndex];
-  const versesInCurrentSet = currentLevel <= 5 ? 10 : 10;
-  const currentSetStartIndex = currentLevel <= 5 ? 0 : 10;
-  const isLastVerseInSet = currentVerseIndex === (currentSetStartIndex + versesInCurrentSet - 1);
+  const isLevelComplete = (stage: number, level: number, scores: VerseScores) => {
+      const levelScores = scores[stage]?.[level] || {};
+      return Object.keys(levelScores).length === VERSES_PER_STAGE;
+  };
+  
+  const isStageComplete = (stage: number, scores: VerseScores) => {
+    for(let level=1; level <= LEVELS_PER_STAGE; level++) {
+        if(!isLevelComplete(stage, level, scores)) {
+            return false;
+        }
+    }
+    return true;
+  };
 
+  const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
+  const currentVerse = verses[verseSetIndex + currentVerseIndex];
+  const isLastVerseInSet = currentVerseIndex === (VERSES_PER_STAGE - 1);
 
   const renderFillInTheBlankVerse = () => {
     if (!isClient || !currentVerse) {
@@ -828,34 +942,31 @@ export default function VerseMemoryPage() {
 
   const getDialogMessage = () => {
       if (gameState === 'revealed') return "Here's the full verse. Take some time to study it!";
-      if (attemptScore >= 2) return "Great job! Keep going!";
-      if (attemptScore > 0) return "Good effort! Keep practicing to get all the stars.";
-      return "Keep trying! Memorization is a journey. You can do it!";
+      return `You got ${attemptScore} out of ${missingWords.length} words correct!`;
   }
 
-  const currentVerseScore = verseScores[currentLevel]?.[currentVerseIndex] ?? 0;
-  const canUnlockNextLevel = totalStars >= (currentLevel * versesInCurrentSet * STARS_PER_VERSE) && currentLevel < MAX_LEVEL;
-
+  const currentVerseScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
+  const levelIsComplete = isLevelComplete(currentStage, currentLevel, verseScores);
+  const stageIsComplete = isStageComplete(currentStage, verseScores);
 
   if (!isClient || !currentVerse) {
     return <div>Loading...</div>;
   }
   
-    const allLevels = Array.from({length: MAX_LEVEL}).map((_, i) => {
-        const levelNum = i + 1;
-        const versesPerSet = 10;
-        const requiredStars = (levelNum - 1) * versesPerSet * STARS_PER_VERSE;
-        const isUnlocked = levelNum === 1 || totalStars >= requiredStars;
-        const isCurrent = levelNum === currentLevel;
-        const levelScoresData = verseScores[levelNum] || {};
-        const masteredInLevel = Object.values(levelScoresData).filter(score => score === STARS_PER_VERSE).length;
-        const totalVersesInLevel = levelNum <= 5 ? 10 : 10;
-        const isLevelComplete = masteredInLevel === totalVersesInLevel;
-        return { levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars };
+    const allStagesAndLevels = Array.from({length: MAX_STAGES}).map((_, i) => {
+        const stageNum = i + 1;
+        const levels = Array.from({length: LEVELS_PER_STAGE}).map((_, j) => {
+            const levelNum = j + 1;
+            const isUnlocked = stageNum === 1 || isStageComplete(stageNum - 1, verseScores);
+            const isCurrent = stageNum === currentStage && levelNum === currentLevel;
+            const levelScoresData = verseScores[stageNum]?.[levelNum] || {};
+            const masteredInLevel = Object.keys(levelScoresData).length;
+            const totalVersesInLevel = VERSES_PER_STAGE;
+            const isLvlComplete = masteredInLevel === totalVersesInLevel;
+            return { levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete: isLvlComplete };
+        });
+        return { stageNum, isUnlocked: stageNum === 1 || isStageComplete(stageNum-1, verseScores), levels };
     });
-
-    const completedLevels = allLevels.filter(l => l.isLevelComplete);
-    const otherLevels = allLevels.filter(l => !l.isLevelComplete);
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
@@ -871,7 +982,7 @@ export default function VerseMemoryPage() {
             </TabsList>
             <div className="mt-4">
             <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
-                <div>Level: {currentLevel}</div>
+                <div>Stage {currentStage} - Level {currentLevel}</div>
                 <div className="flex items-center gap-1">
                         <Star className="w-5 h-5 text-yellow-500"/> {totalStars}
                 </div>
@@ -882,67 +993,37 @@ export default function VerseMemoryPage() {
                         <DialogContent className="max-w-md w-full">
                             <DialogHeader>
                                 <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
-                                <CardDescription className="text-center">Complete all levels to become a master!</CardDescription>
+                                <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
                             </DialogHeader>
                             <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
-                                {completedLevels.length > 0 && (
-                                    <Collapsible open={isCompletedLevelsOpen} onOpenChange={setIsCompletedLevelsOpen}>
-                                        <CollapsibleTrigger asChild>
-                                            <button className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold">
-                                                <span>{completedLevels.length} Completed Level(s)</span>
-                                                <ChevronsUpDown className="w-4 h-4" />
-                                            </button>
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent className="space-y-2 pt-2">
-                                            {completedLevels.map(({ levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars }) => (
-                                            <div 
-                                                key={levelNum} 
-                                                onClick={() => isUnlocked && handleLevelSelect(levelNum)}
-                                                className={cn(
-                                                "flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                                isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                                isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
-                                                )}
-                                            >
-                                                <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                                {isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
+                               {allStagesAndLevels.map(stage => (
+                                   <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
+                                       <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
+                                           <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
+                                           <ChevronsUpDown className="w-4 h-4" />
+                                       </CollapsibleTrigger>
+                                       <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
+                                            {stage.levels.map(level => (
+                                                <div 
+                                                    key={`${stage.stageNum}-${level.levelNum}`} 
+                                                    onClick={() => stage.isUnlocked && handleLevelSelect(stage.stageNum, level.levelNum)}
+                                                    className={cn("flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                                    level.isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                                    stage.isUnlocked ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed"
+                                                    )}
+                                                >
+                                                    <div className={cn("p-2 rounded-full", stage.isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                                        {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold">Level {level.levelNum}</p>
+                                                        <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="font-semibold">Level {levelNum}</p>
-                                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                    {isLevelComplete ? <><CheckCircle className="w-4 h-4 text-green-500"/> Level Complete!</> : '...'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        </CollapsibleContent>
-                                    </Collapsible>
-                                )}
-
-                            {otherLevels.map(({ levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete, requiredStars }) => (
-                                <div 
-                                    key={levelNum} 
-                                    onClick={() => isUnlocked && handleLevelSelect(levelNum)}
-                                    className={cn(
-                                    "flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                    isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                    isUnlocked ? "cursor-pointer hover:bg-muted" : "opacity-50"
-                                    )}
-                                >
-                                    <div className={cn("p-2 rounded-full", isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                    {isUnlocked ? <PlayCircle className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold">Level {levelNum}</p>
-                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                        {isUnlocked 
-                                            ? `${masteredInLevel}/${totalVersesInLevel} Mastered`
-                                            : `Requires ${requiredStars} stars`
-                                        }
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                                            ))}
+                                       </CollapsibleContent>
+                                   </Collapsible>
+                               ))}
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -989,15 +1070,21 @@ export default function VerseMemoryPage() {
                             {currentVerse.reference} ({currentVerse.version})
                             </CardTitle>
                             <CardDescription>
-                                {gameMode === 'fillInTheBlank' ? 'Fill in the missing words from the verse below.' : 'Arrange the words in the correct order to complete the verse.'}
+                                Verse {currentVerseIndex + 1} of {VERSES_PER_STAGE}
                             </CardDescription>
                             <div className="flex justify-center items-center">
-                                {Array.from({length: 3}).map((_, i) => (
-                                    <Star key={i} className={cn(i === 1 ? "h-10 w-10" : "h-8 w-8", i < currentVerseScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-                                ))}
+                               {currentVerseScore > 0 ? (
+                                   <div className="flex items-center gap-1 font-bold text-yellow-500">
+                                       <Star className="w-5 h-5 fill-current" /> {currentVerseScore} Star(s)
+                                   </div>
+                               ) : (
+                                   <div className="flex items-center gap-1 text-muted-foreground">
+                                       <Star className="w-5 h-5" /> Not Mastered
+                                   </div>
+                               )}
                             </div>
                         </div>
-                        <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === verses.length - 1}>
+                        <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === VERSES_PER_STAGE - 1}>
                             <ChevronRight className="w-5 h-5"/>
                         </Button>
                     </div>
@@ -1017,7 +1104,7 @@ export default function VerseMemoryPage() {
                                         )}
                                         >
                                         <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
-                                            {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
+                                            {isLastVerseInSet ? 'Go to Next Level' : 'Next Verse'}
                                         </span>
                                     </Button>
                                 ) : (
@@ -1032,7 +1119,7 @@ export default function VerseMemoryPage() {
                                     <Button variant="outline" onClick={handleReveal}>
                                         Reveal Answer ({revealsRemaining})
                                     </Button>
-                                    <Button variant="default" onClick={handleNext}>
+                                    <Button variant="secondary" onClick={handleNext}>
                                         {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
                                     </Button>
                                     </>
@@ -1042,7 +1129,7 @@ export default function VerseMemoryPage() {
                          <TabsContent value="puzzle">
                             <VersePuzzle 
                                 verse={currentVerse} 
-                                onComplete={() => handleMastery(3)} 
+                                onComplete={() => handleMastery(currentLevel)} 
                                 isMastered={isVerseMastered} 
                             />
                             <div className="flex flex-wrap gap-2 justify-center pt-6">
@@ -1061,13 +1148,8 @@ export default function VerseMemoryPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-headline text-2xl text-center">
-              {gameState === 'revealed' ? "Verse Revealed" : "Rating"}
+              {gameState === 'revealed' ? "Verse Revealed" : "Score"}
             </AlertDialogTitle>
-            <div className="flex justify-center py-4">
-              {Array.from({length: 3}).map((_, i) => (
-                <Star key={i} className={cn("h-10 w-10", i < attemptScore ? "text-yellow-400 fill-yellow-400" : "text-gray-300 dark:text-gray-600")} />
-              ))}
-            </div>
             <AlertDialogDescription className="text-center text-base">
                 {getDialogMessage()}
             </AlertDialogDescription>
@@ -1080,16 +1162,16 @@ export default function VerseMemoryPage() {
                         verseWithBlanks={verseWithBlanks} 
                         userInputs={userInputs} 
                         missingWords={missingWords}
-                        showCorrectAnswer={gameState !== 'scored' && gameState !== 'incorrect'}
+                        showCorrectAnswer={true}
                     />
                 )}
              </CardContent>
           </Card>
           <AlertDialogFooter>
-            {(gameState === 'scored' && attemptScore < 3) || gameState === 'incorrect' ? (
+            {(gameState === 'scored' || gameState === 'incorrect' ) && !isVerseMastered ? (
                  <AlertDialogAction onClick={tryAgain}>Try Again</AlertDialogAction>
             ) : null}
-            <AlertDialogAction onClick={handleNext} disabled={attemptScore === 0 && gameState !== 'revealed'}>
+            <AlertDialogAction onClick={handleNext}>
                 {isLastVerseInSet ? "Finish Level" : "Next Verse"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1108,15 +1190,9 @@ export default function VerseMemoryPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            {canUnlockNextLevel ? (
-              <AlertDialogAction onClick={startNextLevel} className="w-full">
-                Start Level {currentLevel + 1}
-              </AlertDialogAction>
-            ) : (
-                <AlertDialogAction onClick={() => setShowLevelCompleteDialog(false)} className="w-full">
-                    Continue Practicing
-                </AlertDialogAction>
-            )}
+            <AlertDialogAction onClick={startNextLevel} className="w-full">
+                {currentLevel < LEVELS_PER_STAGE ? `Start Level ${currentLevel + 1}` : `Start Stage ${currentStage + 1}`}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1196,9 +1272,9 @@ export default function VerseMemoryPage() {
                 <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
                     <Trophy className="w-10 h-10 text-primary" />
                 </div>
-              <AlertDialogTitle className="font-headline text-2xl text-center">New Game Unlocked!</AlertDialogTitle>
+              <AlertDialogTitle className="font-headline text-2xl text-center">Stage 1 Complete!</AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                Congratulations! Your knowledge has grown. You've unlocked the <strong>Character Adventures</strong> game.
+                Congratulations! You've unlocked Stage 2 and the <strong>Character Adventures</strong> game.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="sm:justify-center flex-col sm:flex-row gap-2">
@@ -1206,10 +1282,10 @@ export default function VerseMemoryPage() {
                   setShowUnlockDialog(false);
                   handleNext();
                 }}>
-                    Continue to Level 4
+                    Continue to Stage 2
                 </AlertDialogCancel>
               <AlertDialogAction onClick={() => router.push('/dashboard/character-adventures')}>
-                <Users className="mr-2" /> Explore New Game
+                <Users className="mr-2" /> Explore Character Adventures
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

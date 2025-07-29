@@ -4,16 +4,23 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 const DAILY_CHALLENGE_STARS = 10;
 const PERFECT_SCORE_PER_LEVEL = 10;
 const TOTAL_ADVENTURE_LEVELS = 20;
-const TOTAL_VERSE_MEMORY_LEVELS_FOR_BADGE = 5;
-const VERSES_PER_MEMORY_LEVEL = 10;
-const STARS_PER_VERSE = 3;
-const TOTAL_MASTERY_LEVELS = 33;
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
 
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
 
 type BadgeInfo = {
   name: string;
@@ -36,30 +43,10 @@ export default function ProgressPage() {
     
     // Verse Memory
     const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || 'null');
-    const verseStars = verseMemoryProgress?.stars || 0;
-    setVerseMemoryStars(verseStars);
+    setVerseMemoryStars(verseMemoryProgress?.stars || 0);
+    const stage1Complete = isStageComplete(1, verseMemoryProgress?.scores);
+    const stage2Complete = isStageComplete(2, verseMemoryProgress?.scores);
     
-    let verseMemoryBadgeEarned = false;
-    if (verseMemoryProgress?.scores) {
-        let masteredCount = 0;
-        for (let i = 1; i <= TOTAL_VERSE_MEMORY_LEVELS_FOR_BADGE; i++) {
-            const levelScores = verseMemoryProgress.scores[i] || {};
-            const versesInLevel = i <= 5 ? 10 : 10; // 10 verses for levels 1-5
-            let levelMastered = true;
-            for (let j = 0; j < versesInLevel; j++) {
-                if ((levelScores[j] || 0) < STARS_PER_VERSE) {
-                    levelMastered = false;
-                    break;
-                }
-            }
-            if(levelMastered) masteredCount++;
-        }
-        if (masteredCount >= TOTAL_VERSE_MEMORY_LEVELS_FOR_BADGE) {
-           verseMemoryBadgeEarned = true;
-        }
-    }
-
-
     // Character Adventures
     const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || 'null');
     setCharacterAdventureScore(characterAdventuresProgress?.total || 0);
@@ -98,7 +85,8 @@ export default function ProgressPage() {
     }
     
     setBadges([
-        { name: 'Verse Memory Virtuoso', description: 'Mastered all verses in the first 5 levels.', icon: BookText, earned: verseMemoryBadgeEarned },
+        { name: 'Memory Master: Stage 1', description: 'Completed all 5 levels of Stage 1 in Verse Memory.', icon: BookText, earned: stage1Complete },
+        { name: 'Memory Master: Stage 2', description: 'Completed all 5 levels of Stage 2 in Verse Memory.', icon: BookText, earned: stage2Complete },
         { name: 'Character Champion', description: `Achieved a perfect score on all ${TOTAL_ADVENTURE_LEVELS} Character Adventure levels.`, icon: Users, earned: characterBadgeEarned },
         { name: 'Bible Scholar', description: 'Completed all master levels in Bible Mastery.', icon: Milestone, earned: masteryBadgeEarned }
     ]);
@@ -106,7 +94,7 @@ export default function ProgressPage() {
   }, []);
 
   const dailyChallengeBonusStars = dailyChallengeCompletions * DAILY_CHALLENGE_STARS;
-  const totalStars = verseMemoryStars + characterAdventureScore + bibleMasteryStars;
+  const totalStars = verseMemoryStars + characterAdventureScore + bibleMasteryStars + dailyChallengeBonusStars;
   const earnedBadges = badges.filter(b => b.earned);
 
   if (!isClient) {
@@ -227,5 +215,3 @@ export default function ProgressPage() {
     </div>
   );
 }
-
-    

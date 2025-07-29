@@ -32,31 +32,36 @@ import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/app/page';
 import AppTour from '@/components/tour/AppTour';
 
-const STARS_TO_UNLOCK_LEVEL_4 = 90; 
-const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 20;
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
 
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const [characterAdventuresCompleted, setCharacterAdventuresCompleted] = useState(false);
+  const [characterAdventuresUnlocked, setCharacterAdventuresUnlocked] = useState(false);
   const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
 
   useEffect(() => {
-    // This effect runs on the client-side
-    const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
-    if (characterAdventuresProgress.scores) {
-        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-        if(completedLevels >= TOTAL_ADVENTURE_LEVELS) {
-            setBibleMasteryUnlocked(true);
-        }
-    }
-    
-    // Check if level 1 of character adventures is passed
-    const levelOneScore = characterAdventuresProgress.scores?.[1] || 0;
-    setCharacterAdventuresCompleted(levelOneScore >= PERFECT_SCORE_PER_LEVEL);
+    const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
+    const stage1Completed = isStageComplete(1, verseMemoryProgress.scores);
+    const stage2Completed = isStageComplete(2, verseMemoryProgress.scores);
 
-  }, [pathname]); // Rerun on navigation to update lock status
+    setCharacterAdventuresUnlocked(stage1Completed);
+    setBibleMasteryUnlocked(stage2Completed);
+
+  }, [pathname]);
 
   const navItems = [
     { id: 'nav-dashboard', href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -66,6 +71,8 @@ function DashboardNav() {
       href: '/dashboard/character-adventures',
       icon: Users,
       label: 'Character Adventures',
+      isLocked: !characterAdventuresUnlocked,
+      tooltipText: 'Complete Stage 1 of Verse Memory to unlock'
     },
     { 
       id: 'nav-bible-mastery',
@@ -73,7 +80,7 @@ function DashboardNav() {
       icon: Milestone, 
       label: 'Bible Mastery',
       isLocked: !bibleMasteryUnlocked,
-      tooltipText: 'Master all Character Adventures first'
+      tooltipText: 'Complete Stage 2 of Verse Memory to unlock'
     },
     { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
