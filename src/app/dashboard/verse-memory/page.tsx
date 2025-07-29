@@ -233,7 +233,7 @@ type BonusProgress = { [stage: number]: { [level: number]: boolean } };
 const VERSES_PER_STAGE = 20;
 const LEVELS_PER_STAGE = 5;
 const MAX_STAGES = 2;
-const BONUS_ROUND_STARS = 5;
+const BONUS_ROUND_STARS = 20;
 const BONUS_ROUND_TIME = 180; // 3 minutes
 
 const INITIAL_HINTS = 5;
@@ -309,25 +309,47 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
 }
 
 
-function VersePuzzle({ verse, onComplete, isMastered, onTryAgain, status, setStatus, originalWords, solution, setSolution, shuffledWords, setShuffledWords, isBonus = false, timer = 0, onBonusFail }: {
+function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
     verse: typeof verses[number];
     onComplete: () => void;
-    isMastered: boolean;
-    onTryAgain: () => void;
-    status: 'playing' | 'correct' | 'incorrect';
-    setStatus: (status: 'playing' | 'correct' | 'incorrect') => void;
-    originalWords: string[];
-    solution: string[];
-    setSolution: (solution: string[]) => void;
-    shuffledWords: string[];
-    setShuffledWords: (words: string[]) => void;
-    isBonus?: boolean;
-    timer?: number;
-    onBonusFail?: () => void;
+    onBonusFail: () => void;
+    initialTimer: number;
 }) {
-    const dragWord = useRef<number | null>(null);
-    const dragOverWord = useRef<number | null>(null);
+    const [solution, setSolution] = useState<string[]>([]);
+    const [shuffledWords, setShuffledWords] = useState<string[]>([]);
+    const [status, setStatus] = useState<'playing' | 'correct' | 'incorrect'>('playing');
+    const [timer, setTimer] = useState(initialTimer);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const originalWords = useMemo(() => verse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean), [verse.text]);
+
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
+
+    useEffect(() => {
+        let words = [...originalWords];
+        for (let i = words.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [words[i], words[j]] = [words[j], words[i]];
+        }
+        setShuffledWords(words);
+        setSolution([]);
+        setStatus('playing');
+        setTimer(initialTimer);
+
+        timerRef.current = setInterval(() => {
+            setTimer(prev => {
+                if (prev <= 1) {
+                    clearInterval(timerRef.current!);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [verse, initialTimer, originalWords]);
 
 
     const handleWordSelect = (word: string, index: number) => {
@@ -341,6 +363,9 @@ function VersePuzzle({ verse, onComplete, isMastered, onTryAgain, status, setSta
         setSolution(solution.filter((_, i) => i !== index));
         setStatus('playing');
     };
+    
+    const dragWord = useRef<number | null>(null);
+    const dragOverWord = useRef<number | null>(null);
 
     const handleDragSort = () => {
         if (dragWord.current === null || dragOverWord.current === null) return;
@@ -360,30 +385,36 @@ function VersePuzzle({ verse, onComplete, isMastered, onTryAgain, status, setSta
         if (solution.join(' ') === originalWords.join(' ')) {
             setStatus('correct');
             playCorrectSound();
-            onComplete();
+            if(timerRef.current) clearInterval(timerRef.current);
+            setTimeout(() => onComplete(), 1500);
         } else {
             setStatus('incorrect');
             playIncorrectSound();
         }
     };
-    
-    if (isBonus && timer <= 0) {
+
+    const handleTryAgain = () => {
+        setShuffledWords([...shuffledWords, ...solution]);
+        setSolution([]);
+        setStatus('playing');
+    }
+
+    if (timer <= 0 && status !== 'correct') {
         return (
             <div className="text-center py-10">
                 <p className="text-destructive font-bold text-2xl mb-4">Time's up!</p>
                 <p>Better luck on the next level's bonus round.</p>
-                <Button onClick={onBonusFail} className="mt-4">Continue</Button>
+                <Button onClick={onBonusFail} className="mt-4">Back to Game</Button>
             </div>
         );
     }
     
     return (
         <div className="space-y-6">
-            {isBonus && (
-                <div className="text-center font-bold text-primary text-xl flex items-center justify-center gap-2">
-                   <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-                </div>
-            )}
+            <div className="text-center font-bold text-primary text-xl flex items-center justify-center gap-2">
+                <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
+            </div>
+            
             <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50 flex flex-wrap items-start content-start gap-2">
                 {solution.length === 0 && <p className="text-center text-muted-foreground p-8 w-full">Click or drag words from the word bank to build the verse here.</p>}
                 {solution.map((word, index) => (
@@ -431,11 +462,10 @@ function VersePuzzle({ verse, onComplete, isMastered, onTryAgain, status, setSta
                 ))}
             </div>
 
-             <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 justify-center">
                  {status === 'playing' && <Button onClick={checkAnswer} disabled={shuffledWords.length > 0}>Check My Answer</Button>}
-                 {status === 'incorrect' && <Button variant="destructive" onClick={onTryAgain}>Try Again</Button>}
-                 {status === 'correct' && !isBonus && <div className="text-green-600 font-bold flex items-center gap-2"><CheckCircle/> Correct!</div>}
-                 {status === 'correct' && isBonus && (
+                 {status === 'incorrect' && <Button variant="destructive" onClick={handleTryAgain}>Try Again</Button>}
+                 {status === 'correct' && (
                      <div className="text-green-600 font-bold flex flex-col items-center gap-2">
                          <p className="flex items-center gap-2"><CheckCircle/> Bonus Complete!</p>
                          <p className="text-sm">You earned {BONUS_ROUND_STARS} extra stars!</p>
@@ -445,7 +475,6 @@ function VersePuzzle({ verse, onComplete, isMastered, onTryAgain, status, setSta
         </div>
     );
 }
-
 
 
 export default function VerseMemoryPage() {
@@ -467,15 +496,8 @@ export default function VerseMemoryPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(0);
   const [attemptScore, setAttemptScore] = useState(0);
 
-  // Puzzle state
-  const [puzzleShuffledWords, setPuzzleShuffledWords] = useState<string[]>([]);
-  const [puzzleSolution, setPuzzleSolution] = useState<string[]>([]);
-  const [puzzleStatus, setPuzzleStatus] = useState<'playing' | 'correct' | 'incorrect'>('playing');
-
   // Bonus round state
-  const [isInBonusRound, setIsInBonusRound] = useState(false);
-  const [bonusTimer, setBonusTimer] = useState(BONUS_ROUND_TIME);
-  const bonusTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [activeBonusLevel, setActiveBonusLevel] = useState<number | null>(null);
 
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [isJourneyOpen, setIsJourneyOpen] = useState(false);
@@ -484,7 +506,7 @@ export default function VerseMemoryPage() {
   const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
   const [showUnlockDialog, setShowUnlockDialog] = useState<null | 'stage1' | 'stage2'>(null);
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
-  const [showBonusDialog, setShowBonusDialog] = useState(false);
+  
   const [highlightNextButton, setHighlightNextButton] = useState(false);
   const [isCompletedLevelsOpen, setIsCompletedLevelsOpen] = useState(false);
   const { toast } = useToast();
@@ -618,11 +640,9 @@ export default function VerseMemoryPage() {
   
   const handleMastery = (score: number) => {
     const oldScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
-    const isPuzzleMode = gameMode === 'puzzle';
-    const scoreToAward = isPuzzleMode ? currentLevel : score;
-
-    if (scoreToAward > oldScore) {
-        const scoreDifference = scoreToAward - oldScore;
+    
+    if (score > oldScore) {
+        const scoreDifference = score - oldScore;
         const newTotalStars = totalStars + scoreDifference;
         setTotalStars(newTotalStars);
         
@@ -630,20 +650,14 @@ export default function VerseMemoryPage() {
             const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
             if (!newScores[currentStage]) newScores[currentStage] = {};
             if (!newScores[currentStage][currentLevel]) newScores[currentStage][currentLevel] = {};
-            newScores[currentStage][currentLevel][currentVerseIndex] = scoreToAward;
-
-            const isLevelNowComplete = Object.keys(newScores[currentStage][currentLevel]).length === VERSES_PER_STAGE;
-            if (currentStage === 1 && isLevelNowComplete && !bonusProgress[currentStage]?.[currentLevel]) {
-                setShowBonusDialog(true);
-            }
-
+            newScores[currentStage][currentLevel][currentVerseIndex] = score;
             return newScores;
         });
 
         setIsVerseMastered(true);
         setHighlightNextButton(true);
 
-        const updatedScores = {...verseScores, [currentStage]: {...verseScores[currentStage], [currentLevel]: { ...verseScores[currentStage]?.[currentLevel], [currentVerseIndex]: scoreToAward } } };
+        const updatedScores = {...verseScores, [currentStage]: {...verseScores[currentStage], [currentLevel]: { ...verseScores[currentStage]?.[currentLevel], [currentVerseIndex]: score } } };
 
         if(!localStorage.getItem('stage1UnlockShown') && isStageComplete(1, updatedScores)) {
             setShowUnlockDialog('stage1');
@@ -659,18 +673,18 @@ export default function VerseMemoryPage() {
             title: (
                 <div className="flex items-center gap-2 font-headline">
                     <Trophy className="text-primary" />
-                    {isPuzzleMode ? "Verse Puzzle Complete!" : "Verse Attempt Scored!"}
+                    Verse Attempt Scored!
                 </div>
             ),
             description: (
                  <div className="flex items-center gap-2">
-                    Congratulations! You earned {scoreToAward} star(s)!
+                    Congratulations! You earned {score} star(s)!
                  </div>
             ),
         });
     }
 
-    if (score > 0 || isPuzzleMode) {
+    if (score > 0) {
         playCorrectSound();
     } else {
         playIncorrectSound();
@@ -686,18 +700,6 @@ export default function VerseMemoryPage() {
     setEditingIndex(isMastered ? null : 0);
     setAttemptScore(0);
     setShowSummaryDialog(false);
-
-    // Puzzle setup
-    const originalWords = verse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean);
-    const words = [...originalWords];
-     for (let i = words.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [words[i], words[j]] = [words[j], words[i]];
-    }
-    setPuzzleShuffledWords(words);
-    setPuzzleSolution([]);
-    setPuzzleStatus('playing');
-
 
     if (isMastered || !verse) {
         setVerseWithBlanks(verse ? verse.text.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
@@ -745,17 +747,19 @@ export default function VerseMemoryPage() {
   }
 
   const setupRound = useCallback(() => {
-    if (!isClient || isInBonusRound) return;
+    if (!isClient) return;
     const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
     const verse = verses[verseSetIndex + currentVerseIndex];
     if (verse) {
       setupRoundLogic(verse, currentStage, currentLevel, verseScores, currentVerseIndex);
     }
-  }, [currentVerseIndex, currentStage, currentLevel, isClient, verseScores, isInBonusRound]);
+  }, [currentVerseIndex, currentStage, currentLevel, isClient, verseScores]);
 
   useEffect(() => {
-    setupRound();
-  }, [setupRound]);
+    if (gameMode === 'fillInTheBlank') {
+      setupRound();
+    }
+  }, [setupRound, gameMode]);
 
 
   const calculateScore = useCallback((inputs: string[]) => {
@@ -939,82 +943,48 @@ export default function VerseMemoryPage() {
     return true;
   };
   
-  const startBonusRound = () => {
-    setShowBonusDialog(false);
-    setIsInBonusRound(true);
-    setBonusTimer(BONUS_ROUND_TIME);
-    
-    const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
-    const bonusVerseIndex = stage1BonusVerseIndices[currentLevel - 1];
-    const bonusVerse = verses[verseSetIndex + bonusVerseIndex];
-    if (bonusVerse) {
-        const originalWords = bonusVerse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean);
-        let shuffled = [...originalWords];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        setPuzzleShuffledWords(shuffled);
-        setPuzzleSolution([]);
-        setPuzzleStatus('playing');
-    }
-
-    bonusTimerRef.current = setInterval(() => {
-        setBonusTimer(prev => {
-            if (prev <= 1) {
-                clearInterval(bonusTimerRef.current!);
-                return 0;
-            }
-            return prev - 1;
-        });
-    }, 1000);
+  const startBonusRound = (level: number) => {
+    setActiveBonusLevel(level);
+    setGameMode('puzzle');
   };
   
   const handleBonusComplete = () => {
-    clearInterval(bonusTimerRef.current!);
+    if (activeBonusLevel === null) return;
     setTotalStars(s => s + BONUS_ROUND_STARS);
     setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
-        newProgress[currentStage][currentLevel] = true;
+        newProgress[currentStage][activeBonusLevel] = true;
         return newProgress;
     });
     
-    setTimeout(() => {
-        setIsInBonusRound(false);
-        setShowLevelCompleteDialog(true);
-    }, 2000);
+    toast({
+        title: <div className="flex items-center gap-2 font-headline"><Trophy className="text-primary" /> Bonus Complete!</div>,
+        description: `You earned ${BONUS_ROUND_STARS} extra stars!`,
+    });
+    
+    setActiveBonusLevel(null);
+    setGameMode('fillInTheBlank');
   };
 
   const handleBonusFail = () => {
-      clearInterval(bonusTimerRef.current!);
+      if(activeBonusLevel === null) return;
       setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
-        newProgress[currentStage][currentLevel] = true; // Mark as attempted
+        newProgress[currentStage][activeBonusLevel] = true; // Mark as attempted
         return newProgress;
     });
-      setIsInBonusRound(false);
-      setShowLevelCompleteDialog(true);
+      setActiveBonusLevel(null);
+      setGameMode('fillInTheBlank');
   }
 
-  useEffect(() => {
-    return () => {
-        if (bonusTimerRef.current) {
-            clearInterval(bonusTimerRef.current);
-        }
-    };
-  }, []);
-
   const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
-  const currentVerse = isInBonusRound
-    ? verses[verseSetIndex + stage1BonusVerseIndices[currentLevel - 1]]
-    : verses[verseSetIndex + currentVerseIndex];
+  const currentVerse = verses[verseSetIndex + currentVerseIndex];
+  const bonusVerse = activeBonusLevel !== null ? verses[verseSetIndex + stage1BonusVerseIndices[activeBonusLevel - 1]] : null;
 
   const isLastVerseInSet = currentVerseIndex === (VERSES_PER_STAGE - 1);
-  const puzzleOriginalWords = useMemo(() => currentVerse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean), [currentVerse.text]);
-
-
+  
   const renderFillInTheBlankVerse = () => {
     if (!isClient || !currentVerse) {
       return <div>Loading verse...</div>;
@@ -1114,188 +1084,211 @@ export default function VerseMemoryPage() {
         <p className="text-muted-foreground">Master verses through different games and challenges.</p>
       </div>
       
-       <Tabs value={isInBonusRound ? 'puzzle' : gameMode} onValueChange={(value) => !isInBonusRound && setGameMode(value as any)} className="w-full">
+       <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={isInBonusRound}><Feather/> Fill in the Blanks</TabsTrigger>
-                <TabsTrigger value="puzzle" className="gap-2" disabled={isInBonusRound}><Puzzle /> Verse Puzzle</TabsTrigger>
+                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null}><Feather/> Fill in the Blanks</TabsTrigger>
+                <TabsTrigger value="puzzle" className="gap-2"><Puzzle /> Bonus Puzzles</TabsTrigger>
             </TabsList>
             <div className="mt-4">
-            <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
-                <div>{isInBonusRound ? "Bonus Round!" : `Stage ${currentStage} - Level ${currentLevel}`}</div>
-                <div className="flex items-center gap-1">
-                        <Star className="w-5 h-5 text-yellow-500"/> {totalStars}
-                </div>
-                    <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" size="icon" disabled={isInBonusRound}><Map className="w-5 h-5"/></Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md w-full">
-                            <DialogHeader>
-                                <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
-                                <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
-                            </DialogHeader>
-                            <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
-                               {allStagesAndLevels.map(stage => (
-                                   <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
-                                       <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
-                                           <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
-                                           <ChevronsUpDown className="w-4 h-4" />
-                                       </CollapsibleTrigger>
-                                       <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
-                                            {stage.levels.map(level => (
-                                                <div 
-                                                    key={`${stage.stageNum}-${level.levelNum}`} 
-                                                    onClick={() => stage.isUnlocked && handleLevelSelect(stage.stageNum, level.levelNum)}
-                                                    className={cn("flex items-center gap-4 p-2 rounded-lg transition-colors", 
-                                                    level.isCurrent ? "bg-primary/10 border border-primary/20" : "",
-                                                    stage.isUnlocked ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed"
-                                                    )}
-                                                >
-                                                    <div className={cn("p-2 rounded-full", stage.isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                                                        {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-semibold">Level {level.levelNum}</p>
-                                                        <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                       </CollapsibleContent>
-                                   </Collapsible>
-                               ))}
-                            </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="w-full">
-                                        <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56">
-                                    <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
-                                        Reset Current Level
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
-                                        Reset All Progress
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-
-            <div className="relative">
-                {isVerseMastered && !isInBonusRound && (
-                    <div className="pointer-events-none">
-                        <div className="absolute -top-3 -left-3.5 w-16 h-16 overflow-hidden z-10">
-                            <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', left: '-35%', top: '25%' }}>
-                                <CheckCircle2 className="w-4 h-4"/>
-                            </div>
+                <TabsContent value="fillInTheBlank">
+                    <div className="flex justify-between items-center mb-4 px-4 py-2 bg-muted rounded-lg font-semibold">
+                        <div>{`Stage ${currentStage} - Level ${currentLevel}`}</div>
+                        <div className="flex items-center gap-1">
+                                <Star className="w-5 h-5 text-yellow-500"/> {totalStars}
                         </div>
-                        <div className="absolute -top-3 -right-3.5 w-16 h-16 overflow-hidden z-10">
-                            <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', right: '-35%', top: '25%' }}>
-                                <CheckCircle2 className="w-4 h-4"/>
-                            </div>
+                            <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md w-full">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-headline text-2xl text-center">Verse Journey</DialogTitle>
+                                        <CardDescription className="text-center">Complete all stages to become a master!</CardDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-3 max-h-[60vh] overflow-y-auto p-1">
+                                       {allStagesAndLevels.map(stage => (
+                                           <Collapsible key={stage.stageNum} defaultOpen={stage.stageNum === currentStage} className={cn(!stage.isUnlocked && "opacity-50")}>
+                                               <CollapsibleTrigger className="flex justify-between items-center w-full p-2 rounded-lg hover:bg-muted font-semibold disabled:cursor-not-allowed" disabled={!stage.isUnlocked}>
+                                                   <span>Stage {stage.stageNum} {isStageComplete(stage.stageNum, verseScores) && <CheckCircle className="inline w-4 h-4 ml-1 text-green-500"/>}</span>
+                                                   <ChevronsUpDown className="w-4 h-4" />
+                                               </CollapsibleTrigger>
+                                               <CollapsibleContent className="space-y-2 pt-2 pl-4 border-l ml-4">
+                                                    {stage.levels.map(level => (
+                                                        <div 
+                                                            key={`${stage.stageNum}-${level.levelNum}`} 
+                                                            onClick={() => stage.isUnlocked && handleLevelSelect(stage.stageNum, level.levelNum)}
+                                                            className={cn("flex items-center gap-4 p-2 rounded-lg transition-colors", 
+                                                            level.isCurrent ? "bg-primary/10 border border-primary/20" : "",
+                                                            stage.isUnlocked ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed"
+                                                            )}
+                                                        >
+                                                            <div className={cn("p-2 rounded-full", stage.isUnlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                                                                {level.isLevelComplete ? <CheckCircle className="w-6 h-6 text-green-500"/> : <PlayCircle className="w-6 h-6"/>}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-semibold">Level {level.levelNum}</p>
+                                                                <p className="text-sm text-muted-foreground">{level.masteredInLevel}/{level.totalVersesInLevel} Verses Mastered</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                               </CollapsibleContent>
+                                           </Collapsible>
+                                       ))}
+                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="w-full">
+                                                <RefreshCw className="mr-2 h-4 w-4" /> Reset Progress
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                            <DropdownMenuItem onSelect={() => setShowResetConfirm('current')}>
+                                                Reset Current Level
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => setShowResetConfirm('all')} className="text-destructive">
+                                                Reset All Progress
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </DialogContent>
+                            </Dialog>
                         </div>
-                    </div>
-                )}
-                <Card>
-                    <CardHeader>
-                    <div className="flex justify-between items-start gap-4">
-                        <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0 || isInBonusRound}>
-                            <ChevronLeft className="w-5 h-5"/>
-                        </Button>
-                        <div className="flex-grow text-center space-y-2">
-                            <CardTitle className="font-headline text-2xl">
-                            {currentVerse.reference} ({currentVerse.version})
-                            </CardTitle>
-                             {!isInBonusRound && <CardDescription>Verse {currentVerseIndex + 1} of {VERSES_PER_STAGE}</CardDescription>}
-                            <div className="flex justify-center items-center">
-                               {currentVerseScore > 0 && !isInBonusRound ? (
-                                   <div className="flex items-center gap-1 font-bold text-yellow-500">
-                                       <Star className="w-5 h-5 fill-current" /> {currentVerseScore} Star(s)
-                                   </div>
-                               ) : !isInBonusRound ? (
-                                   <div className="flex items-center gap-1 text-muted-foreground">
-                                       <Star className="w-5 h-5" /> Not Mastered
-                                   </div>
-                               ) : null}
-                            </div>
-                        </div>
-                        <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === VERSES_PER_STAGE - 1 || isInBonusRound}>
-                            <ChevronRight className="w-5 h-5"/>
-                        </Button>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <TabsContent value="fillInTheBlank" forceMount={!isInBonusRound} className={cn(isInBonusRound && 'hidden')}>
-                            <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderFillInTheBlankVerse()}</div>
-                            {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
-                            <div className="flex flex-wrap gap-2 justify-center pt-6">
-                                {isVerseMastered ? (
-                                    <Button
-                                        variant="default"
-                                        onClick={handleNext}
-                                        className={cn(
-                                            "w-full relative overflow-hidden",
-                                            highlightNextButton && "animate-border-fade-out"
-                                        )}
-                                        >
-                                        <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
-                                            {isLastVerseInSet ? 'Go to Next Level' : 'Next Verse'}
-                                        </span>
-                                    </Button>
-                                ) : (
-                                    <>
-                                    <Button disabled={gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
-                                        Check My Answer
-                                    </Button>
-                                    <Button variant="outline" onClick={handleHintClick} disabled={gameState === 'scored' || gameState === 'revealed'}>
-                                        <HelpCircle className="mr-2 h-4 w-4"/>
-                                        Hint ({hintsRemaining})
-                                    </Button>
-                                    <Button variant="outline" onClick={handleReveal}>
-                                        Reveal Answer ({revealsRemaining})
-                                    </Button>
-                                    <Button variant="secondary" onClick={handleNext}>
-                                        {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
-                                    </Button>
-                                    </>
-                                )}
-                            </div>
-                        </TabsContent>
-                         <TabsContent value="puzzle" forceMount={isInBonusRound} className={cn(!isInBonusRound && 'hidden')}>
-                             <VersePuzzle 
-                                verse={currentVerse} 
-                                onComplete={() => isInBonusRound ? handleBonusComplete() : handleMastery(currentLevel)}
-                                isMastered={isVerseMastered && !isInBonusRound} 
-                                onTryAgain={() => {
-                                    const originalWords = currentVerse.text.replace(/[.,;!?“”"]/g, '').split(' ').filter(Boolean);
-                                    setPuzzleShuffledWords([...puzzleShuffledWords, ...puzzleSolution]);
-                                    setPuzzleSolution([]);
-                                    setPuzzleStatus('playing');
-                                }}
-                                status={puzzleStatus}
-                                setStatus={setPuzzleStatus}
-                                originalWords={puzzleOriginalWords}
-                                solution={puzzleSolution}
-                                setSolution={setPuzzleSolution}
-                                shuffledWords={puzzleShuffledWords}
-                                setShuffledWords={setPuzzleShuffledWords}
-                                isBonus={isInBonusRound}
-                                timer={bonusTimer}
-                                onBonusFail={handleBonusFail}
-                            />
-                            {!isInBonusRound && (
-                                <div className="flex flex-wrap gap-2 justify-center pt-6">
-                                    <Button variant="secondary" onClick={handleNext}>
-                                            {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
-                                        </Button>
+                        <div className="relative">
+                            {isVerseMastered && (
+                                <div className="pointer-events-none">
+                                    <div className="absolute -top-3 -left-3.5 w-16 h-16 overflow-hidden z-10">
+                                        <div className="absolute transform -rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', left: '-35%', top: '25%' }}>
+                                            <CheckCircle2 className="w-4 h-4"/>
+                                        </div>
+                                    </div>
+                                    <div className="absolute -top-3 -right-3.5 w-16 h-16 overflow-hidden z-10">
+                                        <div className="absolute transform rotate-45 bg-primary text-primary-foreground text-center flex items-center justify-center p-1" style={{ width: '150%', right: '-35%', top: '25%' }}>
+                                            <CheckCircle2 className="w-4 h-4"/>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
-                         </TabsContent>
-                    </CardContent>
-                </Card>
-            </div>
+                            <Card>
+                                <CardHeader>
+                                <div className="flex justify-between items-start gap-4">
+                                    <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
+                                        <ChevronLeft className="w-5 h-5"/>
+                                    </Button>
+                                    <div className="flex-grow text-center space-y-2">
+                                        <CardTitle className="font-headline text-2xl">
+                                        {currentVerse.reference} ({currentVerse.version})
+                                        </CardTitle>
+                                         <CardDescription>Verse {currentVerseIndex + 1} of {VERSES_PER_STAGE}</CardDescription>
+                                        <div className="flex justify-center items-center">
+                                           {currentVerseScore > 0 ? (
+                                               <div className="flex items-center gap-1 font-bold text-yellow-500">
+                                                   <Star className="w-5 h-5 fill-current" /> {currentVerseScore} Star(s)
+                                               </div>
+                                           ) : (
+                                               <div className="flex items-center gap-1 text-muted-foreground">
+                                                   <Star className="w-5 h-5" /> Not Mastered
+                                               </div>
+                                           )}
+                                        </div>
+                                    </div>
+                                    <Button variant="outline" size="icon" onClick={handleNextVerse} disabled={currentVerseIndex === VERSES_PER_STAGE - 1}>
+                                        <ChevronRight className="w-5 h-5"/>
+                                    </Button>
+                                </div>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="text-lg leading-loose flex flex-wrap items-center gap-x-1 gap-y-4">{renderFillInTheBlankVerse()}</div>
+                                    {gameState === 'incomplete' && <p className="text-destructive text-center font-semibold">Please fill in all the blanks before checking.</p>}
+                                    <div className="flex flex-wrap gap-2 justify-center pt-6">
+                                        {isVerseMastered ? (
+                                            <Button
+                                                variant="default"
+                                                onClick={handleNext}
+                                                className={cn(
+                                                    "w-full relative overflow-hidden",
+                                                    highlightNextButton && "animate-border-fade-out"
+                                                )}
+                                                >
+                                                <span className={cn(highlightNextButton && "animate-fade-in opacity-0")}>
+                                                    {isLastVerseInSet ? 'Go to Next Level' : 'Next Verse'}
+                                                </span>
+                                            </Button>
+                                        ) : (
+                                            <>
+                                            <Button disabled={gameState === 'scored' || gameState === 'revealed'} onClick={handleSubmit}>
+                                                Check My Answer
+                                            </Button>
+                                            <Button variant="outline" onClick={handleHintClick} disabled={gameState === 'scored' || gameState === 'revealed'}>
+                                                <HelpCircle className="mr-2 h-4 w-4"/>
+                                                Hint ({hintsRemaining})
+                                            </Button>
+                                            <Button variant="outline" onClick={handleReveal}>
+                                                Reveal Answer ({revealsRemaining})
+                                            </Button>
+                                            <Button variant="secondary" onClick={handleNext}>
+                                                {isLastVerseInSet ? 'Finish Level' : 'Next Verse'}
+                                            </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                </TabsContent>
+                <TabsContent value="puzzle">
+                     <div className="space-y-4">
+                        <div className="text-center">
+                            <h2 className="font-headline text-2xl">Bonus Puzzles</h2>
+                            <p className="text-muted-foreground">Complete a level in 'Fill in the Blanks' to unlock its bonus puzzle.</p>
+                        </div>
+                        {activeBonusLevel !== null && bonusVerse ? (
+                             <Card>
+                                <CardHeader><CardTitle className="text-center font-headline">{bonusVerse.reference}</CardTitle></CardHeader>
+                                <CardContent>
+                                    <VersePuzzle 
+                                        verse={bonusVerse}
+                                        onComplete={handleBonusComplete}
+                                        onBonusFail={handleBonusFail}
+                                        initialTimer={BONUS_ROUND_TIME}
+                                    />
+                                </CardContent>
+                             </Card>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Array.from({ length: LEVELS_PER_STAGE }).map((_, i) => {
+                                    const level = i + 1;
+                                    const isUnlocked = isLevelComplete(currentStage, level, verseScores);
+                                    const isCompleted = bonusProgress[currentStage]?.[level];
+
+                                    return (
+                                        <Card 
+                                            key={`bonus-${level}`}
+                                            className={cn("text-center", !isUnlocked && "bg-muted/50", isUnlocked && !isCompleted && "cursor-pointer hover:border-primary")}
+                                            onClick={() => isUnlocked && !isCompleted && startBonusRound(level)}
+                                        >
+                                            <CardHeader>
+                                                <div className="mx-auto bg-primary/10 p-3 rounded-full mb-2">
+                                                    {isUnlocked ? <Puzzle className="w-8 h-8 text-primary"/> : <Lock className="w-8 h-8 text-muted-foreground"/>}
+                                                </div>
+                                                <CardTitle className="font-headline">Level {level} Bonus</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {isCompleted ? (
+                                                    <div className="font-bold text-green-600 flex items-center justify-center gap-1"><CheckCircle/> Completed</div>
+                                                ) : isUnlocked ? (
+                                                    <p className="text-sm text-primary">Click to start!</p>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">Complete Level {level} to unlock</p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground mt-2">Reward: {BONUS_ROUND_STARS} Stars</p>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
           </div>
         </Tabs>
 
@@ -1333,29 +1326,6 @@ export default function VerseMemoryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showBonusDialog} onOpenChange={setShowBonusDialog}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <div className="mx-auto bg-accent p-4 rounded-full mb-4">
-                    <Star className="w-10 h-10 text-accent-foreground" />
-                </div>
-                <AlertDialogTitle className="font-headline text-2xl text-center">Bonus Round!</AlertDialogTitle>
-                <AlertDialogDescription className="text-center">
-                    You've mastered all verses in this level! Solve a timed puzzle for bonus stars.
-                    <br/>
-                    You have <strong>3 minutes</strong> to complete the verse puzzle and earn <strong>{BONUS_ROUND_STARS} extra stars</strong>.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:justify-center gap-2">
-                <AlertDialogCancel onClick={() => {
-                    handleBonusFail();
-                    setShowBonusDialog(false);
-                }}>Skip Bonus</AlertDialogCancel>
-                <AlertDialogAction onClick={startBonusRound}>Start Timed Puzzle</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AlertDialog open={showLevelCompleteDialog} onOpenChange={setShowLevelCompleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1364,7 +1334,7 @@ export default function VerseMemoryPage() {
             </div>
             <AlertDialogTitle className="font-headline text-2xl text-center">Level {currentLevel} Complete!</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              Excellent work! You've mastered all the verses in this level.
+              Excellent work! You've mastered all the verses in this level. The bonus puzzle is now unlocked in the 'Bonus Puzzles' tab.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1475,3 +1445,5 @@ export default function VerseMemoryPage() {
     </div>
   );
 }
+
+    
