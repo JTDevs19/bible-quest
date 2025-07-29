@@ -665,9 +665,13 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = JSON.parse(JSON.stringify(prevScores)); // Deep copy
-            if (!newScores[currentStage]) newScores[currentStage] = {};
-            if (!newScores[currentStage][currentLevel]) newScores[currentStage][currentLevel] = {};
+            const newScores = JSON.parse(JSON.stringify(prevScores)); 
+            if (!newScores[currentStage]) {
+                newScores[currentStage] = {};
+            }
+            if (!newScores[currentStage][currentLevel]) {
+                newScores[currentStage][currentLevel] = {};
+            }
             newScores[currentStage][currentLevel][currentVerseIndex] = score;
             return newScores;
         });
@@ -1526,5 +1530,6 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
