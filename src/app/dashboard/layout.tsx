@@ -23,6 +23,7 @@ import {
   Cog,
   Gift,
   Lock,
+  ChevronUp,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,6 +32,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/app/page';
 import AppTour from '@/components/tour/AppTour';
+import { useUserProgress } from '@/hooks/use-user-progress';
+import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 
 const VERSES_PER_STAGE = 20;
 const LEVELS_PER_STAGE = 5;
@@ -39,7 +44,7 @@ const LEVELS_PER_STAGE = 5;
 const isStageComplete = (stageNum: number, scores: any) => {
     if (!scores || !scores[stageNum]) return false;
     for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
-        const levelScores = scores[stageNum][level];
+        const levelScores = scores[stageNum]?.[level];
         if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
             return false;
         }
@@ -124,6 +129,36 @@ function DashboardNav() {
   )
 }
 
+function UserProgressHeader() {
+    const { level, exp, expForNextLevel, lastLevelUpExp } = useUserProgress();
+    const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <div className="flex items-center gap-3 cursor-pointer">
+                    <div className="text-right">
+                        <p className="font-bold text-sm">Level {level}</p>
+                        <p className="text-xs text-muted-foreground">EXP: {exp - lastLevelUpExp}/{expForNextLevel - lastLevelUpExp}</p>
+                    </div>
+                    <Progress value={progressPercentage} className="w-24 h-2" />
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+                <div className="space-y-2">
+                    <h4 className="font-medium leading-none">Level {level}</h4>
+                    <p className="text-sm text-muted-foreground">Your spiritual growth progress.</p>
+                    <Progress value={progressPercentage} className="w-full h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{exp - lastLevelUpExp} EXP</span>
+                        <span>{expForNextLevel - lastLevelUpExp} EXP to Level Up</span>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -184,6 +219,7 @@ export default function DashboardLayout({
             </Avatar>
             <span className="font-semibold">{userProfile.username}</span>
            </div>
+           <UserProgressHeader />
         </header>
         <main id="main-content" className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>

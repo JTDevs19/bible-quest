@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 const triviaLevels = [
   // Level 1
@@ -101,10 +102,10 @@ const triviaLevels = [
     { question: "Sino ang alagad na kilala bilang 'ang Zelote'?", options: ["Simon Peter", "Simon", "Andrew", "James"], answer: "Simon", trivia: "The Zealots were a political movement that sought to incite the people of Judea to rebel against the Roman Empire.", reference: "Luke 6:15", verseText: "Matthew, Thomas, James son of Alphaeus, Simon who was called the Zealot," },
     { question: "Who was the king of Babylon who saw the writing on the wall?", options: ["Nebuchadnezzar", "Darius", "Cyrus", "Belshazzar"], answer: "Belshazzar", trivia: "Daniel interpreted the mysterious writing, which foretold the imminent downfall of Belshazzar's kingdom to the Medes and Persians.", reference: "Daniel 5:25", verseText: "This is the inscription that was written: MENE, MENE, TEKEL, PARSIN." },
     { question: "Who were the two spies sent by Joshua who were hidden by Rahab in Jericho?", options: ["Caleb and Phinehas", "Gershon and Merari", "Only one is named", "They are unnamed"], answer: "They are unnamed", trivia: "Though their names aren't given, their mission was crucial for the Israelite victory at Jericho, thanks to Rahab's help.", reference: "Joshua 2:1", verseText: "Then Joshua son of Nun secretly sent two spies from Shittim. 'Go, look over the land,' he said, 'especially Jericho.' So they went and entered the house of a prostitute named Rahab and stayed there." },
-    { question: "Who was the woman who was the first to see the resurrected Jesus?", options: ["Mary, the mother of Jesus", "Mary Magdalene", "Salome", "Joanna"], answer: "Mary Magdalene", trivia: "Mary Magdalene was a devoted follower of Jesus, and she was given the honor of being the first witness to His resurrection.", reference: "John 20:16", verseText: "Jesus said to her, 'Mary.' She turned toward him and cried out in Aramaic, 'Rabboni!' (which means 'Teacher')." },
-    { question: "Who was the co-worker with Paul, a doctor by profession, who wrote a Gospel and the book of Acts?", options: ["Mark", "Luke", "Silas", "Barnabas"], answer: "Luke", trivia: "Luke was a meticulous historian and a faithful companion to Paul, providing detailed accounts of Jesus' life and the early church.", reference: "Colossians 4:14", verseText: "Our dear friend Luke, the doctor, and Demas send greetings." },
-    { question: "Who was the high priest who mentored the young prophet Samuel?", options: ["Phinehas", "Ahimelech", "Eli", "Abiathar"], answer: "Eli", trivia: "Though his own sons were wicked, Eli recognized God's call on Samuel's life and guided him in his early prophetic ministry.", reference: "1 Samuel 3:9", verseText: "So Eli told Samuel, 'Go and lie down, and if he calls you, say, ‘Speak, LORD, for your servant is listening.’' So Samuel went and lay down in his place." },
-    { question: "Who was the prophet that God called 'son of man' more than 90 times?", options: ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"], answer: "Ezekiel", trivia: "This title emphasized Ezekiel's humanity in contrast to the divine glory of God, to whom he was a messenger during the Babylonian exile.", reference: "Ezekiel 2:1", verseText: "He said to me, 'Son of man, stand up on your feet and I will speak to you.'" }
+    { question: "Sino ang babaeng unang nakakita sa muling nabuhay na si Hesus?", options: ["Maria, ina ni Hesus", "Maria Magdalena", "Salome", "Juana"], answer: "Maria Magdalena", trivia: "Mary Magdalene was a devoted follower of Jesus, and she was given the honor of being the first witness to His resurrection.", reference: "John 20:16", verseText: "Jesus said to her, 'Mary.' She turned toward him and cried out in Aramaic, 'Rabboni!' (which means 'Teacher')." },
+    { question: "Sino ang co-worker with Paul, isang doktor sa propesyon, na sumulat ng isang Ebanghelyo at ang aklat ng Mga Gawa?", options: ["Mark", "Luke", "Silas", "Barnabas"], answer: "Luke", trivia: "Luke was a meticulous historian and a faithful companion to Paul, providing detailed accounts of Jesus' life and the early church.", reference: "Colossians 4:14", verseText: "Our dear friend Luke, the doctor, and Demas send greetings." },
+    { question: "Sino ang punong saserdote na gumabay sa batang propeta na si Samuel?", options: ["Phinehas", "Ahimelech", "Eli", "Abiathar"], answer: "Eli", trivia: "Though his own sons were wicked, Eli recognized God's call on Samuel's life and guided him in his early prophetic ministry.", reference: "1 Samuel 3:9", verseText: "So Eli told Samuel, 'Go and lie down, and if he calls you, say, ‘Speak, LORD, for your servant is listening.’' So Samuel went and lay down in his place." },
+    { question: "Sino ang propeta na tinawag ng Diyos na 'anak ng tao' nang higit sa 90 beses?", options: ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"], answer: "Ezekiel", trivia: "This title emphasized Ezekiel's humanity in contrast to the divine glory of God, to whom he was a messenger during the Babylonian exile.", reference: "Ezekiel 2:1", verseText: "He said to me, 'Son of man, stand up on your feet and I will speak to you.'" }
   ],
   // Level 8
   [
@@ -437,7 +438,6 @@ export default function CharacterAdventuresPage() {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isAnswered, setIsAnswered] = useState(false);
     const [levelScores, setLevelScores] = useState<{ [key: number]: number }>({});
-    const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
     const [showAdventureMap, setShowAdventureMap] = useState(true);
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
@@ -446,6 +446,7 @@ export default function CharacterAdventuresPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
+    const { addExp } = useUserProgress();
     const [isTester, setIsTester] = useState(false);
 
     useEffect(() => {
@@ -471,15 +472,14 @@ export default function CharacterAdventuresPage() {
         if (savedProgress) {
             const progress = JSON.parse(savedProgress);
             setLevelScores(progress.scores || {});
-            setTotalScore(progress.total || 0);
         }
     }, [isClient, isTester]);
 
     const saveProgress = useCallback(() => {
         if (!isClient) return;
-        const progress = { scores: levelScores, total: totalScore };
+        const progress = { scores: levelScores };
         localStorage.setItem('characterAdventuresProgress', JSON.stringify(progress));
-    }, [isClient, levelScores, totalScore]);
+    }, [isClient, levelScores]);
 
 
     useEffect(() => {
@@ -488,7 +488,7 @@ export default function CharacterAdventuresPage() {
 
     useEffect(() => {
         saveProgress();
-    }, [levelScores, totalScore, saveProgress]);
+    }, [levelScores, saveProgress]);
 
     const startLevel = (level: number) => {
         setCurrentLevel(level);
@@ -533,6 +533,7 @@ export default function CharacterAdventuresPage() {
 
         if (option === correctAnswer) {
             setScore(s => s + 1);
+            addExp(1); // Add 1 EXP for each correct answer
             playCorrectSound();
         } else {
             playIncorrectSound();
@@ -560,8 +561,6 @@ export default function CharacterAdventuresPage() {
             const oldLevelScore = levelScores[currentLevel] || 0;
 
             if (finalScore > oldLevelScore) {
-                const scoreDifference = finalScore - oldLevelScore;
-                setTotalScore(ts => ts + scoreDifference);
                 setLevelScores(ls => ({ ...ls, [currentLevel]: finalScore }));
             }
 

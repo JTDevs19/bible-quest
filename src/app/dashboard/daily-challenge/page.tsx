@@ -10,6 +10,7 @@ import { WordSearch } from './word-search';
 import { RiddleOfTheDay } from './riddle';
 import { TriviaOfTheDay } from './trivia';
 import { JumbleOfTheDay } from './jumble';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 const BONUS_STARS = 10;
 
@@ -32,6 +33,7 @@ export default function DailyChallengePage() {
     const [isClient, setIsClient] = useState(false);
     const [isChallengeOpen, setIsChallengeOpen] = useState(false);
     const [isCompletedToday, setIsCompletedToday] = useState(false);
+    const { addExp } = useUserProgress();
 
     const today = useMemo(() => new Date(), []);
     const dayOfMonth = today.getDate(); // 1-31
@@ -46,26 +48,12 @@ export default function DailyChallengePage() {
         }
     }, [todayStr]);
 
-    const saveProgress = useCallback(() => {
-        if (!isClient || !isCompletedToday) return;
-        localStorage.setItem(`dailyChallengeCompletion_${todayStr}`, 'true');
-        
-        const dailyProgress = JSON.parse(localStorage.getItem('dailyChallengeProgress') || '{}');
-        if (!dailyProgress[todayStr]) {
-            dailyProgress[todayStr] = true;
-            const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-            const currentStars = verseMemoryProgress.stars || 0;
-            verseMemoryProgress.stars = currentStars + BONUS_STARS;
-            localStorage.setItem('verseMemoryProgress', JSON.stringify(verseMemoryProgress));
-        }
-        localStorage.setItem('dailyChallengeProgress', JSON.stringify(dailyProgress));
-
-    }, [isClient, isCompletedToday, todayStr]);
-
     const handleChallengeComplete = () => {
         if (isCompletedToday) return;
         
         setIsCompletedToday(true);
+        addExp(BONUS_STARS);
+        localStorage.setItem(`dailyChallengeCompletion_${todayStr}`, 'true');
         setTimeout(() => setIsChallengeOpen(false), 2000);
     };
 
@@ -73,10 +61,6 @@ export default function DailyChallengePage() {
         setIsClient(true);
         loadProgress();
     }, [loadProgress]);
-
-    useEffect(() => {
-        saveProgress();
-    }, [isCompletedToday, saveProgress]);
 
     if (!isClient) return <div>Loading...</div>;
 
@@ -106,12 +90,12 @@ export default function DailyChallengePage() {
                                     <CheckCircle />
                                     <span>Completed!</span>
                                 </div>
-                                <p className="text-sm text-muted-foreground">You earned {BONUS_STARS} stars!</p>
+                                <p className="text-sm text-muted-foreground">You earned {BONUS_STARS} EXP!</p>
                             </div>
                         ) : (
                              <div className="text-right">
                                 <p className="font-bold text-primary">Daily Reward</p>
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">{BONUS_STARS} <Star className="w-4 h-4 text-yellow-500" /></p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-1">{BONUS_STARS} <Star className="w-4 h-4 text-yellow-500" /> EXP</p>
                              </div>
                         )}
                     </div>
