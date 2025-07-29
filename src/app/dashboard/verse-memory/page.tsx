@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -240,7 +239,6 @@ const MAX_STAGES = 2;
 const BONUS_ROUND_TIME = 180; // 3 minutes
 
 const INITIAL_HINTS = 5;
-const INITIAL_REVEALS = 3;
 
 // Bonus verses for each level in Stage 1, selected based on length
 // Level 1: <10 words, Level 2: <=15, Level 3: <=20, Level 4: <=25, Level 5: >30
@@ -510,7 +508,6 @@ export default function VerseMemoryPage() {
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [bonusProgress, setBonusProgress] = useState<BonusProgress>({});
   const { exp, addExp, wisdomKeys, setWisdomKeys, setProgress } = useUserProgress();
-  const [revealsRemaining, setRevealsRemaining] = useState(INITIAL_REVEALS);
   const [hintsRemaining, setHintsRemaining] = useState(INITIAL_HINTS);
   const [tradeAmount, setTradeAmount] = useState(1);
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
@@ -530,7 +527,7 @@ export default function VerseMemoryPage() {
   const [isJourneyOpen, setIsJourneyOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
-  const [showTradeDialog, setShowTradeDialog] = useState<null | 'hints' | 'reveals'>(null);
+  const [showTradeDialog, setShowTradeDialog] = useState(false);
   const [showUnlockDialog, setShowUnlockDialog] = useState<null | 'stage1' | 'stage2'>(null);
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
   
@@ -567,7 +564,6 @@ export default function VerseMemoryPage() {
       setCurrentLevel(loadedLevel);
       setVerseScores(loadedScores);
       setBonusProgress(progress.bonusProgress || {});
-      setRevealsRemaining(progress.reveals ?? INITIAL_REVEALS);
       setHintsRemaining(progress.hints ?? INITIAL_HINTS);
 
       const firstUnfinished = findFirstUnfinishedVerse(loadedStage, loadedLevel, loadedScores);
@@ -582,11 +578,10 @@ export default function VerseMemoryPage() {
       level: currentLevel,
       scores: verseScores,
       bonusProgress: bonusProgress,
-      reveals: revealsRemaining,
       hints: hintsRemaining,
     };
     localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [isClient, currentStage, currentLevel, verseScores, bonusProgress, revealsRemaining, hintsRemaining]);
+  }, [isClient, currentStage, currentLevel, verseScores, bonusProgress, hintsRemaining]);
 
   useEffect(() => {
     setIsClient(true);
@@ -623,7 +618,6 @@ export default function VerseMemoryPage() {
     setVerseScores({});
     setBonusProgress({});
     setProgress({ level: 1, exp: 0, wisdomKeys: 5, lastLevelUpExp: 0 });
-    setRevealsRemaining(INITIAL_REVEALS);
     setHintsRemaining(INITIAL_HINTS);
     localStorage.removeItem('verseMemoryProgress');
     localStorage.removeItem('userProgress');
@@ -871,48 +865,21 @@ export default function VerseMemoryPage() {
     }
   };
   
-  const handleReveal = () => {
-    if (isVerseMastered) return;
-    if (revealsRemaining > 0) {
-        setRevealsRemaining(r => r - 1);
-        performReveal();
-    } else {
-        setTradeAmount(1);
-        setShowTradeDialog('reveals');
-    }
-  };
-
-  const performReveal = () => {
-    setUserInputs([...missingWords]);
-    setAttemptScore(0);
-    setGameState('revealed');
-    setShowSummaryDialog(true);
-    setEditingIndex(null);
-  }
-
-  const handleTradeForReveals = () => {
-    if (wisdomKeys >= tradeAmount && tradeAmount > 0) {
-        setWisdomKeys(s => s - tradeAmount);
-        setRevealsRemaining(r => r + tradeAmount);
-        setShowTradeDialog(null);
-    }
-  };
-  
   const handleTradeForHints = () => {
     if (wisdomKeys >= tradeAmount && tradeAmount > 0) {
         setWisdomKeys(s => s - tradeAmount);
-        setHintsRemaining(r => r + tradeAmount);
-        setShowTradeDialog(null);
+        setHintsRemaining(r => r + (tradeAmount * 3));
+        setShowTradeDialog(false);
     }
   };
 
   const handleHintClick = () => {
     if(isVerseMastered) return;
     if (hintsRemaining > 0) {
-        setShowTradeDialog('hints');
+        useHint();
     } else {
         setTradeAmount(1);
-        setShowTradeDialog('hints');
+        setShowTradeDialog(true);
     }
   };
   
@@ -926,7 +893,7 @@ export default function VerseMemoryPage() {
         setHintsRemaining(h => h - 1);
       }
     }
-    setShowTradeDialog(null);
+    setShowTradeDialog(false);
   };
   
   const handleInputChange = (index: number, value: string) => {
@@ -1299,9 +1266,6 @@ export default function VerseMemoryPage() {
                                                 <HelpCircle className="mr-2 h-4 w-4"/>
                                                 Hint ({hintsRemaining})
                                             </Button>
-                                            <Button variant="outline" onClick={handleReveal}>
-                                                Reveal Answer ({revealsRemaining})
-                                            </Button>
                                             <Button variant="default" onClick={handleNext}>
                                                 {isLastVerseInSet ? "Finish Level" : "Skip Verse"}
                                             </Button>
@@ -1460,49 +1424,30 @@ export default function VerseMemoryPage() {
             </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={showTradeDialog !== null} onOpenChange={(open) => !open && setShowTradeDialog(null)}>
+        <AlertDialog open={showTradeDialog} onOpenChange={setShowTradeDialog}>
             <AlertDialogContent>
-                {showTradeDialog === 'hints' && hintsRemaining > 0 ? (
-                     <>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Use a Hint?</AlertDialogTitle>
-                            <div className="text-sm text-muted-foreground space-y-2">
-                                <div>Using a hint will reveal the next missing word in the verse. This can help you learn the verse without revealing the entire answer.</div>
-                                <div className="font-bold">You have {hintsRemaining} hint(s) remaining.</div>
-                                <div>Are you sure you want to use a hint?</div>
-                            </div>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setShowTradeDialog(null)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={useHint}>Use Hint</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </>
-                ) : (
-                    <>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>No {showTradeDialog ? `${showTradeDialog.charAt(0).toUpperCase()}${showTradeDialog.slice(1)}` : ''} Remaining</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                You can trade your Wisdom Keys for more {showTradeDialog}. You currently have {wisdomKeys} key(s).
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="flex items-center gap-2">
-                            <Input 
-                                type="number"
-                                value={tradeAmount}
-                                onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                                min="1"
-                                max={wisdomKeys}
-                            />
-                            <Label>Key(s) for {tradeAmount} {showTradeDialog}</Label>
-                        </div>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setShowTradeDialog(null)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={showTradeDialog === 'hints' ? handleTradeForHints : handleTradeForReveals} disabled={wisdomKeys < tradeAmount || tradeAmount <= 0}>
-                                Trade {tradeAmount} <Key className="w-4 h-4 ml-1" />
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </>
-                )}
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Not enough hints</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        You can trade your Wisdom Keys for more hints. You currently have {wisdomKeys} key(s).
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex items-center gap-2">
+                    <Input 
+                        type="number"
+                        value={tradeAmount}
+                        onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                        min="1"
+                        max={wisdomKeys}
+                    />
+                    <Label>Key(s) for {tradeAmount * 3} hints</Label>
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setShowTradeDialog(false)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleTradeForHints} disabled={wisdomKeys < tradeAmount || tradeAmount <= 0}>
+                        Trade {tradeAmount} <Key className="w-4 h-4 ml-1" />
+                    </AlertDialogAction>
+                </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
@@ -1543,6 +1488,8 @@ export default function VerseMemoryPage() {
 
 
     
+
+
 
 
 
