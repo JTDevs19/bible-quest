@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -227,7 +227,8 @@ const verses = [
 type GameState = 'playing' | 'checking' | 'scored' | 'revealed' | 'incorrect' | 'incomplete';
 type VerseParts = (string | null)[];
 type VerseScores = { [stage: number]: { [level: number]: { [verseIndex: number]: number } } };
-type BonusProgress = { [stage: number]: { [level: number]: boolean } };
+type BonusStatus = 'completed' | 'attempted';
+type BonusProgress = { [stage: number]: { [level: number]: BonusStatus } };
 
 
 const VERSES_PER_STAGE = 20;
@@ -317,11 +318,12 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
 }
 
 
-function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
+function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = false }: {
     verse: typeof verses[number];
     onComplete: () => void;
     onBonusFail: () => void;
     initialTimer: number;
+    viewOnly?: boolean;
 }) {
     const [solution, setSolution] = useState<string[]>([]);
     const [shuffledWords, setShuffledWords] = useState<string[]>([]);
@@ -334,6 +336,13 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
 
     useEffect(() => {
+        if (viewOnly) {
+            setSolution(originalWords);
+            setShuffledWords([]);
+            setStatus('correct');
+            return;
+        }
+
         let words = [...originalWords];
         for (let i = words.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -348,6 +357,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
             setTimer(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current!);
+                    onBonusFail();
                     return 0;
                 }
                 return prev - 1;
@@ -357,7 +367,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [verse, initialTimer, originalWords]);
+    }, [verse, initialTimer, originalWords, viewOnly, onBonusFail]);
 
 
     const handleWordSelect = (word: string, index: number) => {
@@ -376,7 +386,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
     const dragOverWord = useRef<number | null>(null);
 
     const handleDragSort = () => {
-        if (dragWord.current === null || dragOverWord.current === null) return;
+        if (viewOnly || dragWord.current === null || dragOverWord.current === null) return;
         
         const solutionWords = [...solution];
         const [reorderedItem] = solutionWords.splice(dragWord.current, 1);
@@ -407,7 +417,7 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
         setStatus('playing');
     }
 
-    if (timer <= 0 && status !== 'correct') {
+    if (!viewOnly && timer <= 0 && status !== 'correct') {
         return (
             <div className="text-center py-10">
                 <p className="text-destructive font-bold text-2xl mb-4">Time's up!</p>
@@ -419,25 +429,27 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
     
     return (
         <div className="space-y-6">
-            <div className="text-center font-bold text-primary text-xl flex items-center justify-center gap-2">
-                <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
-            </div>
+            {!viewOnly && (
+                 <div className="text-center font-bold text-primary text-xl flex items-center justify-center gap-2">
+                    <Clock /> {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, '0')}
+                </div>
+            )}
             
             <div className="p-4 border-2 border-dashed rounded-lg min-h-[120px] bg-muted/50 flex flex-wrap items-start content-start gap-2">
-                {solution.length === 0 && <p className="text-center text-muted-foreground p-8 w-full">Click or drag words from the word bank to build the verse here.</p>}
+                {solution.length === 0 && !viewOnly && <p className="text-center text-muted-foreground p-8 w-full">Click or drag words from the word bank to build the verse here.</p>}
                 {solution.map((word, index) => (
                     <motion.button
                         key={`${word}-${index}`}
-                        onClick={() => status === 'playing' && handleSolutionWordSelect(word, index)}
-                        draggable
+                        onClick={() => status === 'playing' && !viewOnly && handleSolutionWordSelect(word, index)}
+                        draggable={!viewOnly}
                         onDragStart={() => (dragWord.current = index)}
                         onDragEnter={() => (dragOverWord.current = index)}
                         onDragEnd={handleDragSort}
                         onDragOver={(e) => e.preventDefault()}
                         className={cn(
                             "p-2 rounded-lg font-medium",
-                            status === 'playing' && "cursor-move bg-primary/20 text-primary-foreground",
-                            status === 'correct' && "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
+                            status === 'playing' && !viewOnly && "cursor-move bg-primary/20 text-primary-foreground",
+                            (status === 'correct' || viewOnly) && "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300",
                             status === 'incorrect' && "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 animate-shake"
                         )}
                         layout
@@ -451,34 +463,38 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer }: {
                 ))}
             </div>
 
-            <div className="p-4 border-2 rounded-lg min-h-[120px] flex flex-wrap items-start content-start gap-2">
-                {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8 w-full">All words used. Check your answer!</p>}
-                {status === 'correct' && <p className="text-center font-bold text-green-600 p-8 w-full">Verse constructed perfectly!</p>}
-                {shuffledWords.map((word, index) => (
-                    <motion.button
-                        key={`${word}-${index}`}
-                        onClick={() => status === 'playing' && handleWordSelect(word, index)}
-                        className="p-2 rounded-lg font-medium bg-secondary hover:bg-secondary/80 cursor-pointer"
-                        layout
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        {word}
-                    </motion.button>
-                ))}
-            </div>
+            {!viewOnly && (
+                <>
+                    <div className="p-4 border-2 rounded-lg min-h-[120px] flex flex-wrap items-start content-start gap-2">
+                        {shuffledWords.length === 0 && status !== 'correct' && <p className="text-center text-muted-foreground p-8 w-full">All words used. Check your answer!</p>}
+                        {status === 'correct' && <p className="text-center font-bold text-green-600 p-8 w-full">Verse constructed perfectly!</p>}
+                        {shuffledWords.map((word, index) => (
+                            <motion.button
+                                key={`${word}-${index}`}
+                                onClick={() => status === 'playing' && handleWordSelect(word, index)}
+                                className="p-2 rounded-lg font-medium bg-secondary hover:bg-secondary/80 cursor-pointer"
+                                layout
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                {word}
+                            </motion.button>
+                        ))}
+                    </div>
 
-            <div className="flex flex-wrap gap-2 justify-center">
-                 {status === 'playing' && <Button onClick={checkAnswer} disabled={shuffledWords.length > 0}>Check My Answer</Button>}
-                 {status === 'incorrect' && <Button variant="destructive" onClick={handleTryAgain}>Try Again</Button>}
-                 {status === 'correct' && (
-                     <div className="text-green-600 font-bold flex flex-col items-center gap-2">
-                         <p className="flex items-center gap-2"><CheckCircle/> Bonus Complete!</p>
-                     </div>
-                 )}
-            </div>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        {status === 'playing' && <Button onClick={checkAnswer} disabled={shuffledWords.length > 0}>Check My Answer</Button>}
+                        {status === 'incorrect' && <Button variant="destructive" onClick={handleTryAgain}>Try Again</Button>}
+                        {status === 'correct' && (
+                            <div className="text-green-600 font-bold flex flex-col items-center gap-2">
+                                <p className="flex items-center gap-2"><CheckCircle/> Bonus Complete!</p>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }
@@ -506,6 +522,7 @@ export default function VerseMemoryPage() {
 
   // Bonus round state
   const [activeBonusLevel, setActiveBonusLevel] = useState<number | null>(null);
+  const [viewOnlyBonusLevel, setViewOnlyBonusLevel] = useState<number | null>(null);
 
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [isJourneyOpen, setIsJourneyOpen] = useState(false);
@@ -610,7 +627,7 @@ export default function VerseMemoryPage() {
     }
      for (const stage in bonus) {
         for (const level in bonus[stage]) {
-            if (bonus[stage][level]) {
+            if (bonus[stage][level] === 'completed') {
                 const reward = stage === '1' ? stage1BonusRewards[parseInt(level)-1] : 0; // Add logic for stage 2 if needed
                 sum += reward;
             }
@@ -963,6 +980,7 @@ export default function VerseMemoryPage() {
   
   const startBonusRound = (level: number) => {
     setActiveBonusLevel(level);
+    setViewOnlyBonusLevel(null);
     setGameMode('puzzle');
   };
   
@@ -973,7 +991,7 @@ export default function VerseMemoryPage() {
     setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
-        newProgress[currentStage][activeBonusLevel] = true;
+        newProgress[currentStage][activeBonusLevel] = 'completed';
         return newProgress;
     });
     
@@ -991,17 +1009,25 @@ export default function VerseMemoryPage() {
       setBonusProgress(prev => {
         const newProgress = {...prev};
         if (!newProgress[currentStage]) newProgress[currentStage] = {};
-        newProgress[currentStage][activeBonusLevel] = true; // Mark as attempted
+        newProgress[currentStage][activeBonusLevel] = 'attempted';
         return newProgress;
     });
       setActiveBonusLevel(null);
       setGameMode('fillInTheBlank');
   }
 
-  const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
-  const currentVerse = verses[verseSetIndex + currentVerseIndex];
-  const bonusVerse = activeBonusLevel !== null ? verses[verseSetIndex + stage1BonusVerseIndices[activeBonusLevel - 1]] : null;
+  const viewBonusRound = (level: number) => {
+      setViewOnlyBonusLevel(level);
+      setActiveBonusLevel(null);
+      setGameMode('puzzle');
+  }
 
+  const verseSetIndex = (currentStage - 1) * VERSES_PER_STAGE;
+  const verseIdx = activeBonusLevel !== null ? stage1BonusVerseIndices[activeBonusLevel - 1] : (viewOnlyBonusLevel !== null ? stage1BonusVerseIndices[viewOnlyBonusLevel - 1] : -1);
+  const bonusVerse = verseIdx !== -1 ? verses[verseSetIndex + verseIdx] : null;
+
+  const currentVerse = verses[verseSetIndex + currentVerseIndex];
+  
   const isLastVerseInSet = currentVerseIndex === (VERSES_PER_STAGE - 1);
   
   const renderFillInTheBlankVerse = () => {
@@ -1105,7 +1131,7 @@ export default function VerseMemoryPage() {
       
        <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null}><Feather/> Fill in the Blanks</TabsTrigger>
+                <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null || viewOnlyBonusLevel !== null}><Feather/> Fill in the Blanks</TabsTrigger>
                 <TabsTrigger value="puzzle" className="gap-2"><Puzzle /> Bonus Puzzles</TabsTrigger>
             </TabsList>
             <div className="mt-4">
@@ -1260,12 +1286,12 @@ export default function VerseMemoryPage() {
                             <h2 className="font-headline text-2xl">Bonus Puzzles</h2>
                             <p className="text-muted-foreground">Complete a level in 'Fill in the Blanks' to unlock its bonus puzzle.</p>
                         </div>
-                        {activeBonusLevel !== null && bonusVerse ? (
+                        {(activeBonusLevel !== null || viewOnlyBonusLevel !== null) && bonusVerse ? (
                              <Card>
                                 <CardHeader>
                                     <div className="flex justify-between items-center">
                                         <CardTitle className="text-center font-headline">{bonusVerse.reference}</CardTitle>
-                                        <Button size="sm" variant="ghost" onClick={() => { setActiveBonusLevel(null); setGameMode('fillInTheBlank'); }}>Back</Button>
+                                        <Button size="sm" variant="ghost" onClick={() => { setActiveBonusLevel(null); setViewOnlyBonusLevel(null); setGameMode('fillInTheBlank'); }}>Back</Button>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -1274,6 +1300,7 @@ export default function VerseMemoryPage() {
                                         onComplete={handleBonusComplete}
                                         onBonusFail={handleBonusFail}
                                         initialTimer={BONUS_ROUND_TIME}
+                                        viewOnly={viewOnlyBonusLevel !== null}
                                     />
                                 </CardContent>
                              </Card>
@@ -1282,14 +1309,13 @@ export default function VerseMemoryPage() {
                                 {Array.from({ length: LEVELS_PER_STAGE }).map((_, i) => {
                                     const level = i + 1;
                                     const isUnlocked = isLevelComplete(currentStage, level, verseScores);
-                                    const isCompleted = bonusProgress[currentStage]?.[level];
+                                    const bonusStatus = bonusProgress[currentStage]?.[level];
                                     const bonusReward = stage1BonusRewards[i] || 0;
 
                                     return (
                                         <Card 
                                             key={`bonus-${level}`}
-                                            className={cn("text-center", !isUnlocked && "bg-muted/50", isUnlocked && !isCompleted && "cursor-pointer hover:border-primary")}
-                                            onClick={() => isUnlocked && !isCompleted && startBonusRound(level)}
+                                            className={cn("text-center", !isUnlocked && "bg-muted/50")}
                                         >
                                             <CardHeader>
                                                 <div className="mx-auto bg-primary/10 p-3 rounded-full mb-2">
@@ -1297,15 +1323,24 @@ export default function VerseMemoryPage() {
                                                 </div>
                                                 <CardTitle className="font-headline">Level {level} Bonus</CardTitle>
                                             </CardHeader>
-                                            <CardContent>
-                                                {isCompleted ? (
-                                                    <div className="font-bold text-green-600 flex items-center justify-center gap-1"><CheckCircle/> Completed</div>
+                                            <CardContent className="space-y-2">
+                                                 <div className="text-center">
+                                                    <p className="text-xs text-muted-foreground">Reward: {bonusReward} Stars</p>
+                                                 </div>
+                                                 {bonusStatus === 'completed' ? (
+                                                    <Button disabled className="w-full bg-green-600 hover:bg-green-600"><CheckCircle className="mr-2"/> Completed</Button>
+                                                ) : bonusStatus === 'attempted' ? (
+                                                    <div className="flex flex-col gap-2">
+                                                        <p className="text-sm font-semibold text-destructive">Time's up!</p>
+                                                        <Button onClick={() => viewBonusRound(level)} variant="secondary" className="w-full"><Eye className="mr-2"/>View Puzzle</Button>
+                                                    </div>
                                                 ) : isUnlocked ? (
-                                                    <p className="text-sm text-primary">Click to start!</p>
+                                                    <Button onClick={() => startBonusRound(level)} className="w-full">
+                                                        <PlayCircle className="mr-2"/> Start Challenge
+                                                    </Button>
                                                 ) : (
-                                                    <p className="text-sm text-muted-foreground">Complete Level {level} to unlock</p>
+                                                     <p className="text-sm text-muted-foreground">Complete Level {level} to unlock</p>
                                                 )}
-                                                <p className="text-xs text-muted-foreground mt-2">Reward: {bonusReward} Stars</p>
                                             </CardContent>
                                         </Card>
                                     )
