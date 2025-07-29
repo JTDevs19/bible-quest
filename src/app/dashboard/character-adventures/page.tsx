@@ -8,8 +8,8 @@ import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle,
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
@@ -246,7 +246,7 @@ const triviaLevels = [
     { question: "Who was the king of Tyre who was a great friend of David and Solomon and supplied them with cedar logs?", options: ["Abibaal", "Hiram", "Ithobaal I", "Pygmalion"], answer: "Hiram", trivia: "Hiram's skilled craftsmen and quality materials were essential for building both David's palace and Solomon's Temple.", reference: "1 Kings 5:1", verseText: "When Hiram king of Tyre heard that Solomon had been anointed king to succeed his father David, he sent his envoys to Solomon, because he had always been on friendly terms with David." },
     { question: "Who was the son of Jacob from whom the kings of Judah, including David and Jesus, were descended?", options: ["Reuben", "Levi", "Judah", "Joseph"], answer: "Judah", trivia: "In his final blessing, Jacob prophesied that the 'scepter will not depart from Judah,' indicating the royal line.", reference: "Genesis 49:10", verseText: "The scepter will not depart from Judah, nor the ruler’s staff from between his feet, until he to whom it belongs shall come and the obedience of the nations shall be his." },
     { question: "Who was the man who was healed of blindness by Jesus at the Pool of Siloam?", options: ["Bartimaeus", "The man born blind", "A man from Bethsaida", "Two men from Galilee"], answer: "The man born blind", trivia: "This miracle in John's gospel sparked a major controversy with the Pharisees, as they interrogated the man and his parents about his healing on the Sabbath.", reference: "John 9:7", verseText: "'Go,' he told him, 'wash in the Pool of Siloam' (this word means 'Sent'). So the man went and washed, and came home seeing." },
-    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla are almost always mentioned together in the New Testament. They hosted a church in their home and helped instruct Apollos.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla, because Claudius had ordered all Jews to leave Rome. Paul went to see them," },
+    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla are almost always mentioned together in the New Testament. They hosted a church in their home and helped instruct Apollos.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla... Paul went to see them, and because he was a tentmaker as they were, he stayed and worked with them." },
     { question: "Who was the wife that Jacob loved more, but who was barren for many years?", options: ["Leah", "Rachel", "Bilhah", "Zilpah"], answer: "Rachel", trivia: "After years of watching her sister Leah have children, Rachel finally gave birth to Joseph and later Benjamin, but she died during Benjamin's birth.", reference: "Genesis 30:1", verseText: "When Rachel saw that she was not bearing Jacob any children, she became jealous of her sister. So she said to Jacob, 'Give me children, or I’ll die!'" }
   ],
   // Level 19
@@ -428,6 +428,7 @@ export default function CharacterAdventuresPage() {
     const [showAdventureMap, setShowAdventureMap] = useState(true);
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
     const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
+    const [showTriviaDialog, setShowTriviaDialog] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
@@ -509,9 +510,16 @@ export default function CharacterAdventuresPage() {
         } else {
             playIncorrectSound();
         }
+
+        if(language === 'en' && triviaLevels[currentLevel - 1][questionIndex].trivia) {
+            setTimeout(() => {
+                setShowTriviaDialog(true);
+            }, 500);
+        }
     };
 
     const handleNextQuestion = () => {
+        setShowTriviaDialog(false);
         if (questionIndex < 9) {
             setQuestionIndex(q => q + 1);
             setSelectedAnswer(null);
@@ -573,7 +581,7 @@ export default function CharacterAdventuresPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-center">
-                         <AlertDialogCancel onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogCancel>
+                         <AlertDialogAction onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogAction>
                         <AlertDialogAction onClick={() => router.push('/dashboard/verse-memory')}>
                            <BookOpen className="mr-2" /> Go to Verse Memory
                         </AlertDialogAction>
@@ -705,37 +713,11 @@ export default function CharacterAdventuresPage() {
                                     );
                                 })}
                             </div>
-                             {isAnswered && (
-                                <div className="space-y-4">
-                                    <div className="flex gap-2 justify-center">
-                                         {currentTrivia.trivia && (
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="outline">
-                                                        <HelpCircle className="mr-2" /> {language === 'en' ? 'Did you know?' : 'Alam mo ba?'}
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-full max-w-md mx-auto" align="center">
-                                                <div className="grid gap-4">
-                                                    <div className="space-y-2">
-                                                        <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
-                                                        <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
-                                                    </div>
-                                                    {currentTrivia.reference && (
-                                                        <div className="space-y-2">
-                                                            <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
-                                                            <p className="text-sm font-bold">{currentTrivia.reference}</p>
-                                                            <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                </PopoverContent>
-                                            </Popover>
-                                         )}
-                                        <Button onClick={handleNextQuestion} className="w-full max-w-xs">
-                                            {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
-                                        </Button>
-                                    </div>
+                             {isAnswered && !showTriviaDialog && (
+                                <div className="space-y-4 text-center">
+                                    <Button onClick={handleNextQuestion}>
+                                        {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
+                                    </Button>
                                 </div>
                              )}
                         </motion.div>
@@ -784,18 +766,58 @@ export default function CharacterAdventuresPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                      <AlertDialogFooter className="sm:justify-center">
-                        <AlertDialogCancel onClick={() => {
+                        <AlertDialogAction onClick={() => {
                             setShowUnlockDialog(false);
                             nextLevel();
                         }}>
                              {language === 'en' ? 'Continue Adventures' : 'Ipagpatuloy ang Pakikipagsapalaran'}
-                        </AlertDialogCancel>
+                        </AlertDialogAction>
                         <AlertDialogAction onClick={() => router.push('/dashboard/bible-mastery')}>
                             <Users className="mr-2" /> {language === 'en' ? 'Explore New Game' : 'Tuklasin ang Bagong Laro'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={showTriviaDialog} onOpenChange={setShowTriviaDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl text-center">
+                            Did you know?
+                        </DialogTitle>
+                        <DialogDescription className="text-center font-bold text-lg text-primary">
+                            {currentTrivia.answer}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                         {selectedAnswer !== currentTrivia.answer && (
+                            <div className="text-center text-destructive font-semibold">
+                                Your answer was {selectedAnswer}. Keep trying!
+                            </div>
+                        )}
+                        <div className="space-y-1">
+                            <h4 className="font-semibold">Extra Trivia</h4>
+                            <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
+                        </div>
+                        {currentTrivia.reference && (
+                            <div className="space-y-1">
+                                <h4 className="font-semibold">Reference</h4>
+                                <p className="text-sm font-bold">{currentTrivia.reference}</p>
+                                <blockquote className="border-l-2 pl-4 italic text-muted-foreground">
+                                    "{currentTrivia.verseText}"
+                                </blockquote>
+                            </div>
+                        )}
+                    </div>
+                     <DialogClose asChild>
+                        <Button onClick={handleNextQuestion}>
+                           {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
+                        </Button>
+                    </DialogClose>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
+
+    
