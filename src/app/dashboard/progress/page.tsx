@@ -77,7 +77,8 @@ export default function ProgressPage() {
   }, []);
 
   const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
-
+  
+  const earnedBadges = badges.filter(b => b.earned);
 
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
@@ -128,7 +129,7 @@ export default function ProgressPage() {
             <CardContent>
                 {earnedBadges.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {badges.map((badge) => (
+                        {earnedBadges.map((badge) => (
                            badge.earned && (
                             <div key={badge.name} className="flex flex-col items-center text-center p-4 border rounded-lg bg-secondary/50">
                                 <div className="p-3 bg-accent rounded-full mb-3">
