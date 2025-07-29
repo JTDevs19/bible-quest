@@ -707,37 +707,35 @@ export default function CharacterAdventuresPage() {
                             </div>
                              {isAnswered && (
                                 <div className="space-y-4">
-                                    <Popover open={isAnswered}>
-                                        <PopoverContent className="w-full max-w-md mx-auto" align="center">
-                                        <div className="grid gap-4">
-                                            <div className="space-y-2">
-                                                {selectedAnswer === currentTrivia.answer ? (
-                                                    <p className="text-sm font-semibold text-green-600">Correct!</p>
-                                                ) : (
-                                                     <p className="text-sm font-semibold text-destructive">
-                                                         {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
-                                                     </p>
-                                                )}
-                                                {currentTrivia.trivia && (
-                                                    <>
+                                    <div className="flex gap-2 justify-center">
+                                         {currentTrivia.trivia && (
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="outline">
+                                                        <HelpCircle className="mr-2" /> {language === 'en' ? 'Did you know?' : 'Alam mo ba?'}
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-full max-w-md mx-auto" align="center">
+                                                <div className="grid gap-4">
+                                                    <div className="space-y-2">
                                                         <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
                                                         <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {currentTrivia.reference && (
-                                                <div className="space-y-2">
-                                                    <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
-                                                    <p className="text-sm font-bold">{currentTrivia.reference}</p>
-                                                    <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
+                                                    </div>
+                                                    {currentTrivia.reference && (
+                                                        <div className="space-y-2">
+                                                            <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
+                                                            <p className="text-sm font-bold">{currentTrivia.reference}</p>
+                                                            <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <Button onClick={handleNextQuestion} className="w-full">
-                                        {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
-                                    </Button>
+                                                </PopoverContent>
+                                            </Popover>
+                                         )}
+                                        <Button onClick={handleNextQuestion} className="w-full max-w-xs">
+                                            {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
+                                        </Button>
+                                    </div>
                                 </div>
                              )}
                         </motion.div>
@@ -801,5 +799,3 @@ export default function CharacterAdventuresPage() {
         </div>
     );
 }
-
-    
