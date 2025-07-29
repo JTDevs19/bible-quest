@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -59,8 +59,6 @@ const generateLevelConfig = () => {
 };
 
 const levels = generateLevelConfig();
-const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 20;
 
 const VERSES_PER_STAGE = 20;
 const LEVELS_PER_STAGE = 5;
@@ -104,8 +102,13 @@ export default function BibleMasteryPage() {
 
   useEffect(() => {
     if (!isClient) return;
+
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    const profile = profileStr ? JSON.parse(profileStr) : null;
+    const isTester = profile?.username === 'Scassenger';
+
     const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-    if (isStageComplete(2, verseMemoryProgress.scores)) {
+    if (isTester || isStageComplete(2, verseMemoryProgress.scores)) {
         setIsUnlocked(true);
     }
   }, [isClient]);

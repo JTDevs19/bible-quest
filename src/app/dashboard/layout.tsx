@@ -54,12 +54,16 @@ function DashboardNav() {
   const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
 
   useEffect(() => {
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    const profile = profileStr ? JSON.parse(profileStr) : null;
+    const isTester = profile?.username === 'Scassenger';
+
     const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
     const stage1Completed = isStageComplete(1, verseMemoryProgress.scores);
     const stage2Completed = isStageComplete(2, verseMemoryProgress.scores);
 
-    setCharacterAdventuresUnlocked(stage1Completed);
-    setBibleMasteryUnlocked(stage2Completed);
+    setCharacterAdventuresUnlocked(isTester || stage1Completed);
+    setBibleMasteryUnlocked(isTester || stage2Completed);
 
   }, [pathname]);
 
