@@ -665,7 +665,7 @@ export default function VerseMemoryPage() {
         addExp(scoreDifference);
         
         setVerseScores(prevScores => {
-            const newScores = JSON.parse(JSON.stringify(prevScores)); 
+            const newScores = { ...prevScores };
             if (!newScores[currentStage]) {
                 newScores[currentStage] = {};
             }
@@ -1530,6 +1530,7 @@ export default function VerseMemoryPage() {
 
 
     
+
 
 
 
