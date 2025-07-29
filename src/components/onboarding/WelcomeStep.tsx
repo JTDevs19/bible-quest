@@ -4,7 +4,6 @@ import { useOnboarding } from '@/app/page';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
-import Link from 'next/link';
 
 export function WelcomeStep() {
   const { nextStep } = useOnboarding();
@@ -24,7 +23,7 @@ export function WelcomeStep() {
         </Button>
       </CardContent>
       <CardFooter>
-        <p className="text-xs text-muted-foreground">Your progress will be saved in this browser.</p>
+        <p className="text-xs text-muted-foreground">Your progress will be saved in this browser. / Ang iyong pag-unlad ay mase-save sa browser na ito.</p>
       </CardFooter>
     </Card>
   );

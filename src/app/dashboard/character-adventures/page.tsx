@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -457,6 +456,7 @@ export default function CharacterAdventuresPage() {
             if (profile.username === 'Scassenger') {
                 setIsTester(true);
             }
+            setLanguage(profile.language || 'en');
         }
     }, []);
 
@@ -515,8 +515,8 @@ export default function CharacterAdventuresPage() {
             startLevel(level);
         } else {
              toast({
-                title: "Level Locked",
-                description: `You need to get a perfect score (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) on Level ${level - 1} to unlock this.`,
+                title: language === 'en' ? "Level Locked" : "Nakasara ang Antas",
+                description: language === 'en' ? `You need to get a perfect score (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) on Level ${level - 1} to unlock this.` : `Kailangan mong makakuha ng perpektong iskor (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) sa Antas ${level - 1} para mabuksan ito.`,
                 variant: 'destructive',
             })
         }
@@ -604,15 +604,15 @@ export default function CharacterAdventuresPage() {
                          <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
                             <Lock className="w-10 h-10 text-primary" />
                         </div>
-                        <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Character Adventures!</AlertDialogTitle>
+                        <AlertDialogTitle className="font-headline text-2xl text-center">{language === 'en' ? 'Unlock Character Adventures!' : 'I-unlock ang Pakikipagsapalaran ng mga Tauhan!'}</AlertDialogTitle>
                         <AlertDialogDescription className="text-center">
-                            To begin your adventure into the lives of Bible characters, you must first complete <strong>Stage 1</strong> of the Verse Memory game.
+                            {language === 'en' ? "To begin your adventure into the lives of Bible characters, you must first complete <strong>Stage 1</strong> of the Verse Memory game." : "Para simulan ang iyong pakikipagsapalaran sa buhay ng mga tauhan sa Bibliya, kailangan mo munang kumpletuhin ang <strong>Stage 1</strong> ng larong Verse Memory."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-center">
-                         <AlertDialogAction onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogAction>
+                         <AlertDialogAction onClick={() => router.push('/dashboard')}>{language === 'en' ? 'Back to Dashboard' : 'Balik sa Dashboard'}</AlertDialogAction>
                         <AlertDialogAction onClick={() => router.push('/dashboard/verse-memory')}>
-                           <BookOpen className="mr-2" /> Go to Verse Memory
+                           <BookOpen className="mr-2" /> {language === 'en' ? 'Go to Verse Memory' : 'Pumunta sa Verse Memory'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -758,7 +758,7 @@ export default function CharacterAdventuresPage() {
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-center">
                             {language === 'en' ? `You scored ${score} out of 10.` : `Nakuha mo ang ${score} sa 10.`}
-                            {score === PERFECT_SCORE_PER_LEVEL && " Perfect score!"}
+                            {score === PERFECT_SCORE_PER_LEVEL && (language === 'en' ? " Perfect score!" : " Perpektong iskor!")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Sparkles } from 'lucide-react';
 
 export function OverviewBenefitsStep() {
-  const { nextStep, prevStep } = useOnboarding();
+  const { nextStep, prevStep, data } = useOnboarding();
+  const isFilipino = data.language === 'fil';
 
   return (
     <Card className="w-full text-center">
@@ -14,21 +15,21 @@ export function OverviewBenefitsStep() {
         <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
           <Sparkles className="w-10 h-10 text-primary" />
         </div>
-        <CardTitle className="font-headline text-3xl">Grow in Your Faith</CardTitle>
-        <CardDescription className="pt-2">The goal isn't just to play games, but to deepen your relationship with God.</CardDescription>
+        <CardTitle className="font-headline text-3xl">{isFilipino ? 'Lumago sa Iyong Pananampalataya' : 'Grow in Your Faith'}</CardTitle>
+        <CardDescription className="pt-2">{isFilipino ? 'Ang layunin ay hindi lamang maglaro, kundi palalimin ang iyong relasyon sa Diyos.' : "The goal isn't just to play games, but to deepen your relationship with God."}</CardDescription>
       </CardHeader>
       <CardContent className="text-left space-y-2">
-        <p>By playing, you will:</p>
-        <p><strong>- Memorize Verses:</strong> Hide God's Word in your heart to guide and strengthen you daily.</p>
-        <p><strong>- Understand Scripture:</strong> Become familiar with the people, places, and stories of the Bible.</p>
-        <p><strong>- Apply God's Word:</strong> Use the AI Verse Helper to get personalized verses for your specific needs.</p>
+        <p>{isFilipino ? 'Sa paglalaro, ikaw ay:' : 'By playing, you will:'}</p>
+        <p><strong>- {isFilipino ? 'Magmemorya ng mga Talata' : 'Memorize Verses'}:</strong> {isFilipino ? 'Itago ang Salita ng Diyos sa iyong puso upang gabayan at palakasin ka araw-araw.' : "Hide God's Word in your heart to guide and strengthen you daily."}</p>
+        <p><strong>- {isFilipino ? 'Maunawaan ang Kasulatan' : 'Understand Scripture'}:</strong> {isFilipino ? 'Maging pamilyar sa mga tao, lugar, at kwento ng Bibliya.' : 'Become familiar with the people, places, and stories of the Bible.'}</p>
+        <p><strong>- {isFilipino ? 'Ilapat ang Salita ng Diyos' : "Apply God's Word"}:</strong> {isFilipino ? 'Gamitin ang AI Verse Helper upang makakuha ng mga personalized na talata para sa iyong mga partikular na pangangailangan.' : 'Use the AI Verse Helper to get personalized verses for your specific needs.'}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={prevStep}>
-          Back
+          {isFilipino ? 'Bumalik' : 'Back'}
         </Button>
         <Button onClick={nextStep}>
-          Next
+          {isFilipino ? 'Susunod' : 'Next'}
         </Button>
       </CardFooter>
     </Card>

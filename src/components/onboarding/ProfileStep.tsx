@@ -22,18 +22,24 @@ const profileSchema = z.object({
   avatar: z.string().nonempty('Please select an avatar.'),
 });
 
+const profileSchemaFil = z.object({
+    username: z.string().min(3, 'Ang username ay dapat may hindi bababa sa 3 karakter.').max(20, 'Ang username ay dapat hindi hihigit sa 20 karakter.'),
+    avatar: z.string().nonempty('Pumili ng avatar.'),
+});
+
 const avatars = [
-  { name: 'Lion of Judah', icon: LionIcon },
-  { name: 'Lamb of God', icon: LambIcon },
-  { name: 'Holy Spirit Dove', icon: DoveIcon },
-  { name: 'The Cross', icon: CrossIcon },
+  { name: 'Lion of Judah', icon: LionIcon, name_fil: 'Leon ng Juda' },
+  { name: 'Lamb of God', icon: LambIcon, name_fil: 'Kordero ng Diyos' },
+  { name: 'Holy Spirit Dove', icon: DoveIcon, name_fil: 'Kalapati ng Banal na Espiritu' },
+  { name: 'The Cross', icon: CrossIcon, name_fil: 'Ang Krus' },
 ];
 
 export function ProfileStep() {
   const { prevStep, data, setData, finishOnboardingAsGuest, error, loading } = useOnboarding();
+  const isFilipino = data.language === 'fil';
 
   const form = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(isFilipino ? profileSchemaFil : profileSchema),
     defaultValues: {
       username: data.username,
       avatar: data.avatar,
@@ -51,8 +57,8 @@ export function ProfileStep() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Create Your Guest Profile</CardTitle>
-        <CardDescription>Create a sense of identity for your guest session. You can register to save progress permanently.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{isFilipino ? 'Gawin ang Iyong Guest Profile' : 'Create Your Guest Profile'}</CardTitle>
+        <CardDescription>{isFilipino ? 'Lumikha ng pagkakakilanlan para sa iyong sesyon ng bisita. Maaari kang magrehistro upang permanenteng i-save ang pag-unlad.' : 'Create a sense of identity for your guest session. You can register to save progress permanently.'}</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -67,9 +73,9 @@ export function ProfileStep() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>{isFilipino ? 'Pangalan' : 'Username'}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your Name" {...field} />
+                    <Input placeholder={isFilipino ? 'Ang Iyong Pangalan' : 'Your Name'} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -80,7 +86,7 @@ export function ProfileStep() {
               name="avatar"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Choose an avatar</FormLabel>
+                  <FormLabel>{isFilipino ? 'Pumili ng avatar' : 'Choose an avatar'}</FormLabel>
                   <RadioGroup
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -95,7 +101,7 @@ export function ProfileStep() {
                           >
                             <RadioGroupItem value={avatar.name} id={avatar.name} className="sr-only" />
                             <avatar.icon className="w-16 h-16 mb-2 text-primary" />
-                            <span className="text-sm font-medium">{avatar.name}</span>
+                            <span className="text-sm font-medium">{isFilipino ? avatar.name_fil : avatar.name}</span>
                           </Label>
                         </FormControl>
                       </FormItem>
@@ -108,11 +114,11 @@ export function ProfileStep() {
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={prevStep} type="button" disabled={loading}>
-              Back
+              {isFilipino ? 'Bumalik' : 'Back'}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 animate-spin" />}
-              {loading ? 'Setting up...' : 'Finish Setup'}
+              {loading ? (isFilipino ? 'Nagseset-up...' : 'Setting up...') : (isFilipino ? 'Tapusin ang Setup' : 'Finish Setup')}
             </Button>
           </CardFooter>
         </form>

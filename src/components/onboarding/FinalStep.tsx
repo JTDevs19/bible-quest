@@ -9,6 +9,7 @@ import { CheckCircle2 } from 'lucide-react';
 export function FinalStep() {
   const { data } = useOnboarding();
   const router = useRouter();
+  const isFilipino = data.language === 'fil';
 
   const handleStart = () => {
     router.push('/dashboard');
@@ -20,12 +21,12 @@ export function FinalStep() {
         <div className="mx-auto bg-green-100 dark:bg-green-900/50 p-4 rounded-full mb-4">
           <CheckCircle2 className="w-10 h-10 text-green-500 dark:text-green-400" />
         </div>
-        <CardTitle className="font-headline text-3xl">You're All Set, {data.username}!</CardTitle>
-        <CardDescription className="pt-2">You’re now ready to embark on your journey to grow in God’s Word. Let’s begin!</CardDescription>
+        <CardTitle className="font-headline text-3xl">{isFilipino ? `Handa ka na, ${data.username}!` : `You're All Set, ${data.username}!`}</CardTitle>
+        <CardDescription className="pt-2">{isFilipino ? 'Handa ka na ngayong simulan ang iyong paglalakbay upang lumago sa Salita ng Diyos. Magsimula na tayo!' : 'You’re now ready to embark on your journey to grow in God’s Word. Let’s begin!'}</CardDescription>
       </CardHeader>
       <CardFooter>
         <Button onClick={handleStart} className="w-full" size="lg">
-          Go to Dashboard
+          {isFilipino ? 'Pumunta sa Dashboard' : 'Go to Dashboard'}
         </Button>
       </CardFooter>
     </Card>

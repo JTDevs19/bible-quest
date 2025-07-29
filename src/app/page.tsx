@@ -20,6 +20,7 @@ export type UserProfile = {
   ageGroup: string;
   spiritualLevel: string;
   focus: string;
+  language: 'en' | 'fil';
 };
 
 const defaultOnboardingData: UserProfile = {
@@ -28,6 +29,7 @@ const defaultOnboardingData: UserProfile = {
   ageGroup: '',
   spiritualLevel: '',
   focus: '',
+  language: 'en',
 };
 
 type OnboardingContextType = {

@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Puzzle } from 'lucide-react';
 
 export function OverviewGamesStep() {
-  const { nextStep, prevStep } = useOnboarding();
+  const { nextStep, prevStep, data } = useOnboarding();
+  const isFilipino = data.language === 'fil';
 
   return (
     <Card className="w-full text-center">
@@ -14,20 +15,20 @@ export function OverviewGamesStep() {
         <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
           <Puzzle className="w-10 h-10 text-primary" />
         </div>
-        <CardTitle className="font-headline text-3xl">Fun & Engaging Games</CardTitle>
-        <CardDescription className="pt-2">You'll play a variety of games designed to make learning the Bible enjoyable:</CardDescription>
+        <CardTitle className="font-headline text-3xl">{isFilipino ? 'Masaya at Nakakaaliw na mga Laro' : 'Fun & Engaging Games'}</CardTitle>
+        <CardDescription className="pt-2">{isFilipino ? 'Maglalaro ka ng iba\'t ibang laro na idinisenyo upang gawing kasiya-siya ang pag-aaral ng Bibliya:' : "You'll play a variety of games designed to make learning the Bible enjoyable:"}</CardDescription>
       </CardHeader>
       <CardContent className="text-left space-y-2">
-        <p><strong>- Verse Memory:</strong> Fill in the blanks to memorize key scriptures.</p>
-        <p><strong>- Character Adventures:</strong> Test your knowledge with trivia about biblical figures.</p>
-        <p><strong>- Bible Mastery:</strong> Arrange the books of the Bible in the correct order.</p>
+        <p><strong>- {isFilipino ? 'Pagmemorya ng Talata' : 'Verse Memory'}:</strong> {isFilipino ? 'Punan ang mga patlang upang mamemorya ang mga susing kasulatan.' : 'Fill in the blanks to memorize key scriptures.'}</p>
+        <p><strong>- {isFilipino ? 'Pakikipagsapalaran ng mga Tauhan' : 'Character Adventures'}:</strong> {isFilipino ? 'Subukin ang iyong kaalaman sa mga trivia tungkol sa mga tauhan sa Bibliya.' : 'Test your knowledge with trivia about biblical figures.'}</p>
+        <p><strong>- {isFilipino ? 'Kasanayan sa Bibliya' : 'Bible Mastery'}:</strong> {isFilipino ? 'Ayusin ang mga aklat ng Bibliya sa tamang pagkakasunod-sunod.' : 'Arrange the books of the Bible in the correct order.'}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={prevStep}>
-          Back
+          {isFilipino ? 'Bumalik' : 'Back'}
         </Button>
         <Button onClick={nextStep}>
-          Next
+          {isFilipino ? 'Susunod' : 'Next'}
         </Button>
       </CardFooter>
     </Card>

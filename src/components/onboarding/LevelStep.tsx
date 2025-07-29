@@ -7,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const levels = [
-  { value: 'Beginner', label: 'Beginner', description: 'I’m just starting out.' },
-  { value: 'Growing', label: 'Growing', description: 'I know some stories and verses.' },
-  { value: 'Mature', label: 'Mature', description: 'I’ve studied the Bible deeply.' },
+  { value: 'Beginner', label: 'Beginner', description: 'I’m just starting out.', label_fil: 'Baguhan', description_fil: 'Nagsisimula pa lang ako.' },
+  { value: 'Growing', label: 'Growing', description: 'I know some stories and verses.', label_fil: 'Lumalago', description_fil: 'May alam na akong ilang kwento at talata.' },
+  { value: 'Mature', label: 'Mature', description: 'I’ve studied the Bible deeply.', label_fil: 'May Karanasan', description_fil: 'Malalim na ang aking pag-aaral sa Bibliya.' },
 ];
 
 export function LevelStep() {
@@ -19,11 +19,13 @@ export function LevelStep() {
     setData((prev) => ({ ...prev, spiritualLevel: value }));
   };
 
+  const isFilipino = data.language === 'fil';
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">How familiar are you with the Bible?</CardTitle>
-        <CardDescription>This helps us tailor the challenges to your level.</CardDescription>
+        <CardTitle className="font-headline text-2xl">{isFilipino ? 'Gaano ka kapamilyar sa Bibliya?' : 'How familiar are you with the Bible?'}</CardTitle>
+        <CardDescription>{isFilipino ? 'Nakakatulong ito upang maiakma namin ang mga hamon sa iyong antas.' : 'This helps us tailor the challenges to your level.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <RadioGroup value={data.spiritualLevel} onValueChange={handleSelect} className="space-y-4">
@@ -31,8 +33,8 @@ export function LevelStep() {
             <Label key={level.value} htmlFor={level.value} className="flex items-center space-x-4 p-4 border rounded-lg cursor-pointer hover:bg-secondary/50 has-[input:checked]:bg-secondary has-[input:checked]:border-primary">
               <RadioGroupItem value={level.value} id={level.value} />
               <div>
-                <p className="font-semibold">{level.label}</p>
-                <p className="text-muted-foreground font-normal">{level.description}</p>
+                <p className="font-semibold">{isFilipino ? level.label_fil : level.label}</p>
+                <p className="text-muted-foreground font-normal">{isFilipino ? level.description_fil : level.description}</p>
               </div>
             </Label>
           ))}
@@ -40,10 +42,10 @@ export function LevelStep() {
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={prevStep}>
-          Back
+          {isFilipino ? 'Bumalik' : 'Back'}
         </Button>
         <Button onClick={nextStep} disabled={!data.spiritualLevel}>
-          Continue
+          {isFilipino ? 'Magpatuloy' : 'Continue'}
         </Button>
       </CardFooter>
     </Card>
