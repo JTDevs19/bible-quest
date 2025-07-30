@@ -5,21 +5,36 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getVerseRecommendation } from './actions';
+import { getVerseRecommendation, getSermonGuide } from './actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles, Languages, Hammer, Coins } from 'lucide-react';
+import { Loader2, Sparkles, Languages, Hammer, FileText, UserCheck, BookHeart, ScrollText } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
+import { SermonGuideCard } from './sermon-guide-card';
 import type { UserProfile } from '@/app/page';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { useRouter } from 'next/navigation';
+import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
 
-const formSchema = z.object({
+
+const verseFormSchema = z.object({
   spiritualNeed: z.string().min(10, 'Please describe your need in at least 10 characters.'),
+});
+const verseFormSchemaFil = z.object({
+  spiritualNeed: z.string().min(10, 'Pakiusap, ilarawan ang iyong pangangailangan sa hindi bababa sa 10 karakter.'),
+});
+
+
+const sermonFormSchema = z.object({
+  topic: z.string().min(3, 'Please provide a topic with at least 3 characters.'),
+});
+const sermonFormSchemaFil = z.object({
+  topic: z.string().min(3, 'Pakiusap, magbigay ng isang paksa na may hindi bababa sa 3 karakter.'),
 });
 
 const DenariusIcon = () => (
@@ -32,9 +47,11 @@ const DenariusIcon = () => (
 export default function PersonalizedVersePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recommendation, setRecommendation] = useState<PersonalizedVerseRecommendationsOutput | null>(null);
+  const [sermonGuide, setSermonGuide] = useState<SermonGuideOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<'English' | 'Tagalog'>('English');
+  const [activeTab, setActiveTab] = useState('verse');
   const { aiVerseCharges, denarius } = useUserProgress();
   const router = useRouter();
 
@@ -46,13 +63,21 @@ export default function PersonalizedVersePage() {
       setLanguage(parsedProfile.language || 'English');
     }
   }, []);
+  
+  const currentVerseSchema = language === 'English' ? verseFormSchema : verseFormSchemaFil;
+  const currentSermonSchema = language === 'English' ? sermonFormSchema : sermonFormSchemaFil;
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const verseForm = useForm<z.infer<typeof currentVerseSchema>>({
+    resolver: zodResolver(currentVerseSchema),
     defaultValues: { spiritualNeed: '' },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const sermonForm = useForm<z.infer<typeof currentSermonSchema>>({
+    resolver: zodResolver(currentSermonSchema),
+    defaultValues: { topic: '' },
+  });
+
+  async function onVerseSubmit(values: z.infer<typeof currentVerseSchema>) {
     if (!userProfile) {
       setError("User data not found. Please complete onboarding.");
       return;
@@ -60,13 +85,40 @@ export default function PersonalizedVersePage() {
     setLoading(true);
     setError(null);
     setRecommendation(null);
+    setSermonGuide(null);
     try {
       const result = await getVerseRecommendation({
         spiritualNeed: values.spiritualNeed,
         spiritualLevel: userProfile.spiritualLevel,
         language: language,
       });
-      setRecommendation(result.recommendation);
+      if(result.success) {
+        setRecommendation(result.recommendation);
+      } else {
+        setError(result.message || "An unexpected error occurred.");
+      }
+    } catch (e: any) {
+      setError(e.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function onSermonSubmit(values: z.infer<typeof currentSermonSchema>) {
+    setLoading(true);
+    setError(null);
+    setSermonGuide(null);
+    setRecommendation(null);
+    try {
+      const result = await getSermonGuide({
+        topic: values.topic,
+        language: language,
+      });
+       if(result.success) {
+        setSermonGuide(result.sermonGuide);
+      } else {
+        setError(result.message || "An unexpected error occurred.");
+      }
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred.");
     } finally {
@@ -75,15 +127,9 @@ export default function PersonalizedVersePage() {
   }
 
   const hasCharges = aiVerseCharges > 0 || denarius > 0;
+  
   const pageTitle = language === 'Tagalog' ? 'AI Katulong sa Talata' : 'AI Verse Helper';
-  const pageDescription = language === 'Tagalog' ? 'Kumuha ng personalisadong rekomendasyon ng talata sa Bibliya para sa iyong kasalukuyang pangangailangan.' : 'Get a personalized Bible verse recommendation for your current need.';
-  const cardTitle = language === 'Tagalog' ? 'Ilarawan ang Iyong Pangangailangan' : 'Describe Your Need';
-  const cardDescription = language === 'Tagalog' ? 'Sabihin sa amin kung ano ang nasa iyong puso o kung saan ka naghahanap ng gabay. Ang aming AI, na ginagabayan ng Espiritu, ay hahanap ng isang talata para sa iyo.' : "Tell us what's on your heart or what you're seeking guidance on. Our AI, guided by the Spirit, will find a verse for you.";
-  const formLabel = language === 'Tagalog' ? 'Ang Aking Espirituwal na Pangangailangan' : 'My Spiritual Need';
-  const formPlaceholder = language === 'Tagalog' ? 'hal., \'Nakakaramdam ako ng pagkabalisa tungkol sa hinaharap\' o \'Kailangan ko ng lakas para mapatawad ang isang tao\'' : "e.g., 'I'm feeling anxious about the future' or 'I need strength to forgive someone'";
-  const buttonText = language === 'Tagalog' ? 'Kumuha ng Rekomendasyon' : 'Get Recommendation';
-  const loadingText = language === 'Tagalog' ? 'Naghahanap ng Talata...' : 'Finding a Verse...';
-
+  const pageDescription = language === 'Tagalog' ? 'Kumuha ng personalisadong rekomendasyon ng talata o gabay sa sermon.' : 'Get a personalized verse recommendation or sermon guide.';
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -92,66 +138,127 @@ export default function PersonalizedVersePage() {
         <p className="text-muted-foreground">{pageDescription}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-            <div className="flex justify-between items-center">
-                 <CardTitle>{cardTitle}</CardTitle>
-                 <div className="flex items-center gap-2 text-sm font-semibold">
-                    <DenariusIcon />
-                    {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
-                 </div>
+       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="verse" className="gap-2"><BookHeart /> {language === 'Tagalog' ? 'Personal na Talata' : 'Personal Verse'}</TabsTrigger>
+                <TabsTrigger value="sermon" className="gap-2"><ScrollText /> {language === 'Tagalog' ? 'Gabay sa Sermon' : 'Sermon Guide'}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="verse">
+                <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                             <CardTitle>{language === 'Tagalog' ? 'Para Saan Ito?' : 'What Is It For?'}</CardTitle>
+                             <div className="flex items-center gap-2 text-sm font-semibold">
+                                <DenariusIcon />
+                                {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
+                             </div>
+                        </div>
+                        <CardDescription>{language === 'Tagalog' ? 'Sabihin sa amin kung ano ang nasa iyong puso o kung saan ka naghahanap ng gabay.' : "Tell us what's on your heart or what you're seeking guidance on."}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...verseForm}>
+                        <form onSubmit={verseForm.handleSubmit(onVerseSubmit)} className="space-y-6">
+                             <div className="space-y-2">
+                                <FormLabel>{language === 'Tagalog' ? 'Wika' : 'Language'}</FormLabel>
+                                <Tabs defaultValue={language} onValueChange={(value) => setLanguage(value as 'English' | 'Tagalog')} className="w-full">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="English">English</TabsTrigger>
+                                        <TabsTrigger value="Tagalog">Tagalog</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            </div>
+                          <FormField
+                            control={verseForm.control}
+                            name="spiritualNeed"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{language === 'Tagalog' ? 'Ang Aking Pangangailangan' : 'My Need'}</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder={language === 'Tagalog' ? 'hal., \'Nakakaramdam ako ng pagkabalisa...\'' : "e.g., 'I'm feeling anxious...'"}
+                                    className="resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full" disabled={loading || !userProfile || !hasCharges}>
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                            {loading ? (language === 'Tagalog' ? 'Naghahanap...' : 'Finding...') : (language === 'Tagalog' ? 'Kumuha ng Talata' : 'Get Verse')}
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="sermon">
+                 <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                             <CardTitle>{language === 'Tagalog' ? 'Bumuo ng Gabay sa Sermon' : 'Generate Sermon Guide'}</CardTitle>
+                             <div className="flex items-center gap-2 text-sm font-semibold">
+                                <DenariusIcon />
+                                {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
+                             </div>
+                        </div>
+                        <CardDescription>{language === 'Tagalog' ? 'Magbigay ng isang paksa upang lumikha ng isang pangunahing balangkas para sa pagbabahagi.' : 'Provide a topic to create a basic outline for sharing.'}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...sermonForm}>
+                        <form onSubmit={sermonForm.handleSubmit(onSermonSubmit)} className="space-y-6">
+                             <div className="space-y-2">
+                                <FormLabel>{language === 'Tagalog' ? 'Wika' : 'Language'}</FormLabel>
+                                <Tabs defaultValue={language} onValueChange={(value) => setLanguage(value as 'English' | 'Tagalog')} className="w-full">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="English">English</TabsTrigger>
+                                        <TabsTrigger value="Tagalog">Tagalog</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            </div>
+                          <FormField
+                            control={sermonForm.control}
+                            name="topic"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{language === 'Tagalog' ? 'Paksa ng Sermon' : 'Sermon Topic'}</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder={language === 'Tagalog' ? 'hal., Pag-ibig, Pagpapatawad, Pananampalataya' : 'e.g., Love, Forgiveness, Faith'}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full" disabled={loading || !hasCharges}>
+                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                            {loading ? (language === 'Tagalog' ? 'Bumubuo...' : 'Generating...') : (language === 'Tagalog' ? 'Lumikha ng Gabay' : 'Create Guide')}
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+
+        {!hasCharges && (
+            <div className="text-center mt-4 text-sm text-muted-foreground">
+                <p>{language === 'Tagalog' ? 'Wala ka nang singil para sa AI Helper.' : "You're out of charges for the AI Helper."}</p>
+                <Button variant="link" onClick={() => router.push('/dashboard/forge')}>
+                   <Hammer className="mr-2" /> {language === 'Tagalog' ? 'Pumunta sa Forge para makakuha pa.' : 'Go to the Forge to get more.'}
+                </Button>
             </div>
-            <CardDescription>{cardDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                    <FormLabel>{language === 'Tagalog' ? 'Wika para sa Rekomendasyon' : 'Language for Recommendation'}</FormLabel>
-                    <Tabs defaultValue={language} onValueChange={(value) => setLanguage(value as 'English' | 'Tagalog')} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="English">English</TabsTrigger>
-                            <TabsTrigger value="Tagalog">Tagalog</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-              <FormField
-                control={form.control}
-                name="spiritualNeed"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{formLabel}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={formPlaceholder}
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={loading || !userProfile || !hasCharges}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                {loading ? loadingText : buttonText}
-              </Button>
-            </form>
-          </Form>
-           {!hasCharges && (
-                <div className="text-center mt-4 text-sm text-muted-foreground">
-                    <p>You're out of charges for the AI Helper.</p>
-                    <Button variant="link" onClick={() => router.push('/dashboard/forge')}>
-                       <Hammer className="mr-2" /> Go to the Forge to get more.
-                    </Button>
-                </div>
-            )}
-        </CardContent>
-      </Card>
+        )}
       
       {error && <div className="text-destructive text-center">{error}</div>}
 
       {recommendation && <RecommendationCard recommendation={recommendation} language={language} />}
+      {sermonGuide && <SermonGuideCard sermonGuide={sermonGuide} language={language} />}
     </div>
   );
 }
