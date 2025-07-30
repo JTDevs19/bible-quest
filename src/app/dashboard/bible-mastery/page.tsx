@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key, HeartHalf } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -327,7 +327,14 @@ export default function BibleMasteryPage() {
         if (hearts >= i * 2) {
             heartIcons.push(<Heart key={`heart-full-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
         } else if (hearts === i * 2 - 1) {
-            heartIcons.push(<HeartHalf key={`heart-half-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
+            heartIcons.push(
+                <div key={`heart-half-${i}`} className="relative w-5 h-5">
+                    <Heart className="w-5 h-5 text-red-500 fill-muted" />
+                    <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                    </div>
+                </div>
+            );
         } else {
             heartIcons.push(<Heart key={`heart-empty-${i}`} className="w-5 h-5 text-muted-foreground/30" />);
         }
