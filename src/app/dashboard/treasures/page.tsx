@@ -35,31 +35,46 @@ const newAdventurerChest = {
 export default function TreasuresPage() {
     const { wisdomKeys, treasuresOpened, openTreasure, addExp, addShields, addHints, addGold } = useUserProgress();
     const { toast } = useToast();
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isRewardsOpen, setIsRewardsOpen] = useState(false);
 
     const isChestOpened = treasuresOpened[newAdventurerChest.id];
 
     const handleOpenChest = () => {
-        if (wisdomKeys >= newAdventurerChest.cost && !isChestOpened) {
-            openTreasure(newAdventurerChest.id, newAdventurerChest.cost);
-            addShields(newAdventurerChest.rewards.shields * 2); // 5 full shields
-            addExp(newAdventurerChest.rewards.exp);
-            addHints(newAdventurerChest.rewards.hints);
-            addGold(newAdventurerChest.rewards.gold);
-
-            toast({
-                title: `${newAdventurerChest.name} Opened!`,
-                description: `You've received your starting supplies.`,
-            });
-        } else {
+        if (isChestOpened) {
              toast({
-                variant: 'destructive',
-                title: 'Cannot Open Chest',
-                description: isChestOpened ? "You have already opened this chest." : `You need ${newAdventurerChest.cost} key to open this.`,
+                variant: 'default',
+                title: 'Already Opened',
+                description: "You have already claimed the rewards from this chest.",
             });
+            return;
         }
-        setIsConfirmOpen(false);
+
+        if (wisdomKeys < newAdventurerChest.cost) {
+            toast({
+                variant: 'destructive',
+                title: 'Not Enough Keys',
+                description: `You need ${newAdventurerChest.cost} Wisdom Key to open this.`,
+            });
+            return;
+        }
+        
+        setIsRewardsOpen(true);
     };
+
+    const handleClaimRewards = () => {
+        openTreasure(newAdventurerChest.id, newAdventurerChest.cost);
+        addShields(newAdventurerChest.rewards.shields * 2); // 5 full shields
+        addExp(newAdventurerChest.rewards.exp);
+        addHints(newAdventurerChest.rewards.hints);
+        addGold(newAdventurerChest.rewards.gold);
+
+        toast({
+            title: `${newAdventurerChest.name} Opened!`,
+            description: `Your rewards have been added to your inventory.`,
+        });
+        
+        setIsRewardsOpen(false);
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8" id="treasures-page">
@@ -85,19 +100,12 @@ export default function TreasuresPage() {
                             <CardDescription>{newAdventurerChest.description}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow flex flex-col justify-end text-center space-y-4">
-                             <div className="text-left text-sm space-y-2 p-4 bg-muted/50 rounded-lg">
-                                <h4 className="font-semibold text-center mb-2">Contains:</h4>
-                                <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Shield />Shields</span> <strong>x{newAdventurerChest.rewards.shields}</strong></p>
-                                <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Lightbulb />Hints</span> <strong>x{newAdventurerChest.rewards.hints}</strong></p>
-                                <p className="flex items-center justify-between"><span className="flex items-center gap-2"><Star />Experience</span> <strong>+{newAdventurerChest.rewards.exp} EXP</strong></p>
-                                <p className="flex items-center justify-between"><span className="flex items-center gap-2"><GoldIcon />Gold</span> <strong>{newAdventurerChest.rewards.gold}</strong></p>
-                            </div>
                             {isChestOpened ? (
                                 <Button disabled className="w-full" size="lg">
                                     <CheckCircle className="mr-2"/> Opened
                                 </Button>
                             ) : (
-                                <Button className="w-full" size="lg" onClick={() => setIsConfirmOpen(true)} disabled={wisdomKeys < newAdventurerChest.cost}>
+                                <Button className="w-full" size="lg" onClick={handleOpenChest} disabled={wisdomKeys < newAdventurerChest.cost}>
                                     <div className="flex items-center">
                                         Open for {newAdventurerChest.cost} <Key className="w-4 h-4 mx-2" />
                                     </div>
@@ -120,19 +128,28 @@ export default function TreasuresPage() {
 
             </div>
 
-             <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+             <Dialog open={isRewardsOpen} onOpenChange={setIsRewardsOpen}>
                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Open the {newAdventurerChest.name}?</DialogTitle>
+                    <DialogHeader className="text-center">
+                        <div className="mx-auto bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-full mb-4 w-fit">
+                            <Gift className="w-10 h-10 text-yellow-500" />
+                        </div>
+                        <DialogTitle className="font-headline text-2xl">You found a treasure!</DialogTitle>
                         <DialogDescription>
-                            This will cost {newAdventurerChest.cost} Wisdom Key. This action cannot be undone.
+                            Here's what was inside the {newAdventurerChest.name}:
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <div className="text-left text-base space-y-3 p-4 my-4 bg-muted/50 rounded-lg">
+                        <p className="flex items-center justify-between"><span className="flex items-center gap-3"><Shield />Shields</span> <strong>x{newAdventurerChest.rewards.shields}</strong></p>
+                        <p className="flex items-center justify-between"><span className="flex items-center gap-3"><Lightbulb />Hints</span> <strong>x{newAdventurerChest.rewards.hints}</strong></p>
+                        <p className="flex items-center justify-between"><span className="flex items-center gap-3"><Star />Experience</span> <strong>+{newAdventurerChest.rewards.exp} EXP</strong></p>
+                        <p className="flex items-center justify-between"><span className="flex items-center gap-3"><GoldIcon />Gold</span> <strong>{newAdventurerChest.rewards.gold}</strong></p>
+                    </div>
+                    <DialogFooter className="sm:justify-between gap-2">
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">Close</Button>
                         </DialogClose>
-                        <Button onClick={handleOpenChest}>Confirm & Open</Button>
+                        <Button onClick={handleClaimRewards}>Claim Rewards</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
