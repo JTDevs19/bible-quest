@@ -24,6 +24,8 @@ import {
   Gift,
   Lock,
   ChevronUp,
+  Heart,
+  Key,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -104,32 +106,42 @@ function DashboardNav() {
 }
 
 function UserProgressHeader() {
-    const { level, exp, expForNextLevel, lastLevelUpExp } = useUserProgress();
+    const { level, exp, expForNextLevel, lastLevelUpExp, hearts, wisdomKeys } = useUserProgress();
     const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
     return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <div className="flex items-center gap-3 cursor-pointer">
-                    <div className="text-right">
-                        <p className="font-bold text-sm">Level {level}</p>
-                        <p className="text-xs text-muted-foreground">EXP: {exp - lastLevelUpExp}/{expForNextLevel - lastLevelUpExp}</p>
+        <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 font-semibold text-sm">
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                <span>{hearts}</span>
+            </div>
+             <div className="flex items-center gap-2 font-semibold text-sm">
+                <Key className="w-5 h-5 text-yellow-500" />
+                <span>{wisdomKeys}</span>
+            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-3 cursor-pointer">
+                        <div className="text-right">
+                            <p className="font-bold text-sm">Level {level}</p>
+                            <p className="text-xs text-muted-foreground">EXP: {exp - lastLevelUpExp}/{expForNextLevel - lastLevelUpExp}</p>
+                        </div>
+                        <Progress value={progressPercentage} className="w-24 h-2" />
                     </div>
-                    <Progress value={progressPercentage} className="w-24 h-2" />
-                </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-64">
-                <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Level {level}</h4>
-                    <p className="text-sm text-muted-foreground">Your spiritual growth progress.</p>
-                    <Progress value={progressPercentage} className="w-full h-2" />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{exp - lastLevelUpExp} EXP</span>
-                        <span>{expForNextLevel - lastLevelUpExp} EXP to Level Up</span>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Level {level}</h4>
+                        <p className="text-sm text-muted-foreground">Your spiritual growth progress.</p>
+                        <Progress value={progressPercentage} className="w-full h-2" />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{exp - lastLevelUpExp} EXP</span>
+                            <span>{expForNextLevel - lastLevelUpExp} EXP to Level Up</span>
+                        </div>
                     </div>
-                </div>
-            </PopoverContent>
-        </Popover>
+                </PopoverContent>
+            </Popover>
+        </div>
     );
 }
 

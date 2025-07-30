@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -54,7 +54,7 @@ const generateLevelConfig = () => {
                 level: levelCounter,
                 booksToArrange: tier.books,
                 rounds: tier.rounds,
-                expPerRound: levelCounter // EXP reward equals the level number
+                expPerRound: levelCounter,
             });
             levelCounter++;
         }
@@ -100,12 +100,14 @@ export default function BibleMasteryPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showNoHeartsDialog, setShowNoHeartsDialog] = useState(false);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-  const { addExp } = useUserProgress();
+  const { addExp, hearts, spendHeart, refillHearts, wisdomKeys, setWisdomKeys } = useUserProgress();
+  const REFILL_COST = 10;
 
   useEffect(() => {
     setIsClient(true);
@@ -196,7 +198,8 @@ export default function BibleMasteryPage() {
     if(isOrderCorrect) {
         const hasCompletedBefore = progress[currentLevel]?.[currentRound];
         if (!hasCompletedBefore) {
-            addExp(levelConfig.expPerRound);
+            const expGained = levelConfig.expPerRound * (levelConfig.rounds > 1 ? 1 : 1);
+            addExp(expGained);
         }
 
         setProgress(prev => ({
@@ -207,6 +210,18 @@ export default function BibleMasteryPage() {
             }
         }));
         setTimeout(() => setShowSuccessDialog(true), 300);
+    } else {
+        if (!spendHeart()) {
+            setShowNoHeartsDialog(true);
+        }
+    }
+  };
+
+  const handleRefillHearts = () => {
+    if (wisdomKeys >= REFILL_COST) {
+        setWisdomKeys(k => k - REFILL_COST);
+        refillHearts();
+        setShowNoHeartsDialog(false);
     }
   };
 
@@ -319,7 +334,7 @@ export default function BibleMasteryPage() {
            <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
            <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
            <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-yellow-500"/> {totalStars} / {totalRounds}
+                <Heart className="w-5 h-5 text-red-500 fill-red-500"/> {hearts}
            </div>
            <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
@@ -357,9 +372,9 @@ export default function BibleMasteryPage() {
                     ))}
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
-                    {isCorrect === null && <Button onClick={checkOrder}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
+                    {isCorrect === null && <Button onClick={checkOrder} disabled={hearts <= 0}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
                     {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{language === 'en' ? 'Correct! Next' : 'Tama! Susunod'}</Button>}
-                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive"><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
+                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive" disabled={hearts <= 0}><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
                 </div>
             </CardContent>
         </Card>
@@ -396,6 +411,23 @@ export default function BibleMasteryPage() {
             <AlertDialogFooter>
                 <AlertDialogAction onClick={handleNext} className="w-full">
                    {language === 'en' ? 'Next' : 'Susunod'}
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    
+    <AlertDialog open={showNoHeartsDialog} onOpenChange={setShowNoHeartsDialog}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Out of Hearts!</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You've run out of chances. Refill your hearts to keep playing. It costs {REFILL_COST} Wisdom Keys to get 5 more hearts.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+                <AlertDialogAction onClick={handleRefillHearts} disabled={wisdomKeys < REFILL_COST}>
+                    <Key className="mr-2 h-4 w-4" /> Refill Hearts ({wisdomKeys} Keys)
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>

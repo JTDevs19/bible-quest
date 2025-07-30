@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp, Key } from 'lucide-react';
+import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp, Key, Heart } from 'lucide-react';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Progress } from '@/components/ui/progress';
 
@@ -32,7 +32,7 @@ type BadgeInfo = {
 
 
 export default function ProgressPage() {
-  const { level, exp, expForNextLevel, lastLevelUpExp, wisdomKeys } = useUserProgress();
+  const { level, exp, expForNextLevel, lastLevelUpExp, wisdomKeys, hearts } = useUserProgress();
   const [badges, setBadges] = useState<BadgeInfo[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -107,19 +107,33 @@ export default function ProgressPage() {
                 </div>
             </CardContent>
         </Card>
-
-        <Card>
-            <CardHeader>
-                 <div className="flex items-center justify-between">
-                    <CardTitle className="font-headline text-xl">Wisdom Keys</CardTitle>
-                    <Key className="w-6 h-6 text-muted-foreground"/>
-                </div>
-                 <CardDescription>Earn Keys by leveling up. Use them for hints and reveals in games.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <p className="text-4xl font-bold">{wisdomKeys}</p>
-            </CardContent>
-        </Card>
+        
+        <div className="grid md:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="font-headline text-xl">Wisdom Keys</CardTitle>
+                        <Key className="w-6 h-6 text-muted-foreground"/>
+                    </div>
+                    <CardDescription>Earn Keys by leveling up. Use them for hints and refills.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-4xl font-bold">{wisdomKeys}</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="font-headline text-xl">Hearts</CardTitle>
+                        <Heart className="w-6 h-6 text-muted-foreground"/>
+                    </div>
+                    <CardDescription>Your chances for challenging games. These are restored when you level up.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-4xl font-bold">{hearts}</p>
+                </CardContent>
+            </Card>
+        </div>
 
         <Card>
             <CardHeader>
