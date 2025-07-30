@@ -76,6 +76,7 @@ function DashboardNav() {
     },
     { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
+    { id: 'nav-treasures', href: '/dashboard/treasures', icon: Gift, label: 'Treasures' },
     { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
     { id: 'nav-forge', href: '/dashboard/forge', icon: Hammer, label: 'The Forge' },
   ];
@@ -112,7 +113,6 @@ function UserProgressHeader() {
     const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
     const ShieldDisplay = () => {
-        const fullShields = Math.floor(shields / 2);
         const hasHalfShield = shields % 2 !== 0;
 
         return (
@@ -126,11 +126,11 @@ function UserProgressHeader() {
                             </div>
                         </>
                     ) : (
-                         <Shield className={cn("w-5 h-5 text-primary", fullShields > 0 ? "fill-primary" : "fill-muted")} />
+                         <Shield className={cn("w-5 h-5 text-primary", shields > 0 ? "fill-primary" : "fill-muted")} />
                     )}
                 </div>
                 <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
-                    {fullShields}
+                    {Math.floor(shields / 2)}
                 </span>
             </div>
         );

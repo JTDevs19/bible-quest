@@ -20,6 +20,7 @@ const initialState = {
     wisdomKeys: 5,
     shields: MAX_SHIELDS,
     hints: STARTING_HINTS,
+    gold: 0,
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
 }
@@ -30,6 +31,7 @@ interface UserProgressState {
     wisdomKeys: number;
     shields: number;
     hints: number;
+    gold: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
     addExp: (amount: number) => void;
@@ -38,6 +40,7 @@ interface UserProgressState {
     addShields: (amount: number) => void;
     useHint: () => boolean;
     addHints: (amount: number) => void;
+    addGold: (amount: number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
 }
@@ -102,6 +105,9 @@ export const useUserProgress = create<UserProgressState>()(
             },
             addHints: (amount: number) => {
                 set(state => ({ hints: state.hints + amount }));
+            },
+            addGold: (amount: number) => {
+                set(state => ({ gold: state.gold + amount }));
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));
