@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -18,16 +19,17 @@ const PersonalizedVerseRecommendationsInputSchema = z.object({
   spiritualLevel: z
     .string()
     .describe('The spiritual maturity level of the user (Beginner, Growing, Mature).'),
+  language: z.enum(['English', 'Tagalog']).describe("The desired language for the recommendation.")
 });
 export type PersonalizedVerseRecommendationsInput = z.infer<
   typeof PersonalizedVerseRecommendationsInputSchema
 >;
 
 const PersonalizedVerseRecommendationsOutputSchema = z.object({
-  verse: z.string().describe('A relevant Bible verse addressing the user need.'),
+  verse: z.string().describe('A relevant Bible verse addressing the user need, in the requested language.'),
   reason: z
     .string()
-    .describe('Explanation of why this verse is relevant to the user need.'),
+    .describe('Explanation of why this verse is relevant to the user need, in the requested language.'),
 });
 export type PersonalizedVerseRecommendationsOutput = z.infer<
   typeof PersonalizedVerseRecommendationsOutputSchema
@@ -47,13 +49,16 @@ const prompt = ai.definePrompt({
 
   Based on the user's spiritual need and spiritual maturity level, recommend a single relevant Bible verse.
   Also, provide a brief explanation of why this verse is relevant to the user's need.
+  
+  IMPORTANT: The entire response, including the verse and the reason, MUST be in the following language: {{{language}}}.
 
   Spiritual Need: {{{spiritualNeed}}}
   Spiritual Level: {{{spiritualLevel}}}
+  Language: {{{language}}}
   
   Format the response as follows:
-  Verse: [Bible Verse]
-  Reason: [Explanation] `,
+  Verse: [Bible Verse in specified language]
+  Reason: [Explanation in specified language] `,
 });
 
 const personalizedVerseRecommendationsFlow = ai.defineFlow(

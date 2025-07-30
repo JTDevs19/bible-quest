@@ -1,3 +1,4 @@
+
 'use server';
 
 import { personalizedVerseRecommendations, type PersonalizedVerseRecommendationsInput } from '@/ai/flows/personalized-verse-recommendations';
@@ -6,6 +7,7 @@ import { z } from 'zod';
 const formSchema = z.object({
   spiritualNeed: z.string().min(10, "Please describe your need in a bit more detail."),
   spiritualLevel: z.string(),
+  language: z.enum(['English', 'Tagalog']),
 });
 
 export async function getVerseRecommendation(
