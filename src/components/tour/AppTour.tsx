@@ -10,7 +10,10 @@ const AppTour = () => {
     useEffect(() => {
         const tourCompleted = localStorage.getItem('bibleQuestsTourCompleted');
         if (tourCompleted !== 'true') {
-            setRun(true);
+            // Use a timeout to ensure the dashboard has mounted
+            setTimeout(() => {
+                setRun(true);
+            }, 500);
         }
     }, []);
     
@@ -37,7 +40,7 @@ const AppTour = () => {
         },
         {
             target: '#nav-verse-memory',
-            content: 'In Verse Memory, you can practice memorizing key Bible verses by filling in the blanks.',
+            content: 'In Verse Memory, you can practice memorizing key Bible verses.',
             placement: 'right',
         },
         {
@@ -47,17 +50,23 @@ const AppTour = () => {
         },
         {
             target: '#nav-daily-challenge',
-            content: 'Check back every day for a new puzzle or challenge to earn bonus stars!',
+            content: 'Check back every day for a new puzzle or challenge to earn bonus EXP!',
             placement: 'right',
         },
         {
-            target: '#main-content',
-            content: 'Your selected game or activity will appear here in the main content area.',
-            placement: 'auto',
+            target: '#nav-treasures',
+            content: 'Visit the Treasures page to unlock special rewards.',
+            placement: 'right',
+            title: 'Your First Quest!'
+        },
+        {
+            target: '#new-adventurer-chest',
+            content: 'As a new adventurer, you have a special chest waiting for you. It costs 1 Wisdom Key to open (you start with 5!). Click it to see the rewards and open it!',
+            placement: 'bottom',
         },
         {
             target: '#main-header',
-            content: 'Your user profile is shown here. You can find settings and other options in this area.',
+            content: "Here you can track your Level, EXP, Shields (your 'lives' in games), and Wisdom Keys. Keep an eye on these as you play!",
             placement: 'bottom',
         },
     ];

@@ -13,16 +13,22 @@ const getExpForLevel = (level: number) => {
 const KEYS_PER_LEVEL_UP = 5;
 const MAX_SHIELDS = 10; // 5 full shields, 10 half-shields
 const STARTING_HINTS = 5;
+const STARTING_KEYS = 5;
+
+type TreasuresState = {
+    [key: string]: boolean;
+}
 
 const initialState = {
     level: 1,
     exp: 0,
-    wisdomKeys: 5,
+    wisdomKeys: STARTING_KEYS,
     shields: MAX_SHIELDS,
     hints: STARTING_HINTS,
     gold: 0,
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
+    treasuresOpened: {} as TreasuresState,
 }
 
 interface UserProgressState {
@@ -34,6 +40,7 @@ interface UserProgressState {
     gold: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
+    treasuresOpened: TreasuresState;
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     spendChance: () => boolean;
@@ -41,6 +48,7 @@ interface UserProgressState {
     useHint: () => boolean;
     addHints: (amount: number) => void;
     addGold: (amount: number) => void;
+    openTreasure: (treasureId: string, cost: number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
 }
@@ -108,6 +116,20 @@ export const useUserProgress = create<UserProgressState>()(
             },
             addGold: (amount: number) => {
                 set(state => ({ gold: state.gold + amount }));
+            },
+            openTreasure: (treasureId: string, cost: number) => {
+                set(state => {
+                    if (state.wisdomKeys >= cost && !state.treasuresOpened[treasureId]) {
+                        return {
+                            wisdomKeys: state.wisdomKeys - cost,
+                            treasuresOpened: {
+                                ...state.treasuresOpened,
+                                [treasureId]: true,
+                            }
+                        }
+                    }
+                    return state;
+                });
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));
