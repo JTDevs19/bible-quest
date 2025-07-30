@@ -13,6 +13,7 @@ import { useUserProgress } from '@/hooks/use-user-progress';
 import type { SavedSermonNote } from '@/hooks/use-user-progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface SermonGuideDialogProps {
   isOpen: boolean;
@@ -25,7 +26,6 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [guide, setGuide] = useState<SavedSermonNote>(initialGuide);
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
-    const [personalNotes, setPersonalNotes] = useState('');
     const { toast } = useToast();
     const { saveNote, savedNotes, updateNote } = useUserProgress();
 
@@ -33,25 +33,31 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         const savedNote = savedNotes.find(n => n.title.toLowerCase() === initialGuide.title.toLowerCase());
         setGuide(savedNote || initialGuide);
         setLanguage(initialLanguage);
-        setPersonalNotes(savedNote?.personalNotes || '');
     }, [initialGuide, initialLanguage, savedNotes, isOpen]);
 
     const isNoteSaved = savedNotes.some(n => n.title.toLowerCase() === guide.title.toLowerCase());
 
+    const handleFieldChange = (field: keyof SavedSermonNote, value: string) => {
+        setGuide(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handlePointChange = (pointIndex: number, field: keyof SavedSermonNote['points'][0], value: string) => {
+        setGuide(prev => {
+            const newPoints = [...prev.points];
+            newPoints[pointIndex] = { ...newPoints[pointIndex], [field]: value };
+            return { ...prev, points: newPoints };
+        });
+    };
+
     const handleSaveNote = () => {
-        const noteToSave: SavedSermonNote = {
-            ...guide,
-            personalNotes: personalNotes,
-        };
-        
         if (isNoteSaved) {
-            updateNote(noteToSave);
+            updateNote(guide);
             toast({
                 title: 'Note Updated!',
-                description: 'Your personal notes have been saved.',
+                description: 'Your changes have been saved to your notes.',
             });
         } else {
-            const success = saveNote(noteToSave);
+            const success = saveNote(guide);
             if (success) {
                 toast({
                     title: 'Sermon Guide Saved!',
@@ -71,7 +77,19 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         setIsTranslating(true);
         try {
             const targetLanguage = language === 'English' ? 'Tagalog' : 'English';
-            const translatedGuide = await getTranslatedSermonGuide(guide, targetLanguage);
+            // We only translate the core guide, not personal notes
+            const translatableGuide: SermonGuideOutput = {
+                title: guide.title,
+                introduction: guide.introduction,
+                points: guide.points.map(p => ({
+                    pointTitle: p.pointTitle,
+                    pointDetails: p.pointDetails,
+                    verseReference: p.verseReference,
+                    verseText: p.verseText,
+                })),
+                conclusion: guide.conclusion,
+            };
+            const translatedGuide = await getTranslatedSermonGuide(translatableGuide, targetLanguage);
             setGuide(prev => ({...prev, ...translatedGuide})); // Keep personal notes
             setLanguage(targetLanguage);
         } catch (error) {
@@ -98,11 +116,11 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         content += '--------------------\n\n';
         content += `Conclusion:\n${guide.conclusion}\n\n`;
         
-        if (personalNotes) {
+        if (guide.personalNotes) {
             content += '====================\n';
             content += 'MY PERSONAL NOTES:\n';
             content += '====================\n';
-            content += `${personalNotes}\n`;
+            content += `${guide.personalNotes}\n`;
         }
 
         const blob = new Blob([content], { type: 'text/plain' });
@@ -120,24 +138,52 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
-            <DialogHeader className="text-center shrink-0">
-                <DialogTitle className="font-headline text-2xl text-primary">{guide.title}</DialogTitle>
-                <DialogDescription className="font-serif italic">{guide.introduction}</DialogDescription>
+            <DialogHeader className="text-center shrink-0 border-b pb-4">
+                 <Input 
+                    value={guide.title}
+                    onChange={(e) => handleFieldChange('title', e.target.value)}
+                    className="font-headline text-2xl text-primary text-center h-auto border-none focus-visible:ring-1 focus-visible:ring-ring"
+                 />
+                <Textarea 
+                    value={guide.introduction}
+                    onChange={(e) => handleFieldChange('introduction', e.target.value)}
+                    className="font-serif italic text-center border-none focus-visible:ring-1 focus-visible:ring-ring"
+                    rows={3}
+                />
             </DialogHeader>
             <div className="space-y-4 overflow-y-auto flex-1 p-1 pr-4">
                 <Accordion type="single" collapsible defaultValue="point-0" className="w-full">
                     {guide.points.map((point, index) => (
                         <AccordionItem value={`point-${index}`} key={index}>
                             <AccordionTrigger className="font-headline text-lg hover:no-underline text-left">
-                                {language === 'Tagalog' ? `Punto ${index + 1}: ` : `Point ${index + 1}: `} {point.pointTitle}
+                                <Input 
+                                    value={point.pointTitle}
+                                    onChange={(e) => handlePointChange(index, 'pointTitle', e.target.value)}
+                                    className="w-full border-none focus-visible:ring-1 focus-visible:ring-ring"
+                                />
                             </AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-2">
-                                <p className="text-muted-foreground">{point.pointDetails}</p>
+                                <Textarea 
+                                    value={point.pointDetails}
+                                    onChange={(e) => handlePointChange(index, 'pointDetails', e.target.value)}
+                                    className="text-muted-foreground border-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    rows={4}
+                                />
                                 <div className="bg-background/50 p-3 rounded-md border">
-                                    <p className="font-bold text-sm flex items-center gap-2 mb-1"><BookOpen /> {point.verseReference}</p>
-                                    <blockquote className="text-sm font-serif italic border-l-2 pl-3 border-primary/40">
-                                        "{point.verseText}"
-                                    </blockquote>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <BookOpen /> 
+                                        <Input
+                                            value={point.verseReference}
+                                            onChange={(e) => handlePointChange(index, 'verseReference', e.target.value)}
+                                            className="font-bold text-sm h-8 border-none focus-visible:ring-1 focus-visible:ring-ring"
+                                        />
+                                    </div>
+                                    <Textarea
+                                        value={point.verseText}
+                                        onChange={(e) => handlePointChange(index, 'verseText', e.target.value)}
+                                        className="text-sm font-serif italic border-l-2 pl-3 border-primary/40 h-auto border-none focus-visible:ring-1 focus-visible:ring-ring"
+                                        rows={4}
+                                    />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -145,15 +191,20 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                 </Accordion>
                 <div className="mt-6 border-t pt-4">
                     <h3 className="font-headline text-lg text-center font-bold mb-2">{language === 'Tagalog' ? 'Konklusyon' : 'Conclusion'}</h3>
-                    <p className="text-muted-foreground text-center font-serif italic">{guide.conclusion}</p>
+                     <Textarea 
+                        value={guide.conclusion}
+                        onChange={(e) => handleFieldChange('conclusion', e.target.value)}
+                        className="text-muted-foreground text-center font-serif italic border-none focus-visible:ring-1 focus-visible:ring-ring"
+                        rows={4}
+                    />
                 </div>
                 <div className="mt-6 border-t pt-4">
                     <Label htmlFor="personal-notes" className="font-headline text-lg font-bold flex items-center gap-2 mb-2"><FilePenLine /> My Personal Notes</Label>
                     <Textarea 
                         id="personal-notes"
                         placeholder="Add your own stories, reflections, or application points here..."
-                        value={personalNotes}
-                        onChange={(e) => setPersonalNotes(e.target.value)}
+                        value={guide.personalNotes || ''}
+                        onChange={(e) => handleFieldChange('personalNotes', e.target.value)}
                         rows={5}
                         className="mt-2"
                     />
