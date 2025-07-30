@@ -15,8 +15,7 @@ const verseFormSchema = z.object({
 export async function getVerseRecommendation(
   input: PersonalizedVerseRecommendationsInput
 ): Promise<{ success: boolean; recommendation?: any; message?: string }> {
-  const { getState, setState } = useUserProgress;
-  const { aiVerseCharges, denarius } = getState();
+  const { aiVerseCharges, denarius } = useUserProgress.getState();
 
   if (aiVerseCharges <= 0 && denarius <= 0) {
     return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
@@ -32,9 +31,9 @@ export async function getVerseRecommendation(
     const result = await personalizedVerseRecommendations(validatedInput.data);
     
     if (aiVerseCharges > 0) {
-        setState({ aiVerseCharges: aiVerseCharges - 1 });
+        useUserProgress.setState({ aiVerseCharges: aiVerseCharges - 1 });
     } else {
-        setState({ denarius: denarius - 1 });
+        useUserProgress.setState({ denarius: denarius - 1 });
     }
 
     return { success: true, recommendation: result };
@@ -54,8 +53,7 @@ const sermonFormSchema = z.object({
 export async function getSermonGuide(
   input: SermonGuideInput
 ): Promise<{ success: boolean; sermonGuide?: any; message?: string }> {
-  const { getState, setState } = useUserProgress;
-  const { aiVerseCharges, denarius } = getState();
+  const { aiVerseCharges, denarius } = useUserProgress.getState();
 
   if (aiVerseCharges <= 0 && denarius <= 0) {
     return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
@@ -71,9 +69,9 @@ export async function getSermonGuide(
     const result = await generateSermonGuide(validatedInput.data);
     
     if (aiVerseCharges > 0) {
-        setState({ aiVerseCharges: aiVerseCharges - 1 });
+        useUserProgress.setState({ aiVerseCharges: aiVerseCharges - 1 });
     } else {
-        setState({ denarius: denarius - 1 });
+        useUserProgress.setState({ denarius: denarius - 1 });
     }
 
     return { success: true, sermonGuide: result };
