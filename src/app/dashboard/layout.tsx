@@ -27,6 +27,7 @@ import {
   Shield,
   Key,
   Hammer,
+  NotebookText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -78,6 +79,7 @@ function DashboardNav() {
     { id: 'nav-treasures', href: '/dashboard/treasures', icon: Gift, label: 'Treasures' },
     { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
     { id: 'nav-forge', href: '/dashboard/forge', icon: Hammer, label: 'The Forge' },
+    { id: 'nav-notes', href: '/dashboard/notes', icon: NotebookText, label: 'My Notes' },
   ];
 
   return (

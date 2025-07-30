@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { BookOpen, Clipboard, Languages, Loader2 } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getTranslatedSermonGuide } from './actions';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 interface SermonGuideDialogProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
     const { toast } = useToast();
+    const { saveNote } = useUserProgress();
 
     useEffect(() => {
         setGuide(initialGuide);
@@ -29,50 +31,20 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     }, [initialGuide, initialLanguage]);
 
 
-    const handleCopyToClipboard = () => {
-        const textToCopy = `
-Sermon Title: ${guide.title}
-
-Introduction:
-${guide.introduction}
-
----
-
-Point 1: ${guide.points[0].pointTitle}
-${guide.points[0].pointDetails}
-Verse: ${guide.points[0].verseReference} - "${guide.points[0].verseText}"
-
----
-
-Point 2: ${guide.points[1].pointTitle}
-${guide.points[1].pointDetails}
-Verse: ${guide.points[1].verseReference} - "${guide.points[1].verseText}"
-
----
-
-Point 3: ${guide.points[2].pointTitle}
-${guide.points[2].pointDetails}
-Verse: ${guide.points[2].verseReference} - "${guide.points[2].verseText}"
-
----
-
-Conclusion:
-${guide.conclusion}
-        `.trim();
-
-        navigator.clipboard.writeText(textToCopy).then(() => {
+    const handleSaveNote = () => {
+        const success = saveNote(guide);
+        if (success) {
             toast({
-                title: 'Sermon Guide Copied!',
-                description: 'The guide has been copied to your clipboard.',
+                title: 'Sermon Guide Saved!',
+                description: 'The guide has been added to your "My Notes" page.',
             });
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
-            toast({
+        } else {
+             toast({
                 variant: 'destructive',
-                title: 'Failed to Copy',
-                description: 'Could not copy the guide to your clipboard.',
+                title: 'Note Already Exists',
+                description: 'A note with this title has already been saved.',
             });
-        });
+        }
     };
     
     const handleTranslate = async () => {
@@ -130,8 +102,8 @@ ${guide.conclusion}
                     {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                     {language === 'English' ? 'Translate to Tagalog' : 'Translate to English'}
                 </Button>
-                <Button onClick={handleCopyToClipboard}>
-                    <Clipboard className="mr-2" />
+                <Button onClick={handleSaveNote}>
+                    <Save className="mr-2" />
                     Save to Notes
                 </Button>
             </DialogFooter>

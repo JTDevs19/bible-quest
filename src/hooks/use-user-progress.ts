@@ -4,6 +4,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
+
 
 // Define the experience required for each level
 const getExpForLevel = (level: number) => {
@@ -44,6 +46,7 @@ const initialState = {
         characterAdventures: false,
         bibleMastery: false,
     } as TrainingState,
+    savedNotes: [] as SermonGuideOutput[],
 }
 
 interface UserProgressState {
@@ -59,6 +62,7 @@ interface UserProgressState {
     expForNextLevel: number;
     treasuresOpened: TreasuresState;
     training: TrainingState;
+    savedNotes: SermonGuideOutput[];
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     addWisdomKeys: (amount: number) => void;
@@ -71,6 +75,8 @@ interface UserProgressState {
     addDenarius: (amount: number) => void;
     openTreasure: (treasureId: string, cost: number) => void;
     completeTraining: (game: keyof TrainingState) => void;
+    saveNote: (note: SermonGuideOutput) => boolean;
+    deleteNote: (noteTitle: string) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
 }
@@ -177,6 +183,22 @@ export const useUserProgress = create<UserProgressState>()(
                         ...state.training,
                         [game]: true,
                     }
+                }));
+            },
+            saveNote: (note: SermonGuideOutput) => {
+                const { savedNotes } = get();
+                const isDuplicate = savedNotes.some(n => n.title.toLowerCase() === note.title.toLowerCase());
+                if (isDuplicate) {
+                    return false; // Indicate that save failed
+                }
+                set(state => ({
+                    savedNotes: [...state.savedNotes, note]
+                }));
+                return true; // Indicate success
+            },
+            deleteNote: (noteTitle: string) => {
+                set(state => ({
+                    savedNotes: state.savedNotes.filter(n => n.title !== noteTitle)
                 }));
             },
             setProgress: (progress) => {
