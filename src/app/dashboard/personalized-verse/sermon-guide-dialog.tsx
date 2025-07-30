@@ -31,7 +31,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
 
     useEffect(() => {
         const savedNote = savedNotes.find(n => n.title.toLowerCase() === initialGuide.title.toLowerCase());
-        setGuide(savedNote || initialGuide);
+        setGuide(savedNote || { ...initialGuide, personalNotes: '' });
         setLanguage(initialLanguage);
     }, [initialGuide, initialLanguage, savedNotes, isOpen]);
 
@@ -139,17 +139,21 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
             <DialogHeader className="text-center shrink-0 border-b pb-4">
-                 <Input 
-                    value={guide.title}
-                    onChange={(e) => handleFieldChange('title', e.target.value)}
-                    className="font-headline text-2xl text-primary text-center h-auto border-none focus-visible:ring-1 focus-visible:ring-ring"
-                 />
-                <Textarea 
-                    value={guide.introduction}
-                    onChange={(e) => handleFieldChange('introduction', e.target.value)}
-                    className="font-serif italic text-center border-none focus-visible:ring-1 focus-visible:ring-ring"
-                    rows={3}
-                />
+                 <DialogTitle asChild>
+                     <Input 
+                        value={guide.title}
+                        onChange={(e) => handleFieldChange('title', e.target.value)}
+                        className="font-headline text-2xl text-primary text-center h-auto border-none focus-visible:ring-1 focus-visible:ring-ring"
+                     />
+                 </DialogTitle>
+                <DialogDescription asChild>
+                    <Textarea 
+                        value={guide.introduction}
+                        onChange={(e) => handleFieldChange('introduction', e.target.value)}
+                        className="font-serif italic text-center border-none focus-visible:ring-1 focus-visible:ring-ring"
+                        rows={3}
+                    />
+                </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 overflow-y-auto flex-1 p-1 pr-4">
                 <Accordion type="single" collapsible defaultValue="point-0" className="w-full">
@@ -220,10 +224,17 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                         <Download className="mr-2" />
                         Download
                     </Button>
-                    <Button onClick={handleSaveNote}>
-                        <Save className="mr-2" />
-                        {isNoteSaved ? 'Update Note' : 'Save to Notes'}
-                    </Button>
+                    {isNoteSaved ? (
+                        <Button onClick={handleSaveNote}>
+                            <Save className="mr-2" />
+                            Update Note
+                        </Button>
+                    ) : (
+                        <Button onClick={handleSaveNote}>
+                            <Save className="mr-2" />
+                            Save to Notes
+                        </Button>
+                    )}
                 </div>
             </DialogFooter>
         </DialogContent>
