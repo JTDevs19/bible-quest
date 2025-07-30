@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -37,23 +38,23 @@ const shuffleArray = (array: any[]) => {
 
 const generateLevelConfig = () => {
     const config = [];
-    // Levels 1-5: 4 books, 5 rounds
-    for (let i = 1; i <= 5; i++) config.push({ level: i, booksToArrange: 4, rounds: 5 });
-    // Levels 6-10: 5 books, 5 rounds
-    for (let i = 6; i <= 10; i++) config.push({ level: i, booksToArrange: 5, rounds: 5 });
-    // Levels 11-15: 7 books, 5 rounds
-    for (let i = 11; i <= 15; i++) config.push({ level: i, booksToArrange: 7, rounds: 5 });
-    // Levels 16-20: 8 books, 5 rounds
-    for (let i = 16; i <= 20; i++) config.push({ level: i, booksToArrange: 8, rounds: 5 });
-    // Levels 21-25: 9 books, 5 rounds
-    for (let i = 21; i <= 25; i++) config.push({ level: i, booksToArrange: 9, rounds: 5 });
-    // Levels 26-30: 10 books, 5 rounds
-    for (let i = 26; i <= 30; i++) config.push({ level: i, booksToArrange: 10, rounds: 5 });
+    // Levels 1-5: 4 books, 5 rounds, 1 EXP/round
+    for (let i = 1; i <= 5; i++) config.push({ level: i, booksToArrange: 4, rounds: 5, expPerRound: 1 });
+    // Levels 6-10: 5 books, 5 rounds, 1 EXP/round
+    for (let i = 6; i <= 10; i++) config.push({ level: i, booksToArrange: 5, rounds: 5, expPerRound: 1 });
+    // Levels 11-15: 7 books, 5 rounds, 2 EXP/round
+    for (let i = 11; i <= 15; i++) config.push({ level: i, booksToArrange: 7, rounds: 5, expPerRound: 2 });
+    // Levels 16-20: 8 books, 5 rounds, 2 EXP/round
+    for (let i = 16; i <= 20; i++) config.push({ level: i, booksToArrange: 8, rounds: 5, expPerRound: 2 });
+    // Levels 21-25: 9 books, 5 rounds, 3 EXP/round
+    for (let i = 21; i <= 25; i++) config.push({ level: i, booksToArrange: 9, rounds: 5, expPerRound: 3 });
+    // Levels 26-30: 10 books, 5 rounds, 3 EXP/round
+    for (let i = 26; i <= 30; i++) config.push({ level: i, booksToArrange: 10, rounds: 5, expPerRound: 3 });
     
     // Master Levels
-    config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks });
-    config.push({ level: 32, booksToArrange: newTestamentBooks.length, rounds: 1, title: 'Master Level 2: New Testament', books: newTestamentBooks });
-    config.push({ level: 33, booksToArrange: allBooksEnglish.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooksEnglish });
+    config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks, expPerRound: 50 });
+    config.push({ level: 32, booksToArrange: newTestamentBooks.length, rounds: 1, title: 'Master Level 2: New Testament', books: newTestamentBooks, expPerRound: 50 });
+    config.push({ level: 33, booksToArrange: allBooksEnglish.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooksEnglish, expPerRound: 100 });
     
     return config;
 };
@@ -95,6 +96,7 @@ export default function BibleMasteryPage() {
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
+  const { addExp } = useUserProgress();
 
   useEffect(() => {
     setIsClient(true);
@@ -103,7 +105,7 @@ export default function BibleMasteryPage() {
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   
   const totalStars = Object.values(progress).flatMap(levelProgress => Object.values(levelProgress)).filter(Boolean).length;
-  const totalRounds = levels.reduce((acc, l) => acc + l.rounds, 0);
+  const totalRounds = levels.slice(0, -3).reduce((acc, l) => acc + l.rounds, 0) + 3;
 
   const loadProgress = useCallback(() => {
     if(!isClient) return;
@@ -183,6 +185,11 @@ export default function BibleMasteryPage() {
     const isOrderCorrect = shuffledBooks.every((book, index) => book === correctOrder[index]);
     setIsCorrect(isOrderCorrect);
     if(isOrderCorrect) {
+        const hasCompletedBefore = progress[currentLevel]?.[currentRound];
+        if (!hasCompletedBefore) {
+            addExp(levelConfig.expPerRound);
+        }
+
         setProgress(prev => ({
             ...prev,
             [currentLevel]: {
