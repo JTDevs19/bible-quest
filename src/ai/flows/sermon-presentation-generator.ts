@@ -35,8 +35,27 @@ const SermonPresentationOutputSchema = z.object({
 });
 export type SermonPresentationOutput = z.infer<typeof SermonPresentationOutputSchema>;
 
+// Stricter schema for the intermediate content generation step
+const SlideContentSchema = z.object({
+    titleSlide: z.object({
+        title: z.string(),
+        subtitle: z.string(),
+    }),
+    contentSlides: z.array(z.object({
+        title: z.string(),
+        points: z.array(z.string()),
+    })),
+    conclusionSlide: z.object({
+        title: z.string(),
+        summaryPoints: z.array(z.string()),
+    }),
+});
+
 export async function generateSermonPresentation(input: SermonGuideOutput): Promise<{ presentationDataUri: string }> {
   const presentationContent = await sermonPresentationFlow(input);
+  if (!presentationContent) {
+    throw new Error('Failed to generate presentation content.');
+  }
   const pptxDataUri = await createPresentation(presentationContent);
   return { presentationDataUri: pptxDataUri };
 }
@@ -50,7 +69,12 @@ async function generateImage(prompt: string): Promise<string> {
             responseModalities: ['TEXT', 'IMAGE'],
         },
     });
-    return media!.url;
+    if (!media?.url) {
+        // Fallback to a placeholder if image generation fails
+        console.warn(`Image generation failed for prompt: "${prompt}". Using placeholder.`);
+        return 'https://placehold.co/1280x720.png';
+    }
+    return media.url;
 }
 
 const sermonPresentationFlow = ai.defineFlow(
@@ -64,7 +88,7 @@ const sermonPresentationFlow = ai.defineFlow(
     const contentPrompt = ai.definePrompt({
         name: 'sermonSlideContentPrompt',
         input: { schema: z.any() },
-        output: { schema: z.any() }, // Partial output, without images
+        output: { schema: SlideContentSchema }, // Use the stricter schema here
         prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
 
 Sermon Guide:
@@ -79,6 +103,11 @@ Conclusion: {{{conclusion}}}
     });
 
     const { output: structuredContent } = await contentPrompt(guide);
+    
+    if (!structuredContent?.contentSlides) {
+        throw new Error("AI failed to generate the 'contentSlides' array.");
+    }
+
 
     // 2. Generate images for each slide in parallel
     const [titleImage, conclusionImage, ...contentImages] = await Promise.all([
@@ -93,7 +122,7 @@ Conclusion: {{{conclusion}}}
             ...structuredContent.titleSlide,
             imageDataUri: titleImage,
         },
-        contentSlides: structuredContent.contentSlides.map((slide: any, index: number) => ({
+        contentSlides: structuredContent.contentSlides.map((slide, index) => ({
             ...slide,
             imageDataUri: contentImages[index],
         })),
