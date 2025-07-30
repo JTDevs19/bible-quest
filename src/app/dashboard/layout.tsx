@@ -260,7 +260,7 @@ export default function DashboardLayout({
         <header id="main-header" className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
            <SidebarTrigger className="md:hidden" />
            <div className="flex items-center gap-2">
-            <Avatar>
+            <Avatar className={cn(isAdmin && "border-2 border-primary")}>
               <AvatarFallback>{userProfile.username?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="font-semibold">{userProfile.username}</span>
