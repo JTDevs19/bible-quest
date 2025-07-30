@@ -20,6 +20,7 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 
 const verses = [
@@ -643,7 +644,7 @@ export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [bonusProgress, setBonusProgress] = useState<BonusProgress>({});
-  const { addExp, wisdomKeys, hints, setProgress, spendWisdomKeys, useHint: spendHint } = useUserProgress();
+  const { addExp, wisdomKeys, hints, setProgress, spendWisdomKeys, useHint: spendHint, training, completeTraining } = useUserProgress();
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
   const [language, setLanguage] = useState<'en' | 'fil'>('en');
 
@@ -669,6 +670,8 @@ export default function VerseMemoryPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
+
+  const [runTour, setRunTour] = useState(false);
 
 
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
@@ -721,7 +724,10 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if (training.verseMemory === false) {
+        setTimeout(() => setRunTour(true), 500);
+    }
+  }, [training.verseMemory]);
   
   useEffect(() => {
     loadProgress();
@@ -1173,6 +1179,7 @@ export default function VerseMemoryPage() {
            return (
             <Input
               key={`input-${currentIndex}`}
+              id={`verse-input-${currentIndex}`}
               type="text"
               value={userInputs[currentIndex] || ''}
               onChange={(e) => handleInputChange(currentIndex, e.target.value)}
@@ -1194,6 +1201,7 @@ export default function VerseMemoryPage() {
         return (
           <Label 
             key={`label-${currentIndex}`}
+            id={`verse-label-${currentIndex}`}
             onClick={() => handleLabelClick(currentIndex)}
             className={cn(
               "inline-block text-center border-b-2 border-dashed h-8 leading-7 cursor-pointer px-2 rounded-md",
@@ -1221,6 +1229,57 @@ export default function VerseMemoryPage() {
 
   const currentVerseScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
   
+    const tourSteps: Step[] = [
+        {
+            target: '#verse-memory-card',
+            content: 'Welcome to Verse Memory! Here, you will fill in the missing words to memorize the verse.',
+            placement: 'bottom',
+        },
+        {
+            target: '#verse-label-0',
+            content: 'Click on a blank space to type your answer.',
+            placement: 'bottom',
+        },
+        {
+            target: '#verse-input-0',
+            content: 'Type the first missing word here. For this training, the answer is "God".',
+            placement: 'bottom',
+            // @ts-ignore
+            isFixed: true, 
+        },
+        {
+            target: '#check-answer-button',
+            content: "Once you've filled in all the blanks, click this button to check your answer.",
+            placement: 'top',
+        },
+        {
+            target: '#hint-button',
+            content: 'If you get stuck, you can use a hint! This will cost one Wisdom Key.',
+            placement: 'top',
+        },
+        {
+            target: '#journey-map-button',
+            content: "That's it! You can always check your overall progress on the Journey Map. Enjoy the game!",
+            placement: 'left',
+        },
+    ];
+  
+    const handleJoyrideCallback = (data: CallBackProps) => {
+        const { status, type, index } = data;
+        const finishedStatuses: string[] = ['finished', 'skipped'];
+
+        if (type === 'step:after' && index === 2) {
+             // After showing the input hint, fill it in.
+            handleInputChange(0, 'God');
+        }
+
+        if (finishedStatuses.includes(status)) {
+            setRunTour(false);
+            completeTraining('verseMemory');
+        }
+    };
+
+
   if (!isClient || !currentVerse) {
     return <div>{language === 'fil' ? 'Nagloload...' : 'Loading...'}</div>;
   }
@@ -1241,6 +1300,27 @@ export default function VerseMemoryPage() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
+       <Joyride
+            run={runTour}
+            steps={tourSteps}
+            continuous
+            showProgress
+            showSkipButton
+            callback={handleJoyrideCallback}
+            styles={{
+                options: {
+                    zIndex: 10000,
+                    primaryColor: 'hsl(var(--primary))',
+                    textColor: 'hsl(var(--foreground))',
+                    arrowColor: 'hsl(var(--card))',
+                    backgroundColor: 'hsl(var(--card))',
+                },
+                 buttonClose: { color: 'hsl(var(--muted-foreground))' },
+                 buttonNext: { backgroundColor: 'hsl(var(--primary))' },
+                 buttonBack: { color: 'hsl(var(--muted-foreground))' },
+            }}
+        />
+
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">{language === 'fil' ? 'Hamon sa Pagmemorya ng Talata' : 'Verse Memory Challenge'}</h1>
         <p className="text-muted-foreground">{language === 'fil' ? 'Kabisaduhin ang mga talata sa iba\'t ibang laro at hamon.' : 'Master verses through different games and challenges.'}</p>
@@ -1273,7 +1353,7 @@ export default function VerseMemoryPage() {
                         </Popover>
                         <Dialog open={isJourneyOpen} onOpenChange={setIsJourneyOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
+                                <Button id="journey-map-button" variant="outline" size="icon"><Map className="w-5 h-5"/></Button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md w-full">
                                 <DialogHeader>
@@ -1343,7 +1423,7 @@ export default function VerseMemoryPage() {
                                     </div>
                                 </div>
                             )}
-                            <Card>
+                            <Card id="verse-memory-card">
                                 <CardHeader>
                                 <div className="flex justify-between items-start gap-4">
                                     <Button variant="outline" size="icon" onClick={handlePrevVerse} disabled={currentVerseIndex === 0}>
@@ -1390,10 +1470,10 @@ export default function VerseMemoryPage() {
                                             </Button>
                                         ) : (
                                             <>
-                                            <Button onClick={handleSubmit}>
+                                            <Button id="check-answer-button" onClick={handleSubmit}>
                                                 {language === 'fil' ? 'Suriin ang Sagot' : 'Check My Answer'}
                                             </Button>
-                                            <Button variant="outline" onClick={handleHintClick}>
+                                            <Button id="hint-button" variant="outline" onClick={handleHintClick}>
                                                 <HelpCircle className="mr-2 h-4 w-4"/>
                                                 {language === 'fil' ? `Pahiwatig (${hints})` : `Hint (${hints})`}
                                             </Button>

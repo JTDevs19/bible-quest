@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useUserProgress } from '@/hooks/use-user-progress';
+import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 const triviaLevels = [
   // Level 1
@@ -446,7 +448,8 @@ export default function CharacterAdventuresPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
-    const { addExp } = useUserProgress();
+    const { addExp, training, completeTraining } = useUserProgress();
+    const [runTour, setRunTour] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -455,7 +458,11 @@ export default function CharacterAdventuresPage() {
             const profile = JSON.parse(profileStr);
             setLanguage(profile.language || 'en');
         }
-    }, []);
+        if (training.characterAdventures === false) {
+            setShowAdventureMap(false);
+            setTimeout(() => setRunTour(true), 500);
+        }
+    }, [training.characterAdventures]);
 
     const loadProgress = useCallback(() => {
         if (!isClient) return;
@@ -564,6 +571,41 @@ export default function CharacterAdventuresPage() {
         }
     };
 
+    const tourSteps: Step[] = [
+        {
+            target: '#character-adventures-card',
+            content: 'This is Character Adventures! Answer trivia questions about people in the Bible.',
+        },
+        {
+            target: '#question-text',
+            content: 'Read the question carefully.',
+        },
+        {
+            target: '#answer-options',
+            content: 'Then, select one of the four options as your answer.',
+        },
+        {
+            target: '#score-display',
+            content: "You'll earn points and EXP for every correct answer!",
+        },
+         {
+            target: '#adventure-map-button',
+            content: 'You can return to the level selection map at any time. Have fun!',
+        },
+    ];
+
+    const handleJoyrideCallback = (data: CallBackProps) => {
+        const { status } = data;
+        const finishedStatuses: string[] = ['finished', 'skipped'];
+
+        if (finishedStatuses.includes(status)) {
+            setRunTour(false);
+            completeTraining('characterAdventures');
+            setShowAdventureMap(true); // Go back to map after tour
+        }
+    };
+
+
     if (!isClient) {
         return <div>Loading...</div>; // Or a skeleton loader
     }
@@ -651,24 +693,35 @@ export default function CharacterAdventuresPage() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
+            <Joyride
+                run={runTour}
+                steps={tourSteps}
+                continuous
+                showProgress
+                showSkipButton
+                callback={handleJoyrideCallback}
+                styles={{
+                    options: { zIndex: 10000, primaryColor: 'hsl(var(--primary))' }
+                }}
+            />
             <div className="flex justify-between items-center">
                 <div className="space-y-1">
                     <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>
                     <p className="text-muted-foreground">{pageDescription}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setShowAdventureMap(true)}><Map className="w-5 h-5"/></Button>
+                    <Button id="adventure-map-button" variant="outline" size="icon" onClick={() => setShowAdventureMap(true)}><Map className="w-5 h-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => setLanguage(l => l === 'en' ? 'fil' : 'en')}><Languages className="w-5 h-5"/></Button>
                 </div>
             </div>
 
-            <Card>
+            <Card id="character-adventures-card">
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle className="font-headline text-2xl">
                            {language === 'en' ? `Level ${currentLevel}` : `Antas ${currentLevel}`}
                         </CardTitle>
-                        <div className="text-lg font-bold">
+                        <div id="score-display" className="text-lg font-bold">
                            {language === 'en' ? 'Score' : 'Puntos'}: {score}
                         </div>
                     </div>
@@ -684,8 +737,8 @@ export default function CharacterAdventuresPage() {
                             transition={{ duration: 0.3 }}
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold text-center">{currentTrivia.question}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h3 id="question-text" className="text-xl font-semibold text-center">{currentTrivia.question}</h3>
+                            <div id="answer-options" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {currentTrivia.options.map((option, index) => {
                                     const isCorrect = option === currentTrivia.answer;
                                     const isSelected = selectedAnswer === option;

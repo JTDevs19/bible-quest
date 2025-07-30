@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,6 +12,7 @@ import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUserProgress } from '@/hooks/use-user-progress';
+import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -106,12 +108,16 @@ export default function BibleMasteryPage() {
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-  const { addExp, shields, spendWisdomKeys, addShields, wisdomKeys, spendChance } = useUserProgress();
+  const { addExp, shields, spendWisdomKeys, addShields, wisdomKeys, spendChance, training, completeTraining } = useUserProgress();
   const REFILL_COST = 10;
+  const [runTour, setRunTour] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    if (training.bibleMastery === false) {
+        setTimeout(() => setRunTour(true), 500);
+    }
+  }, [training.bibleMastery]);
   
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   
@@ -261,6 +267,40 @@ export default function BibleMasteryPage() {
   const bookListToShow = isBookInOldTestament(correctOrder[0]) ? oldTestamentBooks : newTestamentBooks;
   const bookListName = isBookInOldTestament(correctOrder[0]) ? "Old Testament" : "New Testament";
 
+    const tourSteps: Step[] = [
+        {
+            target: '#bible-mastery-card',
+            content: 'Welcome to Bible Mastery! Your goal is to arrange the books of the Bible in the correct order.',
+        },
+        {
+            target: '#book-list',
+            content: 'Drag and drop these books into the correct canonical order.',
+        },
+        {
+            target: '#check-order-button',
+            content: 'When you think you have the correct order, click here to check your answer.',
+        },
+        {
+            target: '#shield-display',
+            content: 'Each incorrect attempt will cost a shield. Be careful! You can refill shields at the Forge.',
+        },
+        {
+            target: '#language-toggle',
+            content: "You can switch between English and Filipino names for the books. That's all for the training, enjoy!",
+        },
+    ];
+
+    const handleJoyrideCallback = (data: CallBackProps) => {
+        const { status } = data;
+        const finishedStatuses: string[] = ['finished', 'skipped'];
+
+        if (finishedStatuses.includes(status)) {
+            setRunTour(false);
+            completeTraining('bibleMastery');
+            router.push('/dashboard'); // Go back to dashboard after last training
+        }
+    };
+
 
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
@@ -326,7 +366,7 @@ export default function BibleMasteryPage() {
     const hasHalfShield = shields % 2 !== 0;
 
     return (
-        <div className="flex items-center gap-1.5">
+        <div id="shield-display" className="flex items-center gap-1.5">
             <div className="relative w-5 h-5">
                 {hasHalfShield ? (
                     <>
@@ -348,6 +388,15 @@ export default function BibleMasteryPage() {
 
   return (
     <>
+    <Joyride
+        run={runTour}
+        steps={tourSteps}
+        continuous
+        showProgress
+        showSkipButton
+        callback={handleJoyrideCallback}
+        styles={{ options: { zIndex: 10000, primaryColor: 'hsl(var(--primary))' } }}
+    />
     <div className="max-w-md mx-auto">
         <div className="text-center mb-4">
             <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>
@@ -358,10 +407,10 @@ export default function BibleMasteryPage() {
            <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
            <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
            <ShieldDisplay />
-           <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
+           <Button id="language-toggle" variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
 
-        <Card>
+        <Card id="bible-mastery-card">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
@@ -372,7 +421,7 @@ export default function BibleMasteryPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2">
+                <div id="book-list" className="space-y-2">
                     {shuffledBooks.map((book, index) => (
                          <div
                             key={book}
@@ -393,7 +442,7 @@ export default function BibleMasteryPage() {
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 flex flex-col gap-2">
+                <div id="check-order-button" className="mt-6 flex flex-col gap-2">
                     {isCorrect === null && <Button onClick={checkOrder} disabled={shields <= 0}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
                     {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{language === 'en' ? 'Correct! Next' : 'Tama! Susunod'}</Button>}
                     {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive" disabled={shields <= 0}><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}

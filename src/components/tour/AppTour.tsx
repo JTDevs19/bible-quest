@@ -1,29 +1,43 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Joyride, { Step, CallBackProps } from 'react-joyride';
+import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+import { useUserProgress } from '@/hooks/use-user-progress';
+import { useRouter } from 'next/navigation';
 
 const AppTour = () => {
+    const { training, completeTraining } = useUserProgress();
     const [run, setRun] = useState(false);
+    const router = useRouter();
     
     useEffect(() => {
-        const tourCompleted = localStorage.getItem('bibleQuestsTourCompleted');
-        if (tourCompleted !== 'true') {
-            // Use a timeout to ensure the dashboard has mounted
-            setTimeout(() => {
+        const isTourCompleted = Object.values(training).every(t => t === true);
+        if (!isTourCompleted) {
+             setTimeout(() => {
                 setRun(true);
-            }, 500);
+            }, 1000);
         }
     }, []);
     
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
-        const finishedStatuses: string[] = ['finished', 'skipped'];
+        const { status, step, type, action } = data;
+        const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
         if (finishedStatuses.includes(status)) {
-            localStorage.setItem('bibleQuestsTourCompleted', 'true');
             setRun(false);
+            return;
+        }
+
+        if (type === 'step:after' || action === 'next') {
+            if (step.target === '#nav-verse-memory') {
+                router.push('/dashboard/verse-memory');
+            } else if (step.target === '#nav-character-adventures') {
+                router.push('/dashboard/character-adventures');
+            } else if (step.target === '#nav-bible-mastery') {
+                router.push('/dashboard/bible-mastery');
+            }
         }
     };
     
@@ -32,43 +46,39 @@ const AppTour = () => {
             target: '#sidebar-header',
             content: 'Welcome to Bible Quests! This is your main navigation panel.',
             placement: 'right',
-        },
-        {
-            target: '#nav-dashboard',
-            content: 'Your Dashboard gives you a summary of your profile and progress.',
-            placement: 'right',
-        },
-        {
-            target: '#nav-verse-memory',
-            content: 'In Verse Memory, you can practice memorizing key Bible verses.',
-            placement: 'right',
-        },
-        {
-            target: '#nav-character-adventures',
-            content: 'Test your knowledge about important figures in the Bible with Character Adventures trivia.',
-            placement: 'right',
-        },
-        {
-            target: '#nav-daily-challenge',
-            content: 'Check back every day for a new puzzle or challenge to earn bonus EXP!',
-            placement: 'right',
-        },
-        {
-            target: '#nav-treasures',
-            content: 'Visit the Treasures page to unlock special rewards.',
-            placement: 'right',
-            title: 'Your First Quest!'
-        },
-        {
-            target: '#new-adventurer-chest',
-            content: 'As a new adventurer, you have a special chest waiting for you. It costs 1 Wisdom Key to open (you start with 5!). Click it to see the rewards and open it!',
-            placement: 'bottom',
+            disableBeacon: true,
         },
         {
             target: '#main-header',
             content: "Here you can track your Level, EXP, Shields (your 'lives' in games), and Wisdom Keys. Keep an eye on these as you play!",
             placement: 'bottom',
         },
+        {
+            target: '#nav-treasures',
+            content: 'As a new adventurer, you have a special chest waiting for you. Click this to open the treasures page!',
+            placement: 'right',
+            title: 'Your First Quest!'
+        },
+        {
+            target: '#new-adventurer-chest',
+            content: 'It costs 1 Wisdom Key to open (you start with 5!). Click it to see the rewards and open it!',
+            placement: 'bottom',
+        },
+        ...(training.verseMemory === false ? [{
+            target: '#nav-verse-memory',
+            content: "Let's learn how to play Verse Memory. Click here to start the training.",
+            placement: 'right',
+        }] : []),
+         ...(training.characterAdventures === false ? [{
+            target: '#nav-character-adventures',
+            content: "Great! Now let's try Character Adventures.",
+            placement: 'right',
+        }] : []),
+         ...(training.bibleMastery === false ? [{
+            target: '#nav-bible-mastery',
+            content: 'Finally, let\'s look at Bible Mastery, a tougher challenge!',
+            placement: 'right',
+        }] : []),
     ];
 
     return (

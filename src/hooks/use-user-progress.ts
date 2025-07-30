@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { create } from 'zustand';
@@ -19,6 +20,12 @@ type TreasuresState = {
     [key: string]: boolean;
 }
 
+type TrainingState = {
+    verseMemory: boolean;
+    characterAdventures: boolean;
+    bibleMastery: boolean;
+}
+
 const initialState = {
     level: 1,
     exp: 0,
@@ -29,6 +36,11 @@ const initialState = {
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
     treasuresOpened: {} as TreasuresState,
+    training: {
+        verseMemory: false,
+        characterAdventures: false,
+        bibleMastery: false,
+    } as TrainingState,
 }
 
 interface UserProgressState {
@@ -41,6 +53,7 @@ interface UserProgressState {
     lastLevelUpExp: number;
     expForNextLevel: number;
     treasuresOpened: TreasuresState;
+    training: TrainingState;
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     spendChance: () => boolean;
@@ -49,6 +62,7 @@ interface UserProgressState {
     addHints: (amount: number) => void;
     addGold: (amount: number) => void;
     openTreasure: (treasureId: string, cost: number) => void;
+    completeTraining: (game: keyof TrainingState) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
 }
@@ -130,6 +144,14 @@ export const useUserProgress = create<UserProgressState>()(
                     }
                     return state;
                 });
+            },
+            completeTraining: (game: keyof TrainingState) => {
+                set(state => ({
+                    training: {
+                        ...state.training,
+                        [game]: true,
+                    }
+                }));
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));
