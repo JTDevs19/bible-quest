@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { BookOpen, Languages, Loader2, Save, Download, FilePenLine } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Save, Download, FilePenLine, Presentation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getTranslatedSermonGuide } from './actions';
+import { getTranslatedSermonGuide, getSermonPresentation } from './actions';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import type { SavedSermonNote } from '@/hooks/use-user-progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +26,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [guide, setGuide] = useState<SavedSermonNote>(initialGuide);
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
+    const [isGeneratingPpt, setIsGeneratingPpt] = useState(false);
     const { toast } = useToast();
     const { saveNote, savedNotes, updateNote } = useUserProgress();
 
@@ -77,7 +78,6 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         setIsTranslating(true);
         try {
             const targetLanguage = language === 'English' ? 'Tagalog' : 'English';
-            // We only translate the core guide, not personal notes
             const translatableGuide: SermonGuideOutput = {
                 title: guide.title,
                 introduction: guide.introduction,
@@ -133,6 +133,34 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    };
+
+    const handleGeneratePresentation = async () => {
+        setIsGeneratingPpt(true);
+        toast({ title: 'Generating Presentation...', description: 'Your PowerPoint file is being created by the AI. This may take a moment.' });
+        try {
+            const result = await getSermonPresentation(guide);
+            if (result.success && result.dataUri) {
+                const a = document.createElement('a');
+                a.href = result.dataUri;
+                const safeTitle = guide.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                a.download = `${safeTitle}_presentation.pptx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                toast({ title: 'Presentation Downloaded!', description: 'Your PowerPoint file has been successfully generated and downloaded.' });
+            } else {
+                throw new Error(result.message || 'An unknown error occurred');
+            }
+        } catch(error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Presentation Failed',
+                description: `Could not generate the presentation: ${error.message}`,
+            });
+        } finally {
+            setIsGeneratingPpt(false);
+        }
     };
 
   return (
@@ -208,10 +236,16 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                 </div>
             </div>
              <DialogFooter className="sm:justify-between gap-2 shrink-0 flex-wrap pt-4 border-t">
-                <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
-                    {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
-                    {language === 'English' ? 'Translate to Tagalog' : 'Translate to English'}
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
+                        {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
+                        {language === 'English' ? 'To Tagalog' : 'To English'}
+                    </Button>
+                    <Button variant="outline" onClick={handleGeneratePresentation} disabled={isGeneratingPpt}>
+                        {isGeneratingPpt ? <Loader2 className="mr-2 animate-spin" /> : <Presentation className="mr-2" />}
+                        PPT
+                    </Button>
+                </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={handleDownload}>
                         <Download className="mr-2" />

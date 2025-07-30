@@ -2,9 +2,9 @@
 'use server';
 
 import { personalizedVerseRecommendations, type PersonalizedVerseRecommendationsInput } from '@/ai/flows/personalized-verse-recommendations';
-import { generateSermonGuide, type SermonGuideInput } from '@/ai/flows/sermon-guide-generator';
+import { generateSermonGuide, type SermonGuideInput, type SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
+import { generateSermonPresentation } from '@/ai/flows/sermon-presentation-generator';
 import { translateText, type TranslateTextInput, type TranslateTextOutput } from '@/ai/flows/translate-text';
-import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
 import { z } from 'zod';
 
 const verseFormSchema = z.object({
@@ -131,4 +131,15 @@ export async function getTranslatedSermonGuide(guide: SermonGuideOutput, targetL
         points: newPoints,
         conclusion: translatedConclusion
     };
+}
+
+
+export async function getSermonPresentation(guide: SermonGuideOutput): Promise<{ success: boolean; dataUri?: string; message?: string }> {
+  try {
+    const result = await generateSermonPresentation(guide);
+    return { success: true, dataUri: result.presentationDataUri };
+  } catch (error: any) {
+    console.error("Error generating presentation:", error);
+    return { success: false, message: error.message || "Failed to generate presentation." };
+  }
 }
