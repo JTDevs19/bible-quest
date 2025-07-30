@@ -56,6 +56,7 @@ interface UserProgressState {
     training: TrainingState;
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
+    addWisdomKeys: (amount: number) => void;
     spendChance: () => boolean;
     addShields: (amount: number) => void;
     useHint: () => boolean;
@@ -105,6 +106,9 @@ export const useUserProgress = create<UserProgressState>()(
             },
             spendWisdomKeys: (amount: number) => {
                 set(state => ({ wisdomKeys: Math.max(0, state.wisdomKeys - amount) }));
+            },
+            addWisdomKeys: (amount: number) => {
+                set(state => ({ wisdomKeys: state.wisdomKeys + amount }));
             },
             spendChance: () => {
                 const currentShields = get().shields;
