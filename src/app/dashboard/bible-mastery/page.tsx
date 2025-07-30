@@ -38,18 +38,27 @@ const shuffleArray = (array: any[]) => {
 
 const generateLevelConfig = () => {
     const config = [];
-    // Levels 1-5: 4 books, 5 rounds, 1 EXP/round
-    for (let i = 1; i <= 5; i++) config.push({ level: i, booksToArrange: 4, rounds: 5, expPerRound: 1 });
-    // Levels 6-10: 5 books, 5 rounds, 1 EXP/round
-    for (let i = 6; i <= 10; i++) config.push({ level: i, booksToArrange: 5, rounds: 5, expPerRound: 1 });
-    // Levels 11-15: 7 books, 5 rounds, 2 EXP/round
-    for (let i = 11; i <= 15; i++) config.push({ level: i, booksToArrange: 7, rounds: 5, expPerRound: 2 });
-    // Levels 16-20: 8 books, 5 rounds, 2 EXP/round
-    for (let i = 16; i <= 20; i++) config.push({ level: i, booksToArrange: 8, rounds: 5, expPerRound: 2 });
-    // Levels 21-25: 9 books, 5 rounds, 3 EXP/round
-    for (let i = 21; i <= 25; i++) config.push({ level: i, booksToArrange: 9, rounds: 5, expPerRound: 3 });
-    // Levels 26-30: 10 books, 5 rounds, 3 EXP/round
-    for (let i = 26; i <= 30; i++) config.push({ level: i, booksToArrange: 10, rounds: 5, expPerRound: 3 });
+    const difficultyTiers = [
+        { books: 4, rounds: 5 }, // Levels 1-5
+        { books: 5, rounds: 5 }, // Levels 6-10
+        { books: 7, rounds: 5 }, // Levels 11-15
+        { books: 8, rounds: 5 }, // Levels 16-20
+        { books: 9, rounds: 5 }, // Levels 21-25
+        { books: 10, rounds: 5 } // Levels 26-30
+    ];
+
+    let levelCounter = 1;
+    for (const tier of difficultyTiers) {
+        for (let i = 0; i < 5; i++) {
+            config.push({
+                level: levelCounter,
+                booksToArrange: tier.books,
+                rounds: tier.rounds,
+                expPerRound: levelCounter // EXP reward equals the level number
+            });
+            levelCounter++;
+        }
+    }
     
     // Master Levels
     config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks, expPerRound: 50 });
