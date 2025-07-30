@@ -3,6 +3,8 @@
 
 import { personalizedVerseRecommendations, type PersonalizedVerseRecommendationsInput } from '@/ai/flows/personalized-verse-recommendations';
 import { generateSermonGuide, type SermonGuideInput } from '@/ai/flows/sermon-guide-generator';
+import { translateText, type TranslateTextInput, type TranslateTextOutput } from '@/ai/flows/translate-text';
+import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
 import { z } from 'zod';
 
 const verseFormSchema = z.object({
@@ -92,4 +94,41 @@ export async function getSermonGuide(
     console.error("Error in AI sermon guide flow:", error);
     return { success: false, message: "Failed to get a sermon guide from the AI." };
   }
+}
+
+async function translateContent(text: string, lang: 'English' | 'Tagalog'): Promise<string> {
+    const result = await translateText({ textToTranslate: text, targetLanguage: lang });
+    return result.translatedText;
+}
+
+export async function getTranslatedSermonGuide(guide: SermonGuideOutput, targetLanguage: 'English' | 'Tagalog'): Promise<SermonGuideOutput> {
+    const [
+        translatedTitle,
+        translatedIntro,
+        translatedConclusion,
+        ...translatedPoints
+    ] = await Promise.all([
+        translateContent(guide.title, targetLanguage),
+        translateContent(guide.introduction, targetLanguage),
+        translateContent(guide.conclusion, targetLanguage),
+        ...guide.points.flatMap(p => [
+            translateContent(p.pointTitle, targetLanguage),
+            translateContent(p.pointDetails, targetLanguage),
+            translateContent(p.verseText, targetLanguage)
+        ])
+    ]);
+
+    const newPoints = guide.points.map((p, i) => ({
+        ...p,
+        pointTitle: translatedPoints[i * 3],
+        pointDetails: translatedPoints[i * 3 + 1],
+        verseText: translatedPoints[i * 3 + 2]
+    }));
+
+    return {
+        title: translatedTitle,
+        introduction: translatedIntro,
+        points: newPoints,
+        conclusion: translatedConclusion
+    };
 }

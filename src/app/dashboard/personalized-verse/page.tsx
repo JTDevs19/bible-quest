@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getVerseRecommendation, getSermonGuide } from './actions';
+import { getVerseRecommendation, getSermonGuide, getTranslatedSermonGuide } from './actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Loader2, Sparkles, Languages, Hammer, FileText, UserCheck, BookHeart, ScrollText } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
-import { SermonGuideCard } from './sermon-guide-card';
+import { SermonGuideDialog } from './sermon-guide-dialog';
 import type { UserProfile } from '@/app/page';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProgress } from '@/hooks/use-user-progress';
@@ -48,6 +48,7 @@ export default function PersonalizedVersePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recommendation, setRecommendation] = useState<PersonalizedVerseRecommendationsOutput | null>(null);
   const [sermonGuide, setSermonGuide] = useState<SermonGuideOutput | null>(null);
+  const [isSermonGuideOpen, setIsSermonGuideOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<'English' | 'Tagalog'>('English');
@@ -76,6 +77,12 @@ export default function PersonalizedVersePage() {
     resolver: zodResolver(currentSermonSchema),
     defaultValues: { topic: '' },
   });
+
+  useEffect(() => {
+    if (sermonGuide) {
+      setIsSermonGuideOpen(true);
+    }
+  }, [sermonGuide]);
 
   async function onVerseSubmit(values: z.infer<typeof currentVerseSchema>) {
     if (!userProfile) {
@@ -264,7 +271,14 @@ export default function PersonalizedVersePage() {
       {error && <div className="text-destructive text-center">{error}</div>}
 
       {recommendation && <RecommendationCard recommendation={recommendation} language={language} />}
-      {sermonGuide && <SermonGuideCard sermonGuide={sermonGuide} language={language} />}
+      {sermonGuide && (
+        <SermonGuideDialog 
+            isOpen={isSermonGuideOpen}
+            setIsOpen={setIsSermonGuideOpen}
+            initialGuide={sermonGuide}
+            initialLanguage={language}
+        />
+      )}
     </div>
   );
 }
