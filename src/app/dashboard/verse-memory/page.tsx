@@ -724,10 +724,13 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (training.verseMemory === false) {
-        setTimeout(() => setRunTour(true), 500);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && training.verseMemory === false) {
+      setTimeout(() => setRunTour(true), 500);
     }
-  }, [training.verseMemory]);
+  }, [isClient, training.verseMemory]);
   
   useEffect(() => {
     loadProgress();
@@ -1265,17 +1268,17 @@ export default function VerseMemoryPage() {
     ];
   
     const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status, type, index } = data;
+        const { status, type, index, action } = data;
         const finishedStatuses: string[] = ['finished', 'skipped'];
 
-        if (type === 'step:after' && index === 2) {
-             // After showing the input hint, fill it in.
+        if (type === 'step:after' && index === 2 && action === 'next') {
             handleInputChange(0, 'God');
         }
 
         if (finishedStatuses.includes(status)) {
             setRunTour(false);
             completeTraining('verseMemory');
+            router.push('/dashboard'); // Go back to dashboard after first training
         }
     };
 

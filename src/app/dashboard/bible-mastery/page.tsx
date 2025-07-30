@@ -114,10 +114,13 @@ export default function BibleMasteryPage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (training.bibleMastery === false) {
+  }, []);
+  
+  useEffect(() => {
+    if (isClient && training.bibleMastery === false) {
         setTimeout(() => setRunTour(true), 500);
     }
-  }, [training.bibleMastery]);
+  }, [isClient, training.bibleMastery]);
   
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   

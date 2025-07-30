@@ -458,11 +458,14 @@ export default function CharacterAdventuresPage() {
             const profile = JSON.parse(profileStr);
             setLanguage(profile.language || 'en');
         }
-        if (training.characterAdventures === false) {
+    }, []);
+
+    useEffect(() => {
+        if (isClient && training.characterAdventures === false) {
             setShowAdventureMap(false);
             setTimeout(() => setRunTour(true), 500);
         }
-    }, [training.characterAdventures]);
+    }, [isClient, training.characterAdventures]);
 
     const loadProgress = useCallback(() => {
         if (!isClient) return;
