@@ -26,6 +26,7 @@ import {
   ChevronUp,
   Heart,
   Key,
+  ShoppingCart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -76,6 +77,7 @@ function DashboardNav() {
     { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
     { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+    { id: 'nav-store', href: '/dashboard/store', icon: ShoppingCart, label: 'Store' },
   ];
 
   return (

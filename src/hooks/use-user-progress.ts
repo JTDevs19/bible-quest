@@ -12,12 +12,14 @@ const getExpForLevel = (level: number) => {
 
 const KEYS_PER_LEVEL_UP = 5;
 const MAX_HEARTS = 10; // 5 full hearts, 10 half-hearts
+const STARTING_HINTS = 5;
 
 const initialState = {
     level: 1,
     exp: 0,
     wisdomKeys: 5,
     hearts: MAX_HEARTS,
+    hints: STARTING_HINTS,
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
 }
@@ -27,12 +29,15 @@ interface UserProgressState {
     exp: number;
     wisdomKeys: number;
     hearts: number;
+    hints: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
     addExp: (amount: number) => void;
-    setWisdomKeys: (setter: (currentKeys: number) => number) => void;
+    spendWisdomKeys: (amount: number) => void;
     spendChance: () => boolean;
-    refillHearts: () => void;
+    addHearts: (amount: number) => void;
+    useHint: () => boolean;
+    addHints: (amount: number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
 }
@@ -73,8 +78,8 @@ export const useUserProgress = create<UserProgressState>()(
                     };
                 });
             },
-            setWisdomKeys: (setter) => {
-                 set(state => ({ wisdomKeys: setter(state.wisdomKeys) }));
+            spendWisdomKeys: (amount: number) => {
+                set(state => ({ wisdomKeys: Math.max(0, state.wisdomKeys - amount) }));
             },
             spendChance: () => {
                 const currentHearts = get().hearts;
@@ -84,8 +89,19 @@ export const useUserProgress = create<UserProgressState>()(
                 }
                 return false;
             },
-            refillHearts: () => {
-                set({ hearts: MAX_HEARTS });
+            addHearts: (amount: number) => {
+                 set(state => ({ hearts: Math.min(MAX_HEARTS, state.hearts + amount) }));
+            },
+            useHint: () => {
+                const currentHints = get().hints;
+                if(currentHints > 0) {
+                    set({ hints: currentHints - 1});
+                    return true;
+                }
+                return false;
+            },
+            addHints: (amount: number) => {
+                set(state => ({ hints: state.hints + amount }));
             },
             setProgress: (progress) => {
                 set(state => ({ ...state, ...progress }));

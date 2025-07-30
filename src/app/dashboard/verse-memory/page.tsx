@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key, Languages } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key, Languages, ShoppingCart } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -359,8 +359,6 @@ const LEVELS_PER_STAGE = 5;
 const MAX_STAGES = 2;
 const BONUS_ROUND_TIME = 180; // 3 minutes
 
-const INITIAL_HINTS = 5;
-
 // Bonus verses for each level in Stage 1, selected based on length
 // Level 1: <10 words, Level 2: <=15, Level 3: <=20, Level 4: <=25, Level 5: >30
 const stage1BonusVerseIndices = [
@@ -645,9 +643,7 @@ export default function VerseMemoryPage() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [verseScores, setVerseScores] = useState<VerseScores>({});
   const [bonusProgress, setBonusProgress] = useState<BonusProgress>({});
-  const { addExp, wisdomKeys, setWisdomKeys, setProgress } = useUserProgress();
-  const [hintsRemaining, setHintsRemaining] = useState(INITIAL_HINTS);
-  const [tradeAmount, setTradeAmount] = useState(1);
+  const { addExp, wisdomKeys, hints, setProgress, spendWisdomKeys, useHint: spendHint } = useUserProgress();
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
   const [language, setLanguage] = useState<'en' | 'fil'>('en');
 
@@ -665,7 +661,7 @@ export default function VerseMemoryPage() {
   const [isJourneyOpen, setIsJourneyOpen] = useState(false);
   const [isVerseMastered, setIsVerseMastered] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState<null | 'current' | 'all'>(null);
-  const [showTradeDialog, setShowTradeDialog] = useState(false);
+  const [showNoHintsDialog, setShowNoHintsDialog] = useState(false);
   const [showUnlockDialog, setShowUnlockDialog] = useState<null | 'stage1' | 'stage2'>(null);
   const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
   
@@ -706,7 +702,6 @@ export default function VerseMemoryPage() {
       setCurrentLevel(loadedLevel);
       setVerseScores(loadedScores);
       setBonusProgress(progress.bonusProgress || {});
-      setHintsRemaining(progress.hints ?? INITIAL_HINTS);
 
       const firstUnfinished = findFirstUnfinishedVerse(loadedStage, loadedLevel, loadedScores);
       setCurrentVerseIndex(firstUnfinished);
@@ -720,10 +715,9 @@ export default function VerseMemoryPage() {
       level: currentLevel,
       scores: verseScores,
       bonusProgress: bonusProgress,
-      hints: hintsRemaining,
     };
     localStorage.setItem('verseMemoryProgress', JSON.stringify(progress));
-  }, [isClient, currentStage, currentLevel, verseScores, bonusProgress, hintsRemaining]);
+  }, [isClient, currentStage, currentLevel, verseScores, bonusProgress]);
 
   useEffect(() => {
     setIsClient(true);
@@ -753,7 +747,6 @@ export default function VerseMemoryPage() {
     setVerseScores({});
     setBonusProgress({});
     setProgress({ level: 1, exp: 0, wisdomKeys: 5, lastLevelUpExp: 0 });
-    setHintsRemaining(INITIAL_HINTS);
     localStorage.removeItem('verseMemoryProgress');
     localStorage.removeItem('userProgress');
     setIsJourneyOpen(false);
@@ -1016,35 +1009,26 @@ export default function VerseMemoryPage() {
     }
   };
   
-  const handleTradeForHints = () => {
-    if (wisdomKeys >= tradeAmount && tradeAmount > 0) {
-        setWisdomKeys(s => s - tradeAmount);
-        setHintsRemaining(r => r + (tradeAmount * 3));
-        setShowTradeDialog(false);
-    }
-  };
-
   const handleHintClick = () => {
     if(isVerseMastered) return;
-    if (hintsRemaining > 0) {
+    if (hints > 0) {
         useHint();
     } else {
-        setTradeAmount(1);
-        setShowTradeDialog(true);
+        setShowNoHintsDialog(true);
     }
   };
   
   const useHint = () => {
-    if (hintsRemaining > 0 && !isVerseMastered) {
+    if (hints > 0 && !isVerseMastered) {
       const firstEmptyIndex = userInputs.findIndex(input => input === '');
       if (firstEmptyIndex !== -1) {
         const newInputs = [...userInputs];
         newInputs[firstEmptyIndex] = missingWords[firstEmptyIndex];
         setUserInputs(newInputs);
-        setHintsRemaining(h => h - 1);
+        spendHint();
       }
     }
-    setShowTradeDialog(false);
+    setShowNoHintsDialog(false);
   };
   
   const handleInputChange = (index: number, value: string) => {
@@ -1411,7 +1395,7 @@ export default function VerseMemoryPage() {
                                             </Button>
                                             <Button variant="outline" onClick={handleHintClick}>
                                                 <HelpCircle className="mr-2 h-4 w-4"/>
-                                                {language === 'fil' ? `Pahiwatig (${hintsRemaining})` : `Hint (${hintsRemaining})`}
+                                                {language === 'fil' ? `Pahiwatig (${hints})` : `Hint (${hints})`}
                                             </Button>
                                             <Button variant="default" onClick={handleNext}>
                                                 {isLastVerseInSet ? (language === 'fil' ? 'Tapusin ang Antas' : 'Finish Level') : (language === 'fil' ? 'Laktawan ang Talata' : 'Skip Verse')}
@@ -1573,28 +1557,18 @@ export default function VerseMemoryPage() {
             </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={showTradeDialog} onOpenChange={setShowTradeDialog}>
+        <AlertDialog open={showNoHintsDialog} onOpenChange={setShowNoHintsDialog}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{language === 'fil' ? 'Kulang ang mga pahiwatig' : 'Not enough hints'}</AlertDialogTitle>
+                    <AlertDialogTitle>{language === 'fil' ? 'Kulang ang mga pahiwatig' : 'Not Enough Hints'}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {language === 'fil' ? `Maaari mong ipagpalit ang iyong mga Susi ng Karunungan para sa mas maraming pahiwatig. Kasalukuyan kang may ${wisdomKeys} na susi.` : `You can trade your Wisdom Keys for more hints. You currently have ${wisdomKeys} key(s).`}
+                        {language === 'fil' ? 'Wala ka nang natitirang mga pahiwatig. Pumunta sa tindahan upang bumili pa.' : 'You have no hints left. Go to the store to buy more.'}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <div className="flex items-center gap-2">
-                    <Input 
-                        type="number"
-                        value={tradeAmount}
-                        onChange={(e) => setTradeAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                        min="1"
-                        max={wisdomKeys}
-                    />
-                    <Label>{language === 'fil' ? `Susi para sa ${tradeAmount * 3} pahiwatig` : `Key(s) for ${tradeAmount * 3} hints`}</Label>
-                </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setShowTradeDialog(false)}>{language === 'fil' ? 'Kanselahin' : 'Cancel'}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleTradeForHints} disabled={wisdomKeys < tradeAmount || tradeAmount <= 0}>
-                        {language === 'fil' ? `Ipagpalit ang ${tradeAmount}` : `Trade ${tradeAmount}`} <Key className="w-4 h-4 ml-1" />
+                    <AlertDialogCancel>{language === 'fil' ? 'Mamaya na lang' : 'Maybe Later'}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push('/dashboard/store')}>
+                        <ShoppingCart className="mr-2 h-4 w-4" /> {language === 'fil' ? 'Pumunta sa Tindahan' : 'Go to Store'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

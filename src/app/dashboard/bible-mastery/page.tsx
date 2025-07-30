@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -106,7 +106,7 @@ export default function BibleMasteryPage() {
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-  const { addExp, hearts, spendChance, refillHearts, wisdomKeys, setWisdomKeys } = useUserProgress();
+  const { addExp, hearts, spendWisdomKeys, addHearts, wisdomKeys, spendChance } = useUserProgress();
   const REFILL_COST = 10;
 
   useEffect(() => {
@@ -218,8 +218,8 @@ export default function BibleMasteryPage() {
 
   const handleRefillHearts = () => {
     if (wisdomKeys >= REFILL_COST) {
-        setWisdomKeys(k => k - REFILL_COST);
-        refillHearts();
+        spendWisdomKeys(REFILL_COST);
+        addHearts(10);
         setShowNoHeartsDialog(false);
     }
   };
@@ -322,29 +322,29 @@ export default function BibleMasteryPage() {
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
   const HeartDisplay = () => {
-        const fullHearts = Math.floor(hearts / 2);
-        const hasHalfHeart = hearts % 2 !== 0;
+    const fullHearts = Math.floor(hearts / 2);
+    const hasHalfHeart = hearts % 2 !== 0;
 
-        return (
-            <div className="flex items-center gap-1.5">
-                <div className="relative w-5 h-5">
-                    {hasHalfHeart ? (
-                        <>
-                            <Heart className="w-5 h-5 text-red-500 fill-muted" />
-                            <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
-                                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                            </div>
-                        </>
-                    ) : (
-                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                    )}
-                </div>
-                <span className={cn("font-semibold", hasHalfHeart ? "text-red-500" : "text-foreground")}>
-                    {fullHearts}
-                </span>
+    return (
+        <div className="flex items-center gap-1.5">
+            <div className="relative w-5 h-5">
+                {hasHalfHeart ? (
+                    <>
+                        <Heart className="w-5 h-5 text-red-500 fill-muted" />
+                        <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+                            <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                        </div>
+                    </>
+                ) : (
+                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                )}
             </div>
-        );
-    };
+            <span className={cn("font-semibold", hasHalfHeart ? "text-red-500" : "text-foreground")}>
+                {fullHearts}
+            </span>
+        </div>
+    );
+};
 
   return (
     <>
@@ -443,13 +443,13 @@ export default function BibleMasteryPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Out of Hearts!</AlertDialogTitle>
                 <AlertDialogDescription>
-                    You've run out of chances. Refill your hearts to keep playing. It costs {REFILL_COST} Wisdom Keys to get 5 more hearts.
+                    You've run out of chances. Go to the store to refill your hearts and keep playing.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Maybe Later</AlertDialogCancel>
-                <AlertDialogAction onClick={handleRefillHearts} disabled={wisdomKeys < REFILL_COST}>
-                    <Key className="mr-2 h-4 w-4" /> Refill Hearts ({wisdomKeys} Keys)
+                <AlertDialogAction onClick={() => router.push('/dashboard/store')}>
+                    <ShoppingCart className="mr-2 h-4 w-4" /> Go to Store
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
