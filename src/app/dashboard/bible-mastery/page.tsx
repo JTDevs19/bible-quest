@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key, ShoppingCart } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Shield, Key, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -100,13 +100,13 @@ export default function BibleMasteryPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [showNoHeartsDialog, setShowNoHeartsDialog] = useState(false);
+  const [showNoShieldsDialog, setShowNoShieldsDialog] = useState(false);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-  const { addExp, hearts, spendWisdomKeys, addHearts, wisdomKeys, spendChance } = useUserProgress();
+  const { addExp, shields, spendWisdomKeys, addShields, wisdomKeys, spendChance } = useUserProgress();
   const REFILL_COST = 10;
 
   useEffect(() => {
@@ -211,16 +211,16 @@ export default function BibleMasteryPage() {
         setTimeout(() => setShowSuccessDialog(true), 300);
     } else {
         if (!spendChance()) {
-            setShowNoHeartsDialog(true);
+            setShowNoShieldsDialog(true);
         }
     }
   };
 
-  const handleRefillHearts = () => {
+  const handleRefillShields = () => {
     if (wisdomKeys >= REFILL_COST) {
         spendWisdomKeys(REFILL_COST);
-        addHearts(10);
-        setShowNoHeartsDialog(false);
+        addShields(10);
+        setShowNoShieldsDialog(false);
     }
   };
 
@@ -321,26 +321,26 @@ export default function BibleMasteryPage() {
   const pageTitle = language === 'en' ? "Books of the Bible Mastery" : "Kasanayan sa mga Aklat ng Bibliya";
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
-  const HeartDisplay = () => {
-    const fullHearts = Math.floor(hearts / 2);
-    const hasHalfHeart = hearts % 2 !== 0;
+  const ShieldDisplay = () => {
+    const fullShields = Math.floor(shields / 2);
+    const hasHalfShield = shields % 2 !== 0;
 
     return (
         <div className="flex items-center gap-1.5">
             <div className="relative w-5 h-5">
-                {hasHalfHeart ? (
+                {hasHalfShield ? (
                     <>
-                        <Heart className="w-5 h-5 text-red-500 fill-muted" />
+                        <Shield className="w-5 h-5 text-primary fill-muted" />
                         <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
-                            <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                            <Shield className="w-5 h-5 text-primary fill-primary" />
                         </div>
                     </>
                 ) : (
-                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                    <Shield className="w-5 h-5 text-primary fill-primary" />
                 )}
             </div>
-            <span className={cn("font-semibold", hasHalfHeart ? "text-red-500" : "text-foreground")}>
-                {fullHearts}
+            <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
+                {fullShields}
             </span>
         </div>
     );
@@ -357,7 +357,7 @@ export default function BibleMasteryPage() {
         <div className="text-center mb-4 p-2 bg-muted rounded-lg font-semibold flex justify-around items-center">
            <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
            <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
-           <HeartDisplay />
+           <ShieldDisplay />
            <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
 
@@ -394,9 +394,9 @@ export default function BibleMasteryPage() {
                     ))}
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
-                    {isCorrect === null && <Button onClick={checkOrder} disabled={hearts <= 0}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
+                    {isCorrect === null && <Button onClick={checkOrder} disabled={shields <= 0}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
                     {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{language === 'en' ? 'Correct! Next' : 'Tama! Susunod'}</Button>}
-                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive" disabled={hearts <= 0}><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
+                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive" disabled={shields <= 0}><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
                 </div>
             </CardContent>
         </Card>
@@ -438,12 +438,12 @@ export default function BibleMasteryPage() {
         </AlertDialogContent>
     </AlertDialog>
     
-    <AlertDialog open={showNoHeartsDialog} onOpenChange={setShowNoHeartsDialog}>
+    <AlertDialog open={showNoShieldsDialog} onOpenChange={setShowNoShieldsDialog}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Out of Hearts!</AlertDialogTitle>
+                <AlertDialogTitle>Out of Shields!</AlertDialogTitle>
                 <AlertDialogDescription>
-                    You've run out of chances. Go to the store to refill your hearts and keep playing.
+                    You've run out of chances. Go to the store to refill your shields and keep playing.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

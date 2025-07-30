@@ -4,31 +4,31 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserProgress } from '@/hooks/use-user-progress';
-import { Heart, Key, Lightbulb, ShoppingCart } from 'lucide-react';
+import { Shield, Key, Lightbulb, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 
-const HEART_REFILL_COST = 10;
+const SHIELD_REFILL_COST = 10;
 const HINT_PACK_COST = 5;
 const HINTS_PER_PACK = 5;
 
 export default function StorePage() {
-    const { wisdomKeys, hearts, hints, addHearts, addHints, spendWisdomKeys } = useUserProgress();
+    const { wisdomKeys, shields, hints, addShields, addHints, spendWisdomKeys } = useUserProgress();
     const { toast } = useToast();
 
-    const handleRefillHearts = () => {
-        if (wisdomKeys >= HEART_REFILL_COST) {
-            spendWisdomKeys(HEART_REFILL_COST);
-            addHearts(10); // Refill 5 full hearts
+    const handleRefillShields = () => {
+        if (wisdomKeys >= SHIELD_REFILL_COST) {
+            spendWisdomKeys(SHIELD_REFILL_COST);
+            addShields(10); // Refill 5 full shields
             toast({
-                title: 'Hearts Refilled!',
-                description: `You spent ${HEART_REFILL_COST} keys to restore your hearts.`,
+                title: 'Shields Refilled!',
+                description: `You spent ${SHIELD_REFILL_COST} keys to restore your shields.`,
             });
         } else {
             toast({
                 variant: 'destructive',
                 title: 'Not Enough Keys',
-                description: `You need ${HEART_REFILL_COST} keys to refill hearts.`,
+                description: `You need ${SHIELD_REFILL_COST} keys to refill shields.`,
             });
         }
     };
@@ -68,8 +68,8 @@ export default function StorePage() {
                             <span>{wisdomKeys} Keys</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Heart className="w-6 h-6 text-red-500" />
-                             <span>{Math.floor(hearts/2)} Hearts</span>
+                            <Shield className="w-6 h-6 text-primary" />
+                             <span>{Math.floor(shields/2)} Shields</span>
                         </div>
                          <div className="flex items-center gap-2">
                             <Lightbulb className="w-6 h-6 text-blue-500" />
@@ -84,22 +84,22 @@ export default function StorePage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                     <Card className="h-full flex flex-col">
                         <CardHeader className="text-center">
-                            <div className="mx-auto bg-red-100 dark:bg-red-900/50 p-4 rounded-full mb-4 w-fit">
-                                <Heart className="w-10 h-10 text-red-500" />
+                            <div className="mx-auto bg-blue-100 dark:bg-blue-900/50 p-4 rounded-full mb-4 w-fit">
+                                <Shield className="w-10 h-10 text-primary" />
                             </div>
-                            <CardTitle className="font-headline text-2xl">Refill Hearts</CardTitle>
-                            <CardDescription>Completely restore all your hearts to continue playing the tougher challenges.</CardDescription>
+                            <CardTitle className="font-headline text-2xl">Refill Shields</CardTitle>
+                            <CardDescription>Completely restore all your shields to continue playing the tougher challenges.</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow flex flex-col justify-end">
                             <Button
                                 className="w-full"
                                 size="lg"
-                                onClick={handleRefillHearts}
-                                disabled={wisdomKeys < HEART_REFILL_COST || hearts >= 10}
+                                onClick={handleRefillShields}
+                                disabled={wisdomKeys < SHIELD_REFILL_COST || shields >= 10}
                             >
-                                {hearts >= 10 ? 'Hearts are Full' : (
+                                {shields >= 10 ? 'Shields are Full' : (
                                     <div className="flex items-center">
-                                        Spend {HEART_REFILL_COST} <Key className="w-4 h-4 mx-2" /> for 5 <Heart className="w-4 h-4 ml-2" />
+                                        Spend {SHIELD_REFILL_COST} <Key className="w-4 h-4 mx-2" /> for 5 <Shield className="w-4 h-4 ml-2" />
                                     </div>
                                 )}
                             </Button>
@@ -110,8 +110,8 @@ export default function StorePage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
                     <Card className="h-full flex flex-col">
                         <CardHeader className="text-center">
-                             <div className="mx-auto bg-blue-100 dark:bg-blue-900/50 p-4 rounded-full mb-4 w-fit">
-                                <Lightbulb className="w-10 h-10 text-blue-500" />
+                             <div className="mx-auto bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-full mb-4 w-fit">
+                                <Lightbulb className="w-10 h-10 text-yellow-500" />
                             </div>
                             <CardTitle className="font-headline text-2xl">Hint Pack</CardTitle>
                             <CardDescription>Purchase a pack of hints to help you when you're stuck in the Verse Memory game.</CardDescription>

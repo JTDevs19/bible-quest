@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp, Key, Heart } from 'lucide-react';
+import { Award, BookText, Gift, Milestone, Star, TrendingUp, Users, ChevronUp, ChevronsUp, Key, Shield } from 'lucide-react';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Progress } from '@/components/ui/progress';
 
@@ -32,7 +32,7 @@ type BadgeInfo = {
 
 
 export default function ProgressPage() {
-  const { level, exp, expForNextLevel, lastLevelUpExp, wisdomKeys, hearts } = useUserProgress();
+  const { level, exp, expForNextLevel, lastLevelUpExp, wisdomKeys, shields } = useUserProgress();
   const [badges, setBadges] = useState<BadgeInfo[]>([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -124,13 +124,13 @@ export default function ProgressPage() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle className="font-headline text-xl">Hearts</CardTitle>
-                        <Heart className="w-6 h-6 text-muted-foreground"/>
+                        <CardTitle className="font-headline text-xl">Shields</CardTitle>
+                        <Shield className="w-6 h-6 text-muted-foreground"/>
                     </div>
                     <CardDescription>Your chances for challenging games. These are restored when you level up.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-4xl font-bold">{hearts}</p>
+                    <p className="text-4xl font-bold">{Math.floor(shields / 2)}</p>
                 </CardContent>
             </Card>
         </div>

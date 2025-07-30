@@ -24,7 +24,7 @@ import {
   Gift,
   Lock,
   ChevronUp,
-  Heart,
+  Shield,
   Key,
   ShoppingCart,
 } from 'lucide-react';
@@ -108,29 +108,29 @@ function DashboardNav() {
 }
 
 function UserProgressHeader() {
-    const { level, exp, expForNextLevel, lastLevelUpExp, hearts, wisdomKeys } = useUserProgress();
+    const { level, exp, expForNextLevel, lastLevelUpExp, shields, wisdomKeys } = useUserProgress();
     const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
-    const HeartDisplay = () => {
-        const fullHearts = Math.floor(hearts / 2);
-        const hasHalfHeart = hearts % 2 !== 0;
+    const ShieldDisplay = () => {
+        const fullShields = Math.floor(shields / 2);
+        const hasHalfShield = shields % 2 !== 0;
 
         return (
             <div className="flex items-center gap-1.5">
                 <div className="relative w-5 h-5">
-                    {hasHalfHeart ? (
+                    {hasHalfShield ? (
                         <>
-                            <Heart className="w-5 h-5 text-red-500 fill-muted" />
+                            <Shield className="w-5 h-5 text-primary fill-muted" />
                             <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
-                                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                                <Shield className="w-5 h-5 text-primary fill-primary" />
                             </div>
                         </>
                     ) : (
-                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                        <Shield className="w-5 h-5 text-primary fill-primary" />
                     )}
                 </div>
-                <span className={cn("font-semibold", hasHalfHeart ? "text-red-500" : "text-foreground")}>
-                    {fullHearts}
+                <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
+                    {fullShields}
                 </span>
             </div>
         );
@@ -141,14 +141,14 @@ function UserProgressHeader() {
             <Popover>
                 <PopoverTrigger asChild>
                     <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
-                        <HeartDisplay />
+                        <ShieldDisplay />
                     </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-64">
                      <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Hearts</h4>
+                        <h4 className="font-medium leading-none">Shields</h4>
                         <p className="text-sm text-muted-foreground">
-                            Your chances for challenging games. Hearts are fully restored when you level up, or can be refilled with Wisdom Keys. Each mistake costs half a heart.
+                            Your chances for challenging games. Shields protect you from mistakes and are restored when you level up or can be refilled with Wisdom Keys. Each mistake costs half a shield.
                         </p>
                     </div>
                 </PopoverContent>
@@ -164,7 +164,7 @@ function UserProgressHeader() {
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Wisdom Keys</h4>
                         <p className="text-sm text-muted-foreground">
-                            Earned by leveling up. Use them for hints in games or to refill your Hearts.
+                            Earned by leveling up. Use them for hints in games or to refill your Shields.
                         </p>
                     </div>
                 </PopoverContent>

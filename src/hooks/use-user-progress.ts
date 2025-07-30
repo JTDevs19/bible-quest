@@ -11,14 +11,14 @@ const getExpForLevel = (level: number) => {
 };
 
 const KEYS_PER_LEVEL_UP = 5;
-const MAX_HEARTS = 10; // 5 full hearts, 10 half-hearts
+const MAX_SHIELDS = 10; // 5 full shields, 10 half-shields
 const STARTING_HINTS = 5;
 
 const initialState = {
     level: 1,
     exp: 0,
     wisdomKeys: 5,
-    hearts: MAX_HEARTS,
+    shields: MAX_SHIELDS,
     hints: STARTING_HINTS,
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
@@ -28,14 +28,14 @@ interface UserProgressState {
     level: number;
     exp: number;
     wisdomKeys: number;
-    hearts: number;
+    shields: number;
     hints: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     spendChance: () => boolean;
-    addHearts: (amount: number) => void;
+    addShields: (amount: number) => void;
     useHint: () => boolean;
     addHints: (amount: number) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
@@ -53,14 +53,14 @@ export const useUserProgress = create<UserProgressState>()(
                     let newLastLevelUpExp = state.lastLevelUpExp;
                     let newExpForNextLevel = state.expForNextLevel;
                     let newWisdomKeys = state.wisdomKeys;
-                    let newHearts = state.hearts;
+                    let newShields = state.shields;
 
                     while (newExp >= newExpForNextLevel) {
                         newLevel++;
                         newLastLevelUpExp = newExpForNextLevel;
                         newExpForNextLevel += getExpForLevel(newLevel);
                         newWisdomKeys += KEYS_PER_LEVEL_UP; // Award keys on level up
-                        newHearts = MAX_HEARTS; // Refill hearts on level up
+                        newShields = MAX_SHIELDS; // Refill shields on level up
                     }
                     
                     // Prevent EXP from going negative
@@ -74,7 +74,7 @@ export const useUserProgress = create<UserProgressState>()(
                         lastLevelUpExp: newLastLevelUpExp,
                         expForNextLevel: newExpForNextLevel,
                         wisdomKeys: newWisdomKeys,
-                        hearts: newHearts
+                        shields: newShields
                     };
                 });
             },
@@ -82,15 +82,15 @@ export const useUserProgress = create<UserProgressState>()(
                 set(state => ({ wisdomKeys: Math.max(0, state.wisdomKeys - amount) }));
             },
             spendChance: () => {
-                const currentHearts = get().hearts;
-                if (currentHearts > 0) {
-                    set({ hearts: currentHearts - 1 });
+                const currentShields = get().shields;
+                if (currentShields > 0) {
+                    set({ shields: currentShields - 1 });
                     return true;
                 }
                 return false;
             },
-            addHearts: (amount: number) => {
-                 set(state => ({ hearts: Math.min(MAX_HEARTS, state.hearts + amount) }));
+            addShields: (amount: number) => {
+                 set(state => ({ shields: Math.min(MAX_SHIELDS, state.shields + amount) }));
             },
             useHint: () => {
                 const currentHints = get().hints;
