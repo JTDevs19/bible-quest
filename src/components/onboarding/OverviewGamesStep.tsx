@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useOnboarding } from '@/app/page';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Puzzle } from 'lucide-react';
 
-export function OverviewGamesStep() {
+export const OverviewGamesStep = () => {
   const { nextStep, prevStep, data } = useOnboarding();
   const isFilipino = data.language === 'fil';
 
@@ -34,4 +33,4 @@ export function OverviewGamesStep() {
       </CardFooter>
     </Card>
   );
-}
+};
