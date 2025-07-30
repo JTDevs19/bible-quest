@@ -28,7 +28,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [isTranslating, setIsTranslating] = useState(false);
     const [isGeneratingPpt, setIsGeneratingPpt] = useState(false);
     const { toast } = useToast();
-    const { saveNote, savedNotes, updateNote } = useUserProgress();
+    const { saveNote, savedNotes, updateNote, aiVerseCharges, denarius, setProgress } = useUserProgress();
 
     useEffect(() => {
         const savedNote = savedNotes.find(n => n.title.toLowerCase() === initialGuide.title.toLowerCase());
@@ -139,8 +139,9 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         setIsGeneratingPpt(true);
         toast({ title: 'Generating Presentation...', description: 'Your PowerPoint file is being created by the AI. This may take a moment.' });
         try {
-            const result = await getSermonPresentation(guide);
+            const result = await getSermonPresentation(guide, { aiVerseCharges, denarius });
             if (result.success && result.dataUri) {
+                setProgress({ aiVerseCharges: result.newCharges, denarius: result.newDenarius });
                 const a = document.createElement('a');
                 a.href = result.dataUri;
                 const safeTitle = guide.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -241,7 +242,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                         {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                         {language === 'English' ? 'To Tagalog' : 'To English'}
                     </Button>
-                    <Button variant="outline" onClick={handleGeneratePresentation} disabled={isGeneratingPpt}>
+                    <Button variant="outline" onClick={handleGeneratePresentation} disabled={isGeneratingPpt || (aiVerseCharges <= 0 && denarius <= 0)}>
                         {isGeneratingPpt ? <Loader2 className="mr-2 animate-spin" /> : <Presentation className="mr-2" />}
                         PPT
                     </Button>

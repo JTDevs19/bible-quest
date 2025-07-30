@@ -74,7 +74,6 @@ interface UserProgressState {
     useHint: () => boolean;
     addHints: (amount: number) => void;
     addGold: (amount: number) => void;
-    spendAiVerseCharge: () => boolean;
     addDenarius: (amount: number) => void;
     openTreasure: (treasureId: string, cost: number) => void;
     completeTraining: (game: keyof TrainingState) => void;
@@ -151,18 +150,6 @@ export const useUserProgress = create<UserProgressState>()(
             },
             addGold: (amount: number) => {
                 set(state => ({ gold: state.gold + amount }));
-            },
-            spendAiVerseCharge: () => {
-                const { aiVerseCharges, denarius } = get();
-                if (aiVerseCharges > 0) {
-                    set({ aiVerseCharges: aiVerseCharges - 1 });
-                    return true;
-                }
-                if (denarius > 0) {
-                    set({ denarius: denarius - 1 });
-                    return true;
-                }
-                return false;
             },
             addDenarius: (amount: number) => {
                 set(state => ({ denarius: state.denarius + amount }));

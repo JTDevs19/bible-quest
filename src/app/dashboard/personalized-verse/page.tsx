@@ -5,13 +5,13 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getVerseRecommendation, getSermonGuide, getTranslatedSermonGuide } from './actions';
+import { getVerseRecommendation, getSermonGuide } from './actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles, Languages, Hammer, FileText, UserCheck, BookHeart, ScrollText } from 'lucide-react';
+import { Loader2, Sparkles, Hammer, FileText, BookHeart, ScrollText } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
 import { SermonGuideDialog } from './sermon-guide-dialog';
@@ -163,8 +163,11 @@ export default function PersonalizedVersePage() {
                         <div className="flex justify-between items-center">
                              <CardTitle>{language === 'Tagalog' ? 'Para Saan Ito?' : 'What Is It For?'}</CardTitle>
                              <div className="flex items-center gap-2 text-sm font-semibold">
-                                <DenariusIcon />
-                                {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
+                                {aiVerseCharges > 0 ? (
+                                    <><Sparkles className="w-5 h-5 text-primary" />{aiVerseCharges} Free</>
+                                ) : (
+                                    <><DenariusIcon />{denarius}</>
+                                )}
                              </div>
                         </div>
                         <CardDescription>{language === 'Tagalog' ? 'Sabihin sa amin kung ano ang nasa iyong puso o kung saan ka naghahanap ng gabay.' : "Tell us what's on your heart or what you're seeking guidance on."}</CardDescription>
@@ -214,8 +217,11 @@ export default function PersonalizedVersePage() {
                         <div className="flex justify-between items-center">
                              <CardTitle>{language === 'Tagalog' ? 'Bumuo ng Gabay sa Sermon' : 'Generate Sermon Guide'}</CardTitle>
                              <div className="flex items-center gap-2 text-sm font-semibold">
-                                <DenariusIcon />
-                                {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
+                                {aiVerseCharges > 0 ? (
+                                    <><Sparkles className="w-5 h-5 text-primary" />{aiVerseCharges} Free</>
+                                ) : (
+                                    <><DenariusIcon />{denarius}</>
+                                )}
                              </div>
                         </div>
                         <CardDescription>{language === 'Tagalog' ? 'Magbigay ng isang paksa upang lumikha ng isang pangunahing balangkas para sa pagbabahagi.' : 'Provide a topic to create a basic outline for sharing.'}</CardDescription>

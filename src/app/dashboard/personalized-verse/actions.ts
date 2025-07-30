@@ -13,21 +13,21 @@ const verseFormSchema = z.object({
   language: z.enum(['English', 'Tagalog']),
 });
 
-interface VerseActionInput extends PersonalizedVerseRecommendationsInput {
+interface AiActionInput {
     aiVerseCharges: number;
     denarius: number;
 }
 
 export async function getVerseRecommendation(
-  input: VerseActionInput
+  input: PersonalizedVerseRecommendationsInput & AiActionInput
 ): Promise<{ success: boolean; recommendation?: any; message?: string; newCharges?: number; newDenarius?: number; }> {
-  const { aiVerseCharges, denarius } = input;
+  const { aiVerseCharges, denarius, ...verseInput } = input;
 
   if (aiVerseCharges <= 0 && denarius <= 0) {
     return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
   }
   
-  const validatedInput = verseFormSchema.safeParse(input);
+  const validatedInput = verseFormSchema.safeParse(verseInput);
 
   if (!validatedInput.success) {
     return { success: false, message: validatedInput.error.errors.map(e => e.message).join(', ') };
@@ -57,21 +57,17 @@ const sermonFormSchema = z.object({
   language: z.enum(['English', 'Tagalog']),
 });
 
-interface SermonActionInput extends SermonGuideInput {
-    aiVerseCharges: number;
-    denarius: number;
-}
 
 export async function getSermonGuide(
-  input: SermonActionInput
+  input: SermonGuideInput & AiActionInput
 ): Promise<{ success: boolean; sermonGuide?: any; message?: string; newCharges?: number; newDenarius?: number; }> {
-  const { aiVerseCharges, denarius } = input;
+  const { aiVerseCharges, denarius, ...sermonInput } = input;
 
   if (aiVerseCharges <= 0 && denarius <= 0) {
     return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
   }
 
-  const validatedInput = sermonFormSchema.safeParse(input);
+  const validatedInput = sermonFormSchema.safeParse(sermonInput);
 
   if (!validatedInput.success) {
     return { success: false, message: validatedInput.error.errors.map(e => e.message).join(', ') };
@@ -134,10 +130,26 @@ export async function getTranslatedSermonGuide(guide: SermonGuideOutput, targetL
 }
 
 
-export async function getSermonPresentation(guide: SermonGuideOutput): Promise<{ success: boolean; dataUri?: string; message?: string }> {
+export async function getSermonPresentation(guide: SermonGuideOutput, charges: AiActionInput): Promise<{ success: boolean; dataUri?: string; message?: string, newCharges?: number, newDenarius?: number }> {
+  const { aiVerseCharges, denarius } = charges;
+
+  if (aiVerseCharges <= 0 && denarius <= 0) {
+    return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
+  }
+  
   try {
     const result = await generateSermonPresentation(guide);
-    return { success: true, dataUri: result.presentationDataUri };
+    
+    let newCharges = aiVerseCharges;
+    let newDenarius = denarius;
+
+    if (aiVerseCharges > 0) {
+        newCharges = aiVerseCharges - 1;
+    } else {
+        newDenarius = denarius - 1;
+    }
+
+    return { success: true, dataUri: result.presentationDataUri, newCharges, newDenarius };
   } catch (error: any) {
     console.error("Error generating presentation:", error);
     return { success: false, message: error.message || "Failed to generate presentation." };
