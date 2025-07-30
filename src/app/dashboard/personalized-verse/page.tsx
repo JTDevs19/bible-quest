@@ -52,7 +52,7 @@ export default function PersonalizedVersePage() {
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<'English' | 'Tagalog'>('English');
   const [activeTab, setActiveTab] = useState('verse');
-  const { aiVerseCharges, denarius } = useUserProgress();
+  const { aiVerseCharges, denarius, setProgress } = useUserProgress();
   const router = useRouter();
 
   useEffect(() => {
@@ -91,9 +91,12 @@ export default function PersonalizedVersePage() {
         spiritualNeed: values.spiritualNeed,
         spiritualLevel: userProfile.spiritualLevel,
         language: language,
+        aiVerseCharges,
+        denarius,
       });
       if(result.success) {
         setRecommendation(result.recommendation);
+        setProgress({ aiVerseCharges: result.newCharges, denarius: result.newDenarius });
       } else {
         setError(result.message || "An unexpected error occurred.");
       }
@@ -113,9 +116,12 @@ export default function PersonalizedVersePage() {
       const result = await getSermonGuide({
         topic: values.topic,
         language: language,
+        aiVerseCharges,
+        denarius,
       });
        if(result.success) {
         setSermonGuide(result.sermonGuide);
+        setProgress({ aiVerseCharges: result.newCharges, denarius: result.newDenarius });
       } else {
         setError(result.message || "An unexpected error occurred.");
       }
