@@ -6,10 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { BookOpen, Languages, Loader2, Save, Download } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Save, Download, FilePenLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getTranslatedSermonGuide } from './actions';
 import { useUserProgress } from '@/hooks/use-user-progress';
+import type { SavedSermonNote } from '@/hooks/use-user-progress';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface SermonGuideDialogProps {
   isOpen: boolean;
@@ -19,32 +22,48 @@ interface SermonGuideDialogProps {
 }
 
 export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLanguage }: SermonGuideDialogProps) {
-    const [guide, setGuide] = useState(initialGuide);
+    const [guide, setGuide] = useState<SavedSermonNote>(initialGuide);
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
+    const [personalNotes, setPersonalNotes] = useState('');
     const { toast } = useToast();
-    const { saveNote, savedNotes } = useUserProgress();
+    const { saveNote, savedNotes, updateNote } = useUserProgress();
 
     useEffect(() => {
-        setGuide(initialGuide);
+        const savedNote = savedNotes.find(n => n.title.toLowerCase() === initialGuide.title.toLowerCase());
+        setGuide(savedNote || initialGuide);
         setLanguage(initialLanguage);
-    }, [initialGuide, initialLanguage]);
+        setPersonalNotes(savedNote?.personalNotes || '');
+    }, [initialGuide, initialLanguage, savedNotes, isOpen]);
 
     const isNoteSaved = savedNotes.some(n => n.title.toLowerCase() === guide.title.toLowerCase());
 
     const handleSaveNote = () => {
-        const success = saveNote(guide);
-        if (success) {
+        const noteToSave: SavedSermonNote = {
+            ...guide,
+            personalNotes: personalNotes,
+        };
+        
+        if (isNoteSaved) {
+            updateNote(noteToSave);
             toast({
-                title: 'Sermon Guide Saved!',
-                description: 'The guide has been added to your "My Notes" page.',
+                title: 'Note Updated!',
+                description: 'Your personal notes have been saved.',
             });
         } else {
-             toast({
-                variant: 'destructive',
-                title: 'Note Already Exists',
-                description: 'A note with this title has already been saved.',
-            });
+            const success = saveNote(noteToSave);
+            if (success) {
+                toast({
+                    title: 'Sermon Guide Saved!',
+                    description: 'The guide has been added to your "My Notes" page.',
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Note Already Exists',
+                    description: 'A note with this title has already been saved.',
+                });
+            }
         }
     };
     
@@ -53,7 +72,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         try {
             const targetLanguage = language === 'English' ? 'Tagalog' : 'English';
             const translatedGuide = await getTranslatedSermonGuide(guide, targetLanguage);
-            setGuide(translatedGuide);
+            setGuide(prev => ({...prev, ...translatedGuide})); // Keep personal notes
             setLanguage(targetLanguage);
         } catch (error) {
             console.error('Translation failed:', error);
@@ -77,14 +96,21 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
             content += `Verse: ${point.verseReference}\n"${point.verseText}"\n\n`;
         });
         content += '--------------------\n\n';
-        content += `Conclusion:\n${guide.conclusion}\n`;
+        content += `Conclusion:\n${guide.conclusion}\n\n`;
+        
+        if (personalNotes) {
+            content += '====================\n';
+            content += 'MY PERSONAL NOTES:\n';
+            content += '====================\n';
+            content += `${personalNotes}\n`;
+        }
 
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         const safeTitle = guide.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        a.download = `${safeTitle}.txt`;
+        a.download = `${safeTitle}_sermon_guide.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -121,8 +147,19 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                     <h3 className="font-headline text-lg text-center font-bold mb-2">{language === 'Tagalog' ? 'Konklusyon' : 'Conclusion'}</h3>
                     <p className="text-muted-foreground text-center font-serif italic">{guide.conclusion}</p>
                 </div>
+                <div className="mt-6 border-t pt-4">
+                    <Label htmlFor="personal-notes" className="font-headline text-lg font-bold flex items-center gap-2 mb-2"><FilePenLine /> My Personal Notes</Label>
+                    <Textarea 
+                        id="personal-notes"
+                        placeholder="Add your own stories, reflections, or application points here..."
+                        value={personalNotes}
+                        onChange={(e) => setPersonalNotes(e.target.value)}
+                        rows={5}
+                        className="mt-2"
+                    />
+                </div>
             </div>
-             <DialogFooter className="sm:justify-between gap-2 shrink-0 flex-wrap">
+             <DialogFooter className="sm:justify-between gap-2 shrink-0 flex-wrap pt-4 border-t">
                 <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
                     {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                     {language === 'English' ? 'Translate to Tagalog' : 'Translate to English'}
@@ -132,12 +169,10 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                         <Download className="mr-2" />
                         Download
                     </Button>
-                    {!isNoteSaved && (
-                        <Button onClick={handleSaveNote}>
-                            <Save className="mr-2" />
-                            Save to Notes
-                        </Button>
-                    )}
+                    <Button onClick={handleSaveNote}>
+                        <Save className="mr-2" />
+                        {isNoteSaved ? 'Update Note' : 'Save to Notes'}
+                    </Button>
                 </div>
             </DialogFooter>
         </DialogContent>

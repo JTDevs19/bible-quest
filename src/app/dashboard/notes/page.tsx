@@ -6,15 +6,15 @@ import { useUserProgress } from '@/hooks/use-user-progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { NotebookText, Trash2, Eye, Info } from 'lucide-react';
-import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
+import type { SavedSermonNote } from '@/hooks/use-user-progress';
 import { SermonGuideDialog } from '../personalized-verse/sermon-guide-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 export default function NotesPage() {
     const { savedNotes, deleteNote } = useUserProgress();
-    const [selectedNote, setSelectedNote] = useState<SermonGuideOutput | null>(null);
-    const [noteToDelete, setNoteToDelete] = useState<SermonGuideOutput | null>(null);
+    const [selectedNote, setSelectedNote] = useState<SavedSermonNote | null>(null);
+    const [noteToDelete, setNoteToDelete] = useState<SavedSermonNote | null>(null);
     const { toast } = useToast();
 
     const handleDeleteConfirm = () => {

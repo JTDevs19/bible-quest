@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { create } from 'zustand';
@@ -12,6 +11,10 @@ const getExpForLevel = (level: number) => {
     // Simple linear progression for now
     return 100 * level;
 };
+
+export interface SavedSermonNote extends SermonGuideOutput {
+    personalNotes?: string;
+}
 
 const KEYS_PER_LEVEL_UP = 5;
 const MAX_SHIELDS = 10; // 5 full shields, 10 half-shields
@@ -46,7 +49,7 @@ const initialState = {
         characterAdventures: false,
         bibleMastery: false,
     } as TrainingState,
-    savedNotes: [] as SermonGuideOutput[],
+    savedNotes: [] as SavedSermonNote[],
 }
 
 interface UserProgressState {
@@ -62,7 +65,7 @@ interface UserProgressState {
     expForNextLevel: number;
     treasuresOpened: TreasuresState;
     training: TrainingState;
-    savedNotes: SermonGuideOutput[];
+    savedNotes: SavedSermonNote[];
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     addWisdomKeys: (amount: number) => void;
@@ -75,7 +78,8 @@ interface UserProgressState {
     addDenarius: (amount: number) => void;
     openTreasure: (treasureId: string, cost: number) => void;
     completeTraining: (game: keyof TrainingState) => void;
-    saveNote: (note: SermonGuideOutput) => boolean;
+    saveNote: (note: SavedSermonNote) => boolean;
+    updateNote: (updatedNote: SavedSermonNote) => void;
     deleteNote: (noteTitle: string) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
@@ -185,7 +189,7 @@ export const useUserProgress = create<UserProgressState>()(
                     }
                 }));
             },
-            saveNote: (note: SermonGuideOutput) => {
+            saveNote: (note: SavedSermonNote) => {
                 const { savedNotes } = get();
                 const isDuplicate = savedNotes.some(n => n.title.toLowerCase() === note.title.toLowerCase());
                 if (isDuplicate) {
@@ -195,6 +199,15 @@ export const useUserProgress = create<UserProgressState>()(
                     savedNotes: [...state.savedNotes, note]
                 }));
                 return true; // Indicate success
+            },
+            updateNote: (updatedNote: SavedSermonNote) => {
+                set(state => ({
+                    savedNotes: state.savedNotes.map(note => 
+                        note.title.toLowerCase() === updatedNote.title.toLowerCase()
+                            ? updatedNote 
+                            : note
+                    )
+                }));
             },
             deleteNote: (noteTitle: string) => {
                 set(state => ({
