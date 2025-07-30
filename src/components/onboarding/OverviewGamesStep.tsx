@@ -16,7 +16,7 @@ export const OverviewGamesStep = () => {
           <Puzzle className="w-10 h-10 text-primary" />
         </div>
         <CardTitle className="font-headline text-3xl">{isFilipino ? 'Masaya at Nakakaaliw na mga Laro' : 'Fun & Engaging Games'}</CardTitle>
-        <CardDescription className="pt-2">{isFilipino ? 'Maglalaro ka ng iba\\'t ibang laro na idinisenyo upang gawing kasiya-siya ang pag-aaral ng Bibliya:' : "You'll play a variety of games designed to make learning the Bible enjoyable:"}</CardDescription>
+        <CardDescription className="pt-2">{isFilipino ? "Maglalaro ka ng iba't ibang laro na idinisenyo upang gawing kasiya-siya ang pag-aaral ng Bibliya:" : "You'll play a variety of games designed to make learning the Bible enjoyable:"}</CardDescription>
       </CardHeader>
       <CardContent className="text-left space-y-2">
         <p><strong>- {isFilipino ? 'Pagmemorya ng Talata' : 'Verse Memory'}:</strong> {isFilipino ? 'Punan ang mga patlang upang mamemorya ang mga susing kasulatan.' : 'Fill in the blanks to memorize key scriptures.'}</p>
