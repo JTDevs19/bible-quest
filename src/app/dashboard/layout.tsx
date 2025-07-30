@@ -28,6 +28,8 @@ import {
   Key,
   Hammer,
   NotebookText,
+  Lightbulb,
+  Coins,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -113,7 +115,7 @@ function DashboardNav({ isAdmin }: { isAdmin: boolean }) {
 }
 
 function UserProgressHeader() {
-    const { level, exp, expForNextLevel, lastLevelUpExp, shields, wisdomKeys } = useUserProgress();
+    const { level, exp, expForNextLevel, lastLevelUpExp, shields, wisdomKeys, hints, denarius } = useUserProgress();
     const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
     const ShieldDisplay = () => {
@@ -169,6 +171,38 @@ function UserProgressHeader() {
                         <h4 className="font-medium leading-none">Wisdom Keys</h4>
                         <p className="text-sm text-muted-foreground">
                             Earned by leveling up. Use them for hints in games or to refill your Shields.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <Lightbulb className="w-5 h-5 text-blue-500" />
+                        <span>{hints}</span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Scholar's Lens</h4>
+                        <p className="text-sm text-muted-foreground">
+                           Charges for your lens to get hints when you're stuck in the Verse Memory game.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <Coins className="w-5 h-5 text-amber-500" />
+                        <span>{denarius}</span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Denarius</h4>
+                        <p className="text-sm text-muted-foreground">
+                           A special currency used to power the advanced AI features once your free charges are used.
                         </p>
                     </div>
                 </PopoverContent>

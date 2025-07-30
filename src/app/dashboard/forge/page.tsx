@@ -22,7 +22,7 @@ const DenariusIcon = () => (
 );
 
 export default function ForgePage() {
-    const { wisdomKeys, shields, hints, denarius, addShields, addHints, addDenarius, spendWisdomKeys } = useUserProgress();
+    const { wisdomKeys, shields, addShields, addHints, addDenarius, spendWisdomKeys } = useUserProgress();
     const { toast } = useToast();
 
     const handleReinforceShields = () => {
@@ -85,30 +85,6 @@ export default function ForgePage() {
                 <h1 className="font-headline text-3xl font-bold">The Forge</h1>
                 <p className="text-muted-foreground">Use your Wisdom Keys to craft essential items for your quest.</p>
             </div>
-
-            <Card>
-                 <CardHeader>
-                    <div className="flex justify-center items-center gap-4 font-bold text-lg">
-                        <div className="flex items-center gap-2">
-                             <Key className="w-6 h-6 text-yellow-500" />
-                            <span>{wisdomKeys} Keys</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Shield className="w-6 h-6 text-primary" />
-                             <span>{Math.floor(shields/2)} Shields</span>
-                        </div>
-                         <div className="flex items-center gap-2">
-                            <Lightbulb className="w-6 h-6 text-blue-500" />
-                            <span>{hints} Hints</span>
-                        </div>
-                         <div className="flex items-center gap-2">
-                            <Coins className="w-6 h-6 text-amber-500" />
-                            <span>{denarius} Denarius</span>
-                        </div>
-                    </div>
-                </CardHeader>
-            </Card>
-
 
             <div className="grid md:grid-cols-3 gap-8">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
