@@ -101,8 +101,8 @@ const triviaLevels = [
     { question: "Who was the prophet that challenged the prophets of Baal on Mount Carmel?", options: ["Elisha", "Jeremiah", "Isaiah", "Elijah"], answer: "Elijah", trivia: "God sent down fire from heaven to consume Elijah's sacrifice, proving He was the one true God in a dramatic showdown.", reference: "1 Kings 18:38", verseText: "Then the fire of the LORD fell and burned up the sacrifice, the wood, the stones and the soil, and also licked up the water in the trench." },
     { question: "Who was the judge of Israel that defeated a vast Midianite army with only 300 men?", options: ["Jephthah", "Samson", "Ehud", "Gideon"], answer: "Gideon", trivia: "God reduced Gideon's army from 32,000 to 300 to show that the victory was His alone, not by human strength.", reference: "Judges 7:7", verseText: "The LORD said to Gideon, 'With the three hundred men that lapped I will save you and give the Midianites into your hands. Let all the others go home.'" },
     { question: "Sino ang alagad na kilala bilang 'ang Zelote'?", options: ["Simon Peter", "Simon", "Andrew", "James"], answer: "Simon", trivia: "The Zealots were a political movement that sought to incite the people of Judea to rebel against the Roman Empire.", reference: "Luke 6:15", verseText: "Matthew, Thomas, James son of Alphaeus, Simon who was called the Zealot," },
-    { question: "Who was the king of Babylon who saw the writing on the wall?", options: ["Nebuchadnezzar", "Darius", "Cyrus", "Belshazzar"], answer: "Belshazzar", trivia: "Daniel interpreted the mysterious writing, which foretold the imminent downfall of Belshazzar's kingdom to the Medes and Persians.", reference: "Daniel 5:25", verseText: "This is the inscription that was written: MENE, MENE, TEKEL, PARSIN." },
-    { question: "Who were the two spies sent by Joshua who were hidden by Rahab in Jericho?", options: ["Caleb and Phinehas", "Gershon and Merari", "Only one is named", "They are unnamed"], answer: "They are unnamed", trivia: "Though their names aren't given, their mission was crucial for the Israelite victory at Jericho, thanks to Rahab's help.", reference: "Joshua 2:1", verseText: "Then Joshua son of Nun secretly sent two spies from Shittim. 'Go, look over the land,' he said, 'especially Jericho.' So they went and entered the house of a prostitute named Rahab and stayed there." },
+    { question: "Sino ang hari ng Babilonia na nakakita ng sulat sa pader?", options: ["Nabucodonosor", "Dario", "Ciro", "Belsasar"], answer: "Belsasar", trivia: "Daniel interpreted the mysterious writing, which foretold the imminent downfall of Belshazzar's kingdom to the Medes and Persians.", reference: "Daniel 5:25", verseText: "This is the inscription that was written: MENE, MENE, TEKEL, PARSIN." },
+    { question: "Sino ang dalawang espiya na ipinadala ni Josue na itinago ni Rahab sa Jerico?", options: ["Caleb at Finees", "Gerson at Merari", "Only one is named", "They are unnamed"], answer: "They are unnamed", trivia: "Though their names aren't given, their mission was crucial for the Israelite victory at Jericho, thanks to Rahab's help.", reference: "Joshua 2:1", verseText: "Then Joshua son of Nun secretly sent two spies from Shittim. 'Go, look over the land,' he said, 'especially Jericho.' So they went and entered the house of a prostitute named Rahab and stayed there." },
     { question: "Sino ang babaeng unang nakakita sa muling nabuhay na si Hesus?", options: ["Maria, ina ni Hesus", "Maria Magdalena", "Salome", "Juana"], answer: "Maria Magdalena", trivia: "Mary Magdalene was a devoted follower of Jesus, and she was given the honor of being the first witness to His resurrection.", reference: "John 20:16", verseText: "Jesus said to her, 'Mary.' She turned toward him and cried out in Aramaic, 'Rabboni!' (which means 'Teacher')." },
     { question: "Sino ang co-worker with Paul, isang doktor sa propesyon, na sumulat ng isang Ebanghelyo at ang aklat ng Mga Gawa?", options: ["Mark", "Luke", "Silas", "Barnabas"], answer: "Luke", trivia: "Luke was a meticulous historian and a faithful companion to Paul, providing detailed accounts of Jesus' life and the early church.", reference: "Colossians 4:14", verseText: "Our dear friend Luke, the doctor, and Demas send greetings." },
     { question: "Sino ang punong saserdote na gumabay sa batang propeta na si Samuel?", options: ["Phinehas", "Ahimelech", "Eli", "Abiathar"], answer: "Eli", trivia: "Though his own sons were wicked, Eli recognized God's call on Samuel's life and guided him in his early prophetic ministry.", reference: "1 Samuel 3:9", verseText: "So Eli told Samuel, 'Go and lie down, and if he calls you, say, ‘Speak, LORD, for your servant is listening.’' So Samuel went and lay down in his place." },
@@ -123,13 +123,13 @@ const triviaLevels = [
   ],
   // Level 9
   [
-    { question: "Sino ang apo ni Saul na pinakitaan ni David ng kabaitan alang-alang kay Jonathan?", options: ["Ish-Bosheth", "Mephibosheth", "Mica", "Armoni"], answer: "Mephibosheth", trivia: "Mephibosheth was lame in both feet. David restored his family's land and gave him a permanent place at the royal table.", reference: "2 Samuel 9:7", verseText: "'Don’t be afraid,' David said to him, 'for I will surely show you kindness for the sake of your father Jonathan. I will restore to you all the land that belonged to your grandfather Saul, and you will always eat at my table.'" },
+    { question: "Sino ang apo ni Saul na pinakitaan ni David ng kabaitan alang-alang kay Jonathan?", options: ["Ish-Bosheth", "Mephibosheth", "Mica", "Armoni"], answer: "Mefiboset", trivia: "Mephibosheth was lame in both feet. David restored his family's land and gave him a permanent place at the royal table.", reference: "2 Samuel 9:7", verseText: "'Don’t be afraid,' David said to him, 'for I will surely show you kindness for the sake of your father Jonathan. I will restore to you all the land that belonged to your grandfather Saul, and you will always eat at my table.'" },
     { question: "Sino ang mahusay magsalitang Hudyo mula sa Alejandria na nagturo nang may kapangyarihan sa Efeso ngunit alam lamang ang bautismo ni Juan?", options: ["Aquila", "Priscilla", "Apollos", "Tychicus"], answer: "Apolos", trivia: "Priscilla and Aquila took him aside and explained the way of God more accurately, and he became a great asset to the early church.", reference: "Acts 18:24", verseText: "Meanwhile a Jew named Apollos, a native of Alexandria, came to Ephesus. He was a learned man, with a thorough knowledge of the Scriptures." },
-    { question: "Sino ang hari ng Juda na tinamaan ng ketong dahil sa pangahas na pag-aalay ng insenso sa templo?", options: ["Uzziah", "Jotham", "Ahaz", "Hezekiah"], answer: "Uzziah", trivia: "Though he started his reign well, King Uzziah's pride led him to usurp the role of the priests, resulting in divine judgment.", reference: "2 Chronicles 26:19", verseText: "Uzziah, who had a censer in his hand to burn incense, became angry. While he was raging at the priests in their presence before the incense altar in the LORD’s temple, leprosy broke out on his forehead." },
-    { question: "Sino ang propeta na ang balumbon ay pinutol at sinunog ni Haring Jehoiakim?", options: ["Isaiah", "Ezekiel", "Habakkuk", "Jeremiah"], answer: "Jeremiah", trivia: "Despite the king's defiance, God commanded Jeremiah to write all the words again on another scroll, adding many similar words.", reference: "Jeremiah 36:23", verseText: "Whenever Jehudi had read three or four columns of the scroll, the king cut them off with a scribe’s knife and threw them into the firepot, until the entire scroll was burned in the fire." },
-    { question: "Sino ang tumakas na alipin mula sa Colosas na kung kanino sumulat si Pablo ng isang apela sa kanyang amo?", options: ["Philemon", "Archippus", "Tychicus", "Onesimus"], answer: "Onesimus", trivia: "Paul converted Onesimus to Christianity and sent him back to his master Philemon, not as a slave, but as a beloved brother in Christ.", reference: "Philemon 1:16", verseText: "no longer as a slave, but better than a slave, as a dear brother. He is very dear to me but even dearer to you, both as a fellow man and as a brother in the Lord." },
+    { question: "Sino ang hari ng Juda na tinamaan ng ketong dahil sa pangahas na pag-aalay ng insenso sa templo?", options: ["Uzziah", "Jotham", "Ahaz", "Hezekiah"], answer: "Uzias", trivia: "Though he started his reign well, King Uzziah's pride led him to usurp the role of the priests, resulting in divine judgment.", reference: "2 Chronicles 26:19", verseText: "Uzziah, who had a censer in his hand to burn incense, became angry. While he was raging at the priests in their presence before the incense altar in the LORD’s temple, leprosy broke out on his forehead." },
+    { question: "Sino ang propeta na ang balumbon ay pinutol at sinunog ni Haring Jehoiakim?", options: ["Isaiah", "Ezekiel", "Habakkuk", "Jeremiah"], answer: "Jeremias", trivia: "Despite the king's defiance, God commanded Jeremiah to write all the words again on another scroll, adding many similar words.", reference: "Jeremiah 36:23", verseText: "Whenever Jehudi had read three or four columns of the scroll, the king cut them off with a scribe’s knife and threw them into the firepot, until the entire scroll was burned in the fire." },
+    { question: "Sino ang tumakas na alipin mula sa Colosas na kung kanino sumulat si Pablo ng isang apela sa kanyang amo?", options: ["Philemon", "Archippus", "Tychicus", "Onesimus"], answer: "Onesimo", trivia: "Paul converted Onesimus to Christianity and sent him back to his master Philemon, not as a slave, but as a beloved brother in Christ.", reference: "Philemon 1:16", verseText: "no longer as a slave, but better than a slave, as a dear brother. He is very dear to me but even dearer to you, both as a fellow man and as a brother in the Lord." },
     { question: "Sino ang lalaki mula sa Cirene na pinilit na pasanin ang krus ni Hesus?", options: ["Simon", "Alexander", "Rufus", "Joseph"], answer: "Simon", trivia: "Mark's gospel mentions that this Simon was the father of Alexander and Rufus, suggesting they were known to the early Christian community.", reference: "Mark 15:21", verseText: "A certain man from Cyrene, Simon, the father of Alexander and Rufus, was passing by on his way in from the country, and they forced him to carry the cross." },
-    { question: "Sino ang tapat na kaibigan at kapwa bilanggo ni Pablo, na binanggit sa pagtatapos ng Colosas?", options: ["Epaphras", "Tychicus", "Aristarchus", "Demas"], answer: "Aristarchus", trivia: "Aristarchus, a Macedonian from Thessalonica, was a loyal companion who traveled with Paul and shared in his imprisonments.", reference: "Colossians 4:10", verseText: "My fellow prisoner Aristarchus sends you his greetings, as does Mark, the cousin of Barnabas." },
+    { question: "Sino ang tapat na kaibigan at kapwa bilanggo ni Pablo, na binanggit sa pagtatapos ng Colosas?", options: ["Epaphras", "Tychicus", "Aristarchus", "Demas"], answer: "Aristarco", trivia: "Aristarchus, a Macedonian from Thessalonica, was a loyal companion who traveled with Paul and shared in his imprisonments.", reference: "Colossians 4:10", verseText: "My fellow prisoner Aristarchus sends you his greetings, as does Mark, the cousin of Barnabas." },
     { question: "Sino ang ama ni Matusalem at lolo sa tuhod ni Noe?", options: ["Jared", "Lamech", "Mahalalel", "Enoch"], answer: "Enoch", trivia: "Enoch is one of only two men in the Bible (the other being Elijah) who did not experience death but was taken directly by God.", reference: "Genesis 5:22", verseText: "After he became the father of Methuselah, Enoch walked faithfully with God 300 years and had other sons and daughters." },
     { question: "Sino ang propetisang nagkumpirma sa pagiging tunay ng Aklat ng Kautusan na natagpuan noong panahon ni Haring Josias?", options: ["Deborah", "Miriam", "No-adiah", "Huldah"], answer: "Hulda", trivia: "Huldah's prophecy validated the found scripture and spurred on Josiah's great religious reforms in Judah.", reference: "2 Kings 22:14", verseText: "Hilkiah the priest, Ahikam, Akbor, Shaphan and Asaiah went to speak to the prophet Huldah, who was the wife of Shallum son of Tikvah, the son of Harhas, keeper of the wardrobe. She lived in Jerusalem, in the New Quarter." },
     { question: "Sino ang anak nina Jacob at Lea, na ang mga inapo ay naging tribong saserdote ng Israel?", options: ["Reuben", "Simeon", "Levi", "Judah"], answer: "Levi", trivia: "Because of their zeal for the Lord, the tribe of Levi was set apart for the service of the tabernacle and temple, not receiving a territorial inheritance like the other tribes.", reference: "Numbers 3:12", verseText: "'I have taken the Levites from among the Israelites in place of the first male offspring of every Israelite woman. The Levites are mine,'" }
@@ -447,7 +447,7 @@ export default function CharacterAdventuresPage() {
     const router = useRouter();
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
-    const { addExp, training, completeTraining } = useUserProgress();
+    const { addExp, training, completeTraining, characterAdventuresMaxLevel, setProgress, lastPlayedDate } = useUserProgress();
 
     useEffect(() => {
         setIsClient(true);
@@ -459,11 +459,24 @@ export default function CharacterAdventuresPage() {
     }, []);
 
     useEffect(() => {
-        if (isClient && training.characterAdventures === false) {
-            setShowAdventureMap(false);
-            // Auto-start tour logic can go here
+        if (isClient) {
+            const today = new Date().toISOString().split('T')[0];
+            if (lastPlayedDate !== today) {
+                const completedLevels = Object.keys(levelScores).filter(level => levelScores[parseInt(level)] === PERFECT_SCORE_PER_LEVEL).length;
+                if (characterAdventuresMaxLevel <= completedLevels) {
+                    setProgress({ 
+                        lastPlayedDate: today, 
+                        characterAdventuresMaxLevel: Math.min(MAX_LEVEL, characterAdventuresMaxLevel + 2) 
+                    });
+                }
+            }
+
+            if (training.characterAdventures === false) {
+                setShowAdventureMap(false);
+                // Auto-start tour logic can go here
+            }
         }
-    }, [isClient, training.characterAdventures]);
+    }, [isClient, training.characterAdventures, lastPlayedDate, setProgress, characterAdventuresMaxLevel, levelScores]);
 
     const loadProgress = useCallback(() => {
         if (!isClient) return;
@@ -499,6 +512,14 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
+        if (level > characterAdventuresMaxLevel) {
+            toast({
+                title: "Level Locked",
+                description: "Come back tomorrow to unlock more levels!",
+                variant: 'default',
+            });
+            return;
+        }
         startLevel(level);
     };
 
@@ -537,7 +558,7 @@ export default function CharacterAdventuresPage() {
             setSelectedAnswer(null);
             setIsAnswered(false);
         } else {
-            const finalScore = score;
+            const finalScore = score + (selectedAnswer === triviaLevels[currentLevel - 1][questionIndex].answer ? 1 : 0);
             const oldLevelScore = levelScores[currentLevel] || 0;
 
             if (finalScore > oldLevelScore) {
@@ -562,7 +583,7 @@ export default function CharacterAdventuresPage() {
     const nextLevel = () => {
         setShowLevelCompleteDialog(false);
         if (currentLevel < MAX_LEVEL) {
-             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL) {
+             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL || currentLevel + 1 > characterAdventuresMaxLevel) {
                 setShowAdventureMap(true);
              } else {
                 startLevel(currentLevel + 1);
@@ -615,7 +636,7 @@ export default function CharacterAdventuresPage() {
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4 max-h-[60vh] overflow-y-auto">
                             {Array.from({ length: MAX_LEVEL }).map((_, index) => {
                                 const level = index + 1;
-                                const isLocked = false; // All levels are unlocked
+                                const isLocked = level > characterAdventuresMaxLevel;
                                 const bestScore = levelScores[level] || 0;
                                 const isPerfect = bestScore === PERFECT_SCORE_PER_LEVEL;
 
@@ -625,7 +646,7 @@ export default function CharacterAdventuresPage() {
                                         onClick={() => !isLocked && handleLevelSelect(level)}
                                         className={cn(
                                             "flex flex-col items-center justify-center p-4 rounded-lg border-2 text-center aspect-square",
-                                            isLocked ? "bg-muted text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-secondary",
+                                            isLocked ? "bg-muted text-muted-foreground cursor-not-allowed border-dashed" : "cursor-pointer hover:bg-secondary",
                                             isPerfect && "border-yellow-400 bg-yellow-50"
                                         )}
                                     >
@@ -746,7 +767,7 @@ export default function CharacterAdventuresPage() {
                             <RotateCcw className="mr-2" />
                             {language === 'en' ? 'Play Again' : 'Ulitin'}
                         </Button>
-                        <Button onClick={nextLevel} disabled={score < PERFECT_SCORE_PER_LEVEL && currentLevel < MAX_LEVEL}>
+                        <Button onClick={nextLevel} disabled={(score < PERFECT_SCORE_PER_LEVEL || currentLevel >= characterAdventuresMaxLevel) && currentLevel < MAX_LEVEL}>
                            {language === 'en' ? 'Next Level' : 'Susunod na Antas'}
                         </Button>
                          <Button variant="secondary" onClick={() => setShowAdventureMap(true)}>

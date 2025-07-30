@@ -50,6 +50,8 @@ const initialState = {
         bibleMastery: false,
     } as TrainingState,
     savedNotes: [] as SavedSermonNote[],
+    characterAdventuresMaxLevel: 2,
+    lastPlayedDate: new Date().toISOString().split('T')[0],
 }
 
 interface UserProgressState {
@@ -66,6 +68,8 @@ interface UserProgressState {
     treasuresOpened: TreasuresState;
     training: TrainingState;
     savedNotes: SavedSermonNote[];
+    characterAdventuresMaxLevel: number;
+    lastPlayedDate: string;
     addExp: (amount: number) => void;
     spendWisdomKeys: (amount: number) => void;
     addWisdomKeys: (amount: number) => void;
