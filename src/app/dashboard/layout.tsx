@@ -34,7 +34,6 @@ import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/app/page';
-import AppTour from '@/components/tour/AppTour';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Progress } from '@/components/ui/progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -218,7 +217,6 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppTour />
       <Sidebar>
         <SidebarHeader id="sidebar-header">
           <div className="flex items-center gap-2">
