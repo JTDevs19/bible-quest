@@ -68,12 +68,12 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-3xl">
-            <DialogHeader className="text-center">
+        <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
+            <DialogHeader className="text-center shrink-0">
                 <DialogTitle className="font-headline text-2xl text-primary">{guide.title}</DialogTitle>
                 <DialogDescription className="font-serif italic">{guide.introduction}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto p-1 pr-4">
+            <div className="space-y-4 overflow-y-auto flex-1 p-1 pr-4">
                 <Accordion type="single" collapsible defaultValue="point-0" className="w-full">
                     {guide.points.map((point, index) => (
                         <AccordionItem value={`point-${index}`} key={index}>
@@ -97,7 +97,7 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                     <p className="text-muted-foreground text-center font-serif italic">{guide.conclusion}</p>
                 </div>
             </div>
-             <DialogFooter className="sm:justify-between gap-2">
+             <DialogFooter className="sm:justify-between gap-2 shrink-0">
                 <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
                     {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                     {language === 'English' ? 'Translate to Tagalog' : 'Translate to English'}
