@@ -45,7 +45,12 @@ export default function NotesPage() {
                             <Card key={note.title} className="flex flex-col">
                                 <CardHeader>
                                     <CardTitle className="font-headline text-xl">{note.title}</CardTitle>
-                                    <CardDescription className="italic truncate">{note.introduction}</CardDescription>
+                                    <CardDescription className="italic">
+                                        {note.introduction.length > 100 
+                                            ? `${note.introduction.substring(0, 100)}...` 
+                                            : note.introduction
+                                        }
+                                    </CardDescription>
                                 </CardHeader>
                                 <CardContent className="flex-grow flex items-end">
                                     <div className="flex w-full gap-2">
