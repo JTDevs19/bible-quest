@@ -23,13 +23,14 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
     const { toast } = useToast();
-    const { saveNote } = useUserProgress();
+    const { saveNote, savedNotes } = useUserProgress();
 
     useEffect(() => {
         setGuide(initialGuide);
         setLanguage(initialLanguage);
     }, [initialGuide, initialLanguage]);
 
+    const isNoteSaved = savedNotes.some(n => n.title.toLowerCase() === guide.title.toLowerCase());
 
     const handleSaveNote = () => {
         const success = saveNote(guide);
@@ -131,10 +132,12 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                         <Download className="mr-2" />
                         Download
                     </Button>
-                    <Button onClick={handleSaveNote}>
-                        <Save className="mr-2" />
-                        Save to Notes
-                    </Button>
+                    {!isNoteSaved && (
+                        <Button onClick={handleSaveNote}>
+                            <Save className="mr-2" />
+                            Save to Notes
+                        </Button>
+                    )}
                 </div>
             </DialogFooter>
         </DialogContent>
