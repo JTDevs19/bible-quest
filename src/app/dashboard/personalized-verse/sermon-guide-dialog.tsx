@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { BookOpen, Languages, Loader2, Save } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Save, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getTranslatedSermonGuide } from './actions';
 import { useUserProgress } from '@/hooks/use-user-progress';
@@ -66,6 +66,30 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         }
     };
 
+    const handleDownload = () => {
+        let content = `Title: ${guide.title}\n\n`;
+        content += `Introduction:\n${guide.introduction}\n\n`;
+        content += '--------------------\n\n';
+        guide.points.forEach((point, index) => {
+            content += `Point ${index + 1}: ${point.pointTitle}\n`;
+            content += `Details: ${point.pointDetails}\n`;
+            content += `Verse: ${point.verseReference}\n"${point.verseText}"\n\n`;
+        });
+        content += '--------------------\n\n';
+        content += `Conclusion:\n${guide.conclusion}\n`;
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const safeTitle = guide.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        a.download = `${safeTitle}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
@@ -97,15 +121,21 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                     <p className="text-muted-foreground text-center font-serif italic">{guide.conclusion}</p>
                 </div>
             </div>
-             <DialogFooter className="sm:justify-between gap-2 shrink-0">
+             <DialogFooter className="sm:justify-between gap-2 shrink-0 flex-wrap">
                 <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
                     {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                     {language === 'English' ? 'Translate to Tagalog' : 'Translate to English'}
                 </Button>
-                <Button onClick={handleSaveNote}>
-                    <Save className="mr-2" />
-                    Save to Notes
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleDownload}>
+                        <Download className="mr-2" />
+                        Download
+                    </Button>
+                    <Button onClick={handleSaveNote}>
+                        <Save className="mr-2" />
+                        Save to Notes
+                    </Button>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
