@@ -1,21 +1,43 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { NotebookText, Trash2, Eye, Info } from 'lucide-react';
+import { NotebookText, Trash2, Eye, Info, ShieldAlert } from 'lucide-react';
 import type { SavedSermonNote } from '@/hooks/use-user-progress';
 import { SermonGuideDialog } from '../personalized-verse/sermon-guide-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import type { UserProfile } from '@/app/page';
+import { useRouter } from 'next/navigation';
+
+const ADMIN_USERS = ['Kaya', 'Scassenger'];
 
 export default function NotesPage() {
     const { savedNotes, deleteNote } = useUserProgress();
     const [selectedNote, setSelectedNote] = useState<SavedSermonNote | null>(null);
     const [noteToDelete, setNoteToDelete] = useState<SavedSermonNote | null>(null);
     const { toast } = useToast();
+    const [isClient, setIsClient] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const router = useRouter();
+
+     useEffect(() => {
+        setIsClient(true);
+        const profileStr = localStorage.getItem('bibleQuestsUser');
+        if (profileStr) {
+            const profile: UserProfile = JSON.parse(profileStr);
+            if (ADMIN_USERS.includes(profile.username)) {
+                setIsAdmin(true);
+            } else {
+                router.push('/dashboard');
+            }
+        } else {
+             router.push('/dashboard');
+        }
+    }, [router]);
 
     const handleDeleteConfirm = () => {
         if (noteToDelete) {
@@ -27,6 +49,30 @@ export default function NotesPage() {
             setNoteToDelete(null);
         }
     };
+    
+    if (!isClient) {
+        return <div>Loading...</div>;
+    }
+
+    if (!isAdmin) {
+         return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
+                <Card className="max-w-md w-full">
+                    <CardHeader>
+                        <div className="mx-auto bg-destructive/10 p-4 rounded-full mb-4">
+                            <ShieldAlert className="w-10 h-10 text-destructive" />
+                        </div>
+                        <CardTitle className="font-headline text-3xl">Access Denied</CardTitle>
+                        <CardDescription>This page is for admin users only.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
 
     return (
         <>

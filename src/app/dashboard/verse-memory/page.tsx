@@ -635,9 +635,11 @@ function VersePuzzle({ verse, onComplete, onBonusFail, initialTimer, viewOnly = 
     );
 }
 
+const ADMIN_USERS = ['Kaya', 'Scassenger'];
 
 export default function VerseMemoryPage() {
   const [isClient, setIsClient] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [currentStage, setCurrentStage] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
@@ -690,6 +692,9 @@ export default function VerseMemoryPage() {
     if (profileStr) {
         const profile = JSON.parse(profileStr);
         setLanguage(profile.language || 'en');
+        if (ADMIN_USERS.includes(profile.username)) {
+            setIsAdmin(true);
+        }
     }
     if (savedProgress) {
       const progress = JSON.parse(savedProgress);
@@ -1258,7 +1263,7 @@ export default function VerseMemoryPage() {
        <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="fillInTheBlank" className="gap-2" disabled={activeBonusLevel !== null || viewOnlyBonusLevel !== null}><Feather/>{language === 'fil' ? 'Punan ang Patlang' : 'Fill in the Blanks'}</TabsTrigger>
-                <TabsTrigger value="puzzle" className="gap-2"><Puzzle />{language === 'fil' ? 'Mga Bonus na Puzzle' : 'Bonus Puzzles'}</TabsTrigger>
+                <TabsTrigger value="puzzle" className="gap-2" disabled={activeBonusLevel !== null || viewOnlyBonusLevel !== null || !isAdmin}><Puzzle />{language === 'fil' ? 'Mga Bonus na Puzzle' : 'Bonus Puzzles'}</TabsTrigger>
             </TabsList>
             <div className="mt-4">
                 <TabsContent value="fillInTheBlank">
@@ -1445,7 +1450,7 @@ export default function VerseMemoryPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {Array.from({ length: LEVELS_PER_STAGE }).map((_, i) => {
                                     const level = i + 1;
-                                    const isUnlocked = true; // All bonus puzzles unlocked for now
+                                    const isUnlocked = isLevelComplete(currentStage, level, verseScores);
                                     const bonusStatus = bonusProgress[currentStage]?.[level];
                                     const bonusReward = stage1BonusRewards[i] || 0;
 

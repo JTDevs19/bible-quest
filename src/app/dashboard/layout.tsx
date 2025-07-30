@@ -55,7 +55,7 @@ const isStageComplete = (stageNum: number, scores: any) => {
     return true;
 };
 
-function DashboardNav() {
+function DashboardNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
 
@@ -74,17 +74,20 @@ function DashboardNav() {
       icon: Milestone, 
       label: 'Bible Mastery',
     },
-    { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
+    { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper', adminOnly: true },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
     { id: 'nav-treasures', href: '/dashboard/treasures', icon: Gift, label: 'Treasures' },
     { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
     { id: 'nav-forge', href: '/dashboard/forge', icon: Hammer, label: 'The Forge' },
-    { id: 'nav-notes', href: '/dashboard/notes', icon: NotebookText, label: 'My Notes' },
+    { id: 'nav-notes', href: '/dashboard/notes', icon: NotebookText, label: 'My Notes', adminOnly: true },
   ];
 
   return (
      <SidebarMenu>
       {navItems.map((item) => {
+        if (item.adminOnly && !isAdmin) {
+          return null;
+        }
         const buttonContent = (
           <SidebarMenuButton
             id={item.id}
@@ -196,6 +199,8 @@ function UserProgressHeader() {
     );
 }
 
+const ADMIN_USERS = ['Kaya', 'Scassenger'];
+
 export default function DashboardLayout({
   children,
 }: {
@@ -203,11 +208,16 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
-    const profile = localStorage.getItem('bibleQuestsUser');
-    if (profile) {
-      setUserProfile(JSON.parse(profile));
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    if (profileStr) {
+      const profile = JSON.parse(profileStr);
+      setUserProfile(profile);
+      if (ADMIN_USERS.includes(profile.username)) {
+        setIsAdmin(true);
+      }
     } else {
       router.push('/');
     }
@@ -229,7 +239,7 @@ export default function DashboardLayout({
           </div>
         </SidebarHeader>
         <SidebarContent>
-         <DashboardNav />
+         <DashboardNav isAdmin={isAdmin} />
         </SidebarContent>
         <SidebarFooter>
           <div className="border-t border-border -mx-2 pt-2">

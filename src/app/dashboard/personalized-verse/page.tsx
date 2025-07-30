@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles, Hammer, FileText, BookHeart, ScrollText } from 'lucide-react';
+import { Loader2, Sparkles, Hammer, FileText, BookHeart, ScrollText, ShieldAlert } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
 import { SermonGuideDialog } from './sermon-guide-dialog';
@@ -43,6 +43,7 @@ const DenariusIcon = () => (
     </svg>
 );
 
+const ADMIN_USERS = ['Kaya', 'Scassenger'];
 
 export default function PersonalizedVersePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -55,15 +56,25 @@ export default function PersonalizedVersePage() {
   const [activeTab, setActiveTab] = useState('verse');
   const { aiVerseCharges, denarius, setProgress } = useUserProgress();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const profile = localStorage.getItem('bibleQuestsUser');
-    if (profile) {
-      const parsedProfile = JSON.parse(profile);
+    setIsClient(true);
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    if (profileStr) {
+      const parsedProfile: UserProfile = JSON.parse(profileStr);
       setUserProfile(parsedProfile);
       setLanguage(parsedProfile.language || 'English');
+      if (ADMIN_USERS.includes(parsedProfile.username)) {
+        setIsAdmin(true);
+      } else {
+        router.push('/dashboard');
+      }
+    } else {
+        router.push('/dashboard');
     }
-  }, []);
+  }, [router]);
   
   const currentVerseSchema = language === 'English' ? verseFormSchema : verseFormSchemaFil;
   const currentSermonSchema = language === 'English' ? sermonFormSchema : sermonFormSchemaFil;
@@ -143,6 +154,29 @@ export default function PersonalizedVersePage() {
   
   const pageTitle = language === 'Tagalog' ? 'AI Katulong sa Talata' : 'AI Verse Helper';
   const pageDescription = language === 'Tagalog' ? 'Kumuha ng personalisadong rekomendasyon ng talata o gabay sa sermon.' : 'Get a personalized verse recommendation or sermon guide.';
+
+  if (!isClient) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAdmin) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center">
+            <Card className="max-w-md w-full">
+                <CardHeader>
+                    <div className="mx-auto bg-destructive/10 p-4 rounded-full mb-4">
+                        <ShieldAlert className="w-10 h-10 text-destructive" />
+                    </div>
+                    <CardTitle className="font-headline text-3xl">Access Denied</CardTitle>
+                    <CardDescription>This page is for admin users only.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
