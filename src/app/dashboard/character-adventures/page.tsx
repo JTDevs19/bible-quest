@@ -15,7 +15,6 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useUserProgress } from '@/hooks/use-user-progress';
-import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 const triviaLevels = [
   // Level 1
@@ -132,7 +131,7 @@ const triviaLevels = [
     { question: "Sino ang lalaki mula sa Cirene na pinilit na pasanin ang krus ni Hesus?", options: ["Simon", "Alexander", "Rufus", "Joseph"], answer: "Simon", trivia: "Mark's gospel mentions that this Simon was the father of Alexander and Rufus, suggesting they were known to the early Christian community.", reference: "Mark 15:21", verseText: "A certain man from Cyrene, Simon, the father of Alexander and Rufus, was passing by on his way in from the country, and they forced him to carry the cross." },
     { question: "Sino ang tapat na kaibigan at kapwa bilanggo ni Pablo, na binanggit sa pagtatapos ng Colosas?", options: ["Epaphras", "Tychicus", "Aristarchus", "Demas"], answer: "Aristarchus", trivia: "Aristarchus, a Macedonian from Thessalonica, was a loyal companion who traveled with Paul and shared in his imprisonments.", reference: "Colossians 4:10", verseText: "My fellow prisoner Aristarchus sends you his greetings, as does Mark, the cousin of Barnabas." },
     { question: "Sino ang ama ni Matusalem at lolo sa tuhod ni Noe?", options: ["Jared", "Lamech", "Mahalalel", "Enoch"], answer: "Enoch", trivia: "Enoch is one of only two men in the Bible (the other being Elijah) who did not experience death but was taken directly by God.", reference: "Genesis 5:22", verseText: "After he became the father of Methuselah, Enoch walked faithfully with God 300 years and had other sons and daughters." },
-    { question: "Sino ang propetisang nagkumpirma sa pagiging tunay ng Aklat ng Kautusan na natagpuan noong panahon ni Haring Josias?", options: ["Deborah", "Miriam", "No-adiah", "Huldah"], answer: "Huldah", trivia: "Huldah's prophecy validated the found scripture and spurred on Josiah's great religious reforms in Judah.", reference: "2 Kings 22:14", verseText: "Hilkiah the priest, Ahikam, Akbor, Shaphan and Asaiah went to speak to the prophet Huldah, who was the wife of Shallum son of Tikvah, the son of Harhas, keeper of the wardrobe. She lived in Jerusalem, in the New Quarter." },
+    { question: "Sino ang propetisang nagkumpirma sa pagiging tunay ng Aklat ng Kautusan na natagpuan noong panahon ni Haring Josias?", options: ["Deborah", "Miriam", "No-adiah", "Huldah"], answer: "Hulda", trivia: "Huldah's prophecy validated the found scripture and spurred on Josiah's great religious reforms in Judah.", reference: "2 Kings 22:14", verseText: "Hilkiah the priest, Ahikam, Akbor, Shaphan and Asaiah went to speak to the prophet Huldah, who was the wife of Shallum son of Tikvah, the son of Harhas, keeper of the wardrobe. She lived in Jerusalem, in the New Quarter." },
     { question: "Sino ang anak nina Jacob at Lea, na ang mga inapo ay naging tribong saserdote ng Israel?", options: ["Reuben", "Simeon", "Levi", "Judah"], answer: "Levi", trivia: "Because of their zeal for the Lord, the tribe of Levi was set apart for the service of the tabernacle and temple, not receiving a territorial inheritance like the other tribes.", reference: "Numbers 3:12", verseText: "'I have taken the Levites from among the Israelites in place of the first male offspring of every Israelite woman. The Levites are mine,'" }
   ],
   // Level 10
@@ -449,7 +448,6 @@ export default function CharacterAdventuresPage() {
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
     const { addExp, training, completeTraining } = useUserProgress();
-    const [runTour, setRunTour] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -463,7 +461,7 @@ export default function CharacterAdventuresPage() {
     useEffect(() => {
         if (isClient && training.characterAdventures === false) {
             setShowAdventureMap(false);
-            setTimeout(() => setRunTour(true), 500);
+            // Auto-start tour logic can go here
         }
     }, [isClient, training.characterAdventures]);
 
@@ -574,41 +572,6 @@ export default function CharacterAdventuresPage() {
         }
     };
 
-    const tourSteps: Step[] = [
-        {
-            target: '#character-adventures-card',
-            content: 'This is Character Adventures! Answer trivia questions about people in the Bible.',
-        },
-        {
-            target: '#question-text',
-            content: 'Read the question carefully.',
-        },
-        {
-            target: '#answer-options',
-            content: 'Then, select one of the four options as your answer.',
-        },
-        {
-            target: '#score-display',
-            content: "You'll earn points and EXP for every correct answer!",
-        },
-         {
-            target: '#adventure-map-button',
-            content: 'You can return to the level selection map at any time. Have fun!',
-        },
-    ];
-
-    const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
-        const finishedStatuses: string[] = ['finished', 'skipped'];
-
-        if (finishedStatuses.includes(status)) {
-            setRunTour(false);
-            completeTraining('characterAdventures');
-            setShowAdventureMap(true); // Go back to map after tour
-        }
-    };
-
-
     if (!isClient) {
         return <div>Loading...</div>; // Or a skeleton loader
     }
@@ -696,17 +659,6 @@ export default function CharacterAdventuresPage() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            <Joyride
-                run={runTour}
-                steps={tourSteps}
-                continuous
-                showProgress
-                showSkipButton
-                callback={handleJoyrideCallback}
-                styles={{
-                    options: { zIndex: 10000, primaryColor: 'hsl(var(--primary))' }
-                }}
-            />
             <div className="flex justify-between items-center">
                 <div className="space-y-1">
                     <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>

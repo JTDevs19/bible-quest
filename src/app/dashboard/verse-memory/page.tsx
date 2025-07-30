@@ -20,7 +20,6 @@ import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 
 const verses = [
@@ -670,10 +669,7 @@ export default function VerseMemoryPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { playCorrectSound, playIncorrectSound } = useSoundEffects();
-
-  const [runTour, setRunTour] = useState(false);
-
-
+  
   const [verseWithBlanks, setVerseWithBlanks] = useState<VerseParts>([]);
   const [missingWords, setMissingWords] = useState<string[]>([]);
   
@@ -728,7 +724,7 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     if (isClient && training.verseMemory === false) {
-      setTimeout(() => setRunTour(true), 500);
+      // Auto-start tour logic can go here
     }
   }, [isClient, training.verseMemory]);
   
@@ -1232,57 +1228,7 @@ export default function VerseMemoryPage() {
 
   const currentVerseScore = verseScores[currentStage]?.[currentLevel]?.[currentVerseIndex] ?? 0;
   
-    const tourSteps: Step[] = [
-        {
-            target: '#verse-memory-card',
-            content: 'Welcome to Verse Memory! Here, you will fill in the missing words to memorize the verse.',
-            placement: 'bottom',
-        },
-        {
-            target: '#verse-label-0',
-            content: 'Click on a blank space to type your answer.',
-            placement: 'bottom',
-        },
-        {
-            target: '#verse-input-0',
-            content: 'Type the first missing word here. For this training, the answer is "God".',
-            placement: 'bottom',
-            // @ts-ignore
-            isFixed: true, 
-        },
-        {
-            target: '#check-answer-button',
-            content: "Once you've filled in all the blanks, click this button to check your answer.",
-            placement: 'top',
-        },
-        {
-            target: '#hint-button',
-            content: 'If you get stuck, you can use a hint! This will cost one Wisdom Key.',
-            placement: 'top',
-        },
-        {
-            target: '#journey-map-button',
-            content: "That's it! You can always check your overall progress on the Journey Map. Enjoy the game!",
-            placement: 'left',
-        },
-    ];
   
-    const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status, type, index, action } = data;
-        const finishedStatuses: string[] = ['finished', 'skipped'];
-
-        if (type === 'step:after' && index === 2 && action === 'next') {
-            handleInputChange(0, 'God');
-        }
-
-        if (finishedStatuses.includes(status)) {
-            setRunTour(false);
-            completeTraining('verseMemory');
-            router.push('/dashboard'); // Go back to dashboard after first training
-        }
-    };
-
-
   if (!isClient || !currentVerse) {
     return <div>{language === 'fil' ? 'Nagloload...' : 'Loading...'}</div>;
   }
@@ -1303,27 +1249,7 @@ export default function VerseMemoryPage() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
-       <Joyride
-            run={runTour}
-            steps={tourSteps}
-            continuous
-            showProgress
-            showSkipButton
-            callback={handleJoyrideCallback}
-            styles={{
-                options: {
-                    zIndex: 10000,
-                    primaryColor: 'hsl(var(--primary))',
-                    textColor: 'hsl(var(--foreground))',
-                    arrowColor: 'hsl(var(--card))',
-                    backgroundColor: 'hsl(var(--card))',
-                },
-                 buttonClose: { color: 'hsl(var(--muted-foreground))' },
-                 buttonNext: { backgroundColor: 'hsl(var(--primary))' },
-                 buttonBack: { color: 'hsl(var(--muted-foreground))' },
-            }}
-        />
-
+       
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">{language === 'fil' ? 'Hamon sa Pagmemorya ng Talata' : 'Verse Memory Challenge'}</h1>
         <p className="text-muted-foreground">{language === 'fil' ? 'Kabisaduhin ang mga talata sa iba\'t ibang laro at hamon.' : 'Master verses through different games and challenges.'}</p>

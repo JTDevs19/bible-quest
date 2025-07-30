@@ -12,7 +12,6 @@ import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUserProgress } from '@/hooks/use-user-progress';
-import Joyride, { Step, CallBackProps } from 'react-joyride';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -110,15 +109,14 @@ export default function BibleMasteryPage() {
   const router = useRouter();
   const { addExp, shields, spendWisdomKeys, addShields, wisdomKeys, spendChance, training, completeTraining } = useUserProgress();
   const REFILL_COST = 10;
-  const [runTour, setRunTour] = useState(false);
-
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
   
   useEffect(() => {
     if (isClient && training.bibleMastery === false) {
-        setTimeout(() => setRunTour(true), 500);
+        // Auto-start tour logic can go here
     }
   }, [isClient, training.bibleMastery]);
   
@@ -270,41 +268,6 @@ export default function BibleMasteryPage() {
   const bookListToShow = isBookInOldTestament(correctOrder[0]) ? oldTestamentBooks : newTestamentBooks;
   const bookListName = isBookInOldTestament(correctOrder[0]) ? "Old Testament" : "New Testament";
 
-    const tourSteps: Step[] = [
-        {
-            target: '#bible-mastery-card',
-            content: 'Welcome to Bible Mastery! Your goal is to arrange the books of the Bible in the correct order.',
-        },
-        {
-            target: '#book-list',
-            content: 'Drag and drop these books into the correct canonical order.',
-        },
-        {
-            target: '#check-order-button',
-            content: 'When you think you have the correct order, click here to check your answer.',
-        },
-        {
-            target: '#shield-display',
-            content: 'Each incorrect attempt will cost a shield. Be careful! You can refill shields at the Forge.',
-        },
-        {
-            target: '#language-toggle',
-            content: "You can switch between English and Filipino names for the books. That's all for the training, enjoy!",
-        },
-    ];
-
-    const handleJoyrideCallback = (data: CallBackProps) => {
-        const { status } = data;
-        const finishedStatuses: string[] = ['finished', 'skipped'];
-
-        if (finishedStatuses.includes(status)) {
-            setRunTour(false);
-            completeTraining('bibleMastery');
-            router.push('/dashboard'); // Go back to dashboard after last training
-        }
-    };
-
-
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
   }
@@ -391,15 +354,6 @@ export default function BibleMasteryPage() {
 
   return (
     <>
-    <Joyride
-        run={runTour}
-        steps={tourSteps}
-        continuous
-        showProgress
-        showSkipButton
-        callback={handleJoyrideCallback}
-        styles={{ options: { zIndex: 10000, primaryColor: 'hsl(var(--primary))' } }}
-    />
     <div className="max-w-md mx-auto">
         <div className="text-center mb-4">
             <h1 className="font-headline text-3xl font-bold">{pageTitle}</h1>
