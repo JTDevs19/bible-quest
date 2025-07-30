@@ -176,18 +176,11 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                                 <div className="bg-background/50 p-3 rounded-md border">
                                     <div className="flex items-center gap-2 mb-1">
                                         <BookOpen /> 
-                                        <Input
-                                            value={point.verseReference}
-                                            onChange={(e) => handlePointChange(index, 'verseReference', e.target.value)}
-                                            className="font-bold text-sm h-8 border-none focus-visible:ring-1 focus-visible:ring-ring"
-                                        />
+                                        <p className="font-bold text-sm">{point.verseReference}</p>
                                     </div>
-                                    <Textarea
-                                        value={point.verseText}
-                                        onChange={(e) => handlePointChange(index, 'verseText', e.target.value)}
-                                        className="text-sm font-serif italic border-l-2 pl-3 border-primary/40 h-auto border-none focus-visible:ring-1 focus-visible:ring-ring"
-                                        rows={4}
-                                    />
+                                    <blockquote className="text-sm font-serif italic border-l-2 pl-3 border-primary/40">
+                                        {point.verseText}
+                                    </blockquote>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
