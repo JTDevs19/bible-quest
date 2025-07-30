@@ -15,6 +15,7 @@ const KEYS_PER_LEVEL_UP = 5;
 const MAX_SHIELDS = 10; // 5 full shields, 10 half-shields
 const STARTING_HINTS = 5;
 const STARTING_KEYS = 5;
+const STARTING_AI_CHARGES = 10;
 
 type TreasuresState = {
     [key: string]: boolean;
@@ -33,6 +34,8 @@ const initialState = {
     shields: MAX_SHIELDS,
     hints: STARTING_HINTS,
     gold: 0,
+    denarius: 0,
+    aiVerseCharges: STARTING_AI_CHARGES,
     lastLevelUpExp: 0,
     expForNextLevel: getExpForLevel(1),
     treasuresOpened: {} as TreasuresState,
@@ -50,6 +53,8 @@ interface UserProgressState {
     shields: number;
     hints: number;
     gold: number;
+    denarius: number;
+    aiVerseCharges: number;
     lastLevelUpExp: number;
     expForNextLevel: number;
     treasuresOpened: TreasuresState;
@@ -62,6 +67,8 @@ interface UserProgressState {
     useHint: () => boolean;
     addHints: (amount: number) => void;
     addGold: (amount: number) => void;
+    spendAiVerseCharge: () => boolean;
+    addDenarius: (amount: number) => void;
     openTreasure: (treasureId: string, cost: number) => void;
     completeTraining: (game: keyof TrainingState) => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
@@ -134,6 +141,21 @@ export const useUserProgress = create<UserProgressState>()(
             },
             addGold: (amount: number) => {
                 set(state => ({ gold: state.gold + amount }));
+            },
+            spendAiVerseCharge: () => {
+                const { aiVerseCharges, denarius } = get();
+                if (aiVerseCharges > 0) {
+                    set({ aiVerseCharges: aiVerseCharges - 1 });
+                    return true;
+                }
+                if (denarius > 0) {
+                    set({ denarius: denarius - 1 });
+                    return true;
+                }
+                return false;
+            },
+            addDenarius: (amount: number) => {
+                set(state => ({ denarius: state.denarius + amount }));
             },
             openTreasure: (treasureId: string, cost: number) => {
                 set(state => {

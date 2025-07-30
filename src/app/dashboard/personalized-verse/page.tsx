@@ -10,16 +10,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, Sparkles, Languages } from 'lucide-react';
+import { Loader2, Sparkles, Languages, Hammer, Coins } from 'lucide-react';
 import type { PersonalizedVerseRecommendationsOutput } from '@/ai/flows/personalized-verse-recommendations';
 import { RecommendationCard } from './recommendation-card';
 import type { UserProfile } from '@/app/page';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
+import { useUserProgress } from '@/hooks/use-user-progress';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   spiritualNeed: z.string().min(10, 'Please describe your need in at least 10 characters.'),
 });
+
+const DenariusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM8.573 4.253a.75.75 0 01.24 1.03l-1.313 2.625a.75.75 0 01-1.295-.648l1.313-2.625a.75.75 0 011.055-.382zM10.748 6.03a.75.75 0 01.02 1.06l-1.01 1.01a.75.75 0 11-1.06-1.06l1.01-1.01a.75.75 0 011.04-.02zM13.5 4.5a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM12 12.375a3.375 3.375 0 00-3.375 3.375c0 1.864 1.511 3.375 3.375 3.375s3.375-1.511 3.375-3.375a3.375 3.375 0 00-3.375-3.375zM17.183 8.01a.75.75 0 00-1.06-1.06l-1.01 1.01a.75.75 0 101.06 1.06l1.01-1.01zM18.75 10.5a.75.75 0 01.382 1.055l-1.313 2.625a.75.75 0 11-1.295-.648l1.313-2.625a.75.75 0 01.913-.432z" clipRule="evenodd" />
+    </svg>
+);
+
 
 export default function PersonalizedVersePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -27,11 +35,15 @@ export default function PersonalizedVersePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<'English' | 'Tagalog'>('English');
+  const { aiVerseCharges, denarius } = useUserProgress();
+  const router = useRouter();
 
   useEffect(() => {
     const profile = localStorage.getItem('bibleQuestsUser');
     if (profile) {
-      setUserProfile(JSON.parse(profile));
+      const parsedProfile = JSON.parse(profile);
+      setUserProfile(parsedProfile);
+      setLanguage(parsedProfile.language || 'English');
     }
   }, []);
 
@@ -54,7 +66,7 @@ export default function PersonalizedVersePage() {
         spiritualLevel: userProfile.spiritualLevel,
         language: language,
       });
-      setRecommendation(result);
+      setRecommendation(result.recommendation);
     } catch (e: any) {
       setError(e.message || "An unexpected error occurred.");
     } finally {
@@ -62,6 +74,7 @@ export default function PersonalizedVersePage() {
     }
   }
 
+  const hasCharges = aiVerseCharges > 0 || denarius > 0;
   const pageTitle = language === 'Tagalog' ? 'AI Katulong sa Talata' : 'AI Verse Helper';
   const pageDescription = language === 'Tagalog' ? 'Kumuha ng personalisadong rekomendasyon ng talata sa Bibliya para sa iyong kasalukuyang pangangailangan.' : 'Get a personalized Bible verse recommendation for your current need.';
   const cardTitle = language === 'Tagalog' ? 'Ilarawan ang Iyong Pangangailangan' : 'Describe Your Need';
@@ -70,6 +83,7 @@ export default function PersonalizedVersePage() {
   const formPlaceholder = language === 'Tagalog' ? 'hal., \'Nakakaramdam ako ng pagkabalisa tungkol sa hinaharap\' o \'Kailangan ko ng lakas para mapatawad ang isang tao\'' : "e.g., 'I'm feeling anxious about the future' or 'I need strength to forgive someone'";
   const buttonText = language === 'Tagalog' ? 'Kumuha ng Rekomendasyon' : 'Get Recommendation';
   const loadingText = language === 'Tagalog' ? 'Naghahanap ng Talata...' : 'Finding a Verse...';
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -80,8 +94,14 @@ export default function PersonalizedVersePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{cardTitle}</CardTitle>
-          <CardDescription>{cardDescription}</CardDescription>
+            <div className="flex justify-between items-center">
+                 <CardTitle>{cardTitle}</CardTitle>
+                 <div className="flex items-center gap-2 text-sm font-semibold">
+                    <DenariusIcon />
+                    {aiVerseCharges > 0 ? `${aiVerseCharges} Free` : denarius}
+                 </div>
+            </div>
+            <CardDescription>{cardDescription}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -112,12 +132,20 @@ export default function PersonalizedVersePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading || !userProfile}>
+              <Button type="submit" className="w-full" disabled={loading || !userProfile || !hasCharges}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 {loading ? loadingText : buttonText}
               </Button>
             </form>
           </Form>
+           {!hasCharges && (
+                <div className="text-center mt-4 text-sm text-muted-foreground">
+                    <p>You're out of charges for the AI Helper.</p>
+                    <Button variant="link" onClick={() => router.push('/dashboard/forge')}>
+                       <Hammer className="mr-2" /> Go to the Forge to get more.
+                    </Button>
+                </div>
+            )}
         </CardContent>
       </Card>
       
