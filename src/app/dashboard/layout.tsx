@@ -26,7 +26,7 @@ import {
   ChevronUp,
   Shield,
   Key,
-  ShoppingCart,
+  Hammer,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -77,7 +77,7 @@ function DashboardNav() {
     { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
     { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
-    { id: 'nav-store', href: '/dashboard/store', icon: ShoppingCart, label: 'Store' },
+    { id: 'nav-forge', href: '/dashboard/forge', icon: Hammer, label: 'The Forge' },
   ];
 
   return (
@@ -126,7 +126,7 @@ function UserProgressHeader() {
                             </div>
                         </>
                     ) : (
-                        <Shield className="w-5 h-5 text-primary fill-primary" />
+                         <Shield className={cn("w-5 h-5 text-primary", fullShields > 0 ? "fill-primary" : "fill-muted")} />
                     )}
                 </div>
                 <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>

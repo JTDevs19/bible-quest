@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Shield, Key, ShoppingCart } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Shield, Key, Hammer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -336,7 +336,7 @@ export default function BibleMasteryPage() {
                         </div>
                     </>
                 ) : (
-                    <Shield className="w-5 h-5 text-primary fill-primary" />
+                    <Shield className={cn("w-5 h-5 text-primary", fullShields > 0 || shields > 0 ? "fill-primary" : "fill-muted")} />
                 )}
             </div>
             <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
@@ -443,13 +443,13 @@ export default function BibleMasteryPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>Out of Shields!</AlertDialogTitle>
                 <AlertDialogDescription>
-                    You've run out of chances. Go to the store to refill your shields and keep playing.
+                    You've run out of chances. Go to the forge to reinforce your shields and keep playing.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Maybe Later</AlertDialogCancel>
-                <AlertDialogAction onClick={() => router.push('/dashboard/store')}>
-                    <ShoppingCart className="mr-2 h-4 w-4" /> Go to Store
+                <AlertDialogAction onClick={() => router.push('/dashboard/forge')}>
+                    <Hammer className="mr-2 h-4 w-4" /> Go to Forge
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>

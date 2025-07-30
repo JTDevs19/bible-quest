@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key, Languages, ShoppingCart } from 'lucide-react';
+import { CheckCircle, RefreshCw, XCircle, Star, Lock, PlayCircle, Map, Trophy, ChevronLeft, ChevronRight, HelpCircle, GitCommitVertical, Check, Users, CheckCircle2, ChevronsUpDown, Puzzle, Feather, Clock, Eye, Key, Languages, Hammer } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -28,7 +28,7 @@ const verses = [
     reference: 'John 3:16',
     reference_fil: 'Juan 3:16',
     text: 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
-    text_fil: 'Sapagka\'t gayon na lamang ang pagsinta ng Dios sa sanglibutan, na ibinigay niya ang kaniyang bugtong na Anak, upang ang sinomang sa kaniya\'y sumampalataya ay huwag mapahamak, kundi magkaroon ng buhay na walang hanggan.',
+    text_fil: 'Sapagka\\'t gayon na lamang ang pagsinta ng Dios sa sanglibutan, na ibinigay niya ang kaniyang bugtong na Anak, upang ang sinomang sa kaniya\\'y sumampalataya ay huwag mapahamak, kundi magkaroon ng buhay na walang hanggan.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -52,7 +52,7 @@ const verses = [
     reference: 'Romans 8:28',
     reference_fil: 'Mga Taga-Roma 8:28',
     text: 'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.',
-    text_fil: 'At nalalaman natin na ang lahat ng mga bagay ay nagkakalakip na gumagawa sa ikabubuti ng mga nagsisiibig sa Dios, sa makatuwid baga\'y niyaong mga tinawag alinsunod sa kaniyang nais.',
+    text_fil: 'At nalalaman natin na ang lahat ng mga bagay ay nagkakalakip na gumagawa sa ikabubuti ng mga nagsisiibig sa Dios, sa makatuwid baga\\'y niyaong mga tinawag alinsunod sa kaniyang nais.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -60,7 +60,7 @@ const verses = [
     reference: 'Jeremiah 29:11',
     reference_fil: 'Jeremias 29:11',
     text: 'For I know the plans I have for you,” declares the LORD, “plans to prosper you and not to harm you, plans to give you hope and a future.',
-    text_fil: 'Sapagka\'t nalalaman ko ang mga pag-iisip na aking iniisip sa inyo, sabi ng Panginoon, mga pag-iisip tungkol sa kapayapaan, at hindi tungkol sa kasamaan, upang bigyan kayo ng pag-asa sa inyong huling wakas.',
+    text_fil: 'Sapagka\\'t nalalaman ko ang mga pag-iisip na aking iniisip sa inyo, sabi ng Panginoon, mga pag-iisip tungkol sa kapayapaan, at hindi tungkol sa kasamaan, upang bigyan kayo ng pag-asa sa inyong huling wakas.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -68,7 +68,7 @@ const verses = [
     reference: 'Matthew 6:33',
     reference_fil: 'Mateo 6:33',
     text: 'But seek first his kingdom and his righteousness, and all these things will be given to you as well.',
-    text_fil: 'Datapuwa\'t hanapin muna ninyo ang kaniyang kaharian, at ang kaniyang katuwiran; at ang lahat ng mga bagay na ito ay pawang idaragdag sa inyo.',
+    text_fil: 'Datapuwa\\'t hanapin muna ninyo ang kaniyang kaharian, at ang kaniyang katuwiran; at ang lahat ng mga bagay na ito ay pawang idaragdag sa inyo.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -76,7 +76,7 @@ const verses = [
     reference: 'Galatians 5:22-23',
     reference_fil: 'Mga Taga-Galacia 5:22-23',
     text: 'But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control. Against such things there is no law.',
-    text_fil: 'Datapuwa\'t ang bunga ng Espiritu ay pagibig, katuwaan, kapayapaan, pagpapahinuhod, kagandahang-loob, kabutihan, pagtatapat, kaamuan, pagpipigil; laban sa mga gayong bagay ay walang kautusan.',
+    text_fil: 'Datapuwa\\'t ang bunga ng Espiritu ay pagibig, katuwaan, kapayapaan, pagpapahinuhod, kagandahang-loob, kabutihan, pagtatapat, kaamuan, pagpipigil; laban sa mga gayong bagay ay walang kautusan.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -84,7 +84,7 @@ const verses = [
     reference: 'Ephesians 2:8-9',
     reference_fil: 'Mga Taga-Efeso 2:8-9',
     text: 'For it is by grace you have been saved, through faith—and this is not from yourselves, it is the gift of God— not by works, so that no one can boast.',
-    text_fil: 'Sapagka\'t sa biyaya kayo\'y nangaligtas sa pamamagitan ng pananampalataya; at ito\'y hindi sa inyong sarili, ito\'y kaloob ng Dios; Hindi sa pamamagitan ng mga gawa, upang ang sinoman ay huwag magmapuri.',
+    text_fil: 'Sapagka\\'t sa biyaya kayo\\'y nangaligtas sa pamamagitan ng pananampalataya; at ito\\'y hindi sa inyong sarili, ito\\'y kaloob ng Dios; Hindi sa pamamagitan ng mga gawa, upang ang sinoman ay huwag magmapuri.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -108,7 +108,7 @@ const verses = [
     reference: 'Romans 3:23',
     reference_fil: 'Mga Taga-Roma 3:23',
     text: 'for all have sinned and fall short of the glory of God,',
-    text_fil: 'Sapagka\'t ang lahat ay nangagkasala nga, at hindi nangakaabot sa kaluwalhatian ng Dios;',
+    text_fil: 'Sapagka\\'t ang lahat ay nangagkasala nga, at hindi nangakaabot sa kaluwalhatian ng Dios;',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -116,7 +116,7 @@ const verses = [
     reference: 'Romans 6:23',
     reference_fil: 'Mga Taga-Roma 6:23',
     text: 'For the wages of sin is death, but the gift of God is eternal life in Christ Jesus our Lord.',
-    text_fil: 'Sapagka\'t ang kabayaran ng kasalanan ay kamatayan; datapuwa\'t ang kaloob na walang bayad ng Dios ay buhay na walang hanggan kay Cristo Jesus na Panginoon natin.',
+    text_fil: 'Sapagka\\'t ang kabayaran ng kasalanan ay kamatayan; datapuwa\\'t ang kaloob na walang bayad ng Dios ay buhay na walang hanggan kay Cristo Jesus na Panginoon natin.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -132,7 +132,7 @@ const verses = [
     reference: 'Matthew 28:19-20',
     reference_fil: 'Mateo 28:19-20',
     text: 'Therefore go and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, and teaching them to obey everything I have commanded you.',
-    text_fil: 'Dahil dito magsiyaon nga kayo, at gawin ninyong mga alagad ang lahat ng mga bansa, na sila\'y inyong bautismuhan sa pangalan ng Ama at ng Anak at ng Espiritu Santo: Na ituro ninyo sa kanila na kanilang ganapin ang lahat ng mga bagay na iniutos ko sa inyo.',
+    text_fil: 'Dahil dito magsiyaon nga kayo, at gawin ninyong mga alagad ang lahat ng mga bansa, na sila\\'y inyong bautismuhan sa pangalan ng Ama at ng Anak at ng Espiritu Santo: Na ituro ninyo sa kanila na kanilang ganapin ang lahat ng mga bagay na iniutos ko sa inyo.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -140,7 +140,7 @@ const verses = [
     reference: 'Hebrews 12:1-2',
     reference_fil: 'Mga Hebreo 12:1-2',
     text: 'Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off everything that hinders and the sin that so easily entangles. And let us run with perseverance the race marked out for us, fixing our eyes on Jesus, the pioneer and perfecter of faith.',
-    text_fil: 'Kaya\'t yamang napapalibutan tayo ng gayong kakapal na bilang ng mga saksi, itabi namang walang liwag ang bawa\'t pasan, at ang kasalanang pumipigil sa atin, at ating takbuhing may pagtitiis ang takbuhing inilagay sa harapan natin, Na masdan natin si Jesus na gumawa at sumakdal ng ating pananampalataya,',
+    text_fil: 'Kaya\\'t yamang napapalibutan tayo ng gayong kakapal na bilang ng mga saksi, itabi namang walang liwag ang bawa\\'t pasan, at ang kasalanang pumipigil sa atin, at ating takbuhing may pagtitiis ang takbuhing inilagay sa harapan natin, Na masdan natin si Jesus na gumawa at sumakdal ng ating pananampalataya,',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -148,7 +148,7 @@ const verses = [
     reference: 'Joshua 1:9',
     reference_fil: 'Josue 1:9',
     text: 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.',
-    text_fil: 'Hindi ba kita inutusan? Ikaw ay magpakalakas at magpakatapang na mabuti; huwag kang matakot, ni manglupaypay: sapagka\'t ang Panginoon mong Dios ay sumasaiyo saan ka man pumaroon.',
+    text_fil: 'Hindi ba kita inutusan? Ikaw ay magpakalakas at magpakatapang na mabuti; huwag kang matakot, ni manglupaypay: sapagka\\'t ang Panginoon mong Dios ay sumasaiyo saan ka man pumaroon.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -156,7 +156,7 @@ const verses = [
     reference: 'Isaiah 40:31',
     reference_fil: 'Isaias 40:31',
     text: 'but those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
-    text_fil: 'Nguni\'t silang nangaghihintay sa Panginoon ay mangagbabagong lakas; sila\'y paiilanglang na may mga pakpak na parang mga agila; sila\'y magsisitakbo, at hindi mangapapagod; sila\'y magsisilakad, at hindi manganghihina.',
+    text_fil: 'Nguni\\'t silang nangaghihintay sa Panginoon ay mangagbabagong lakas; sila\\'y paiilanglang na may mga pakpak na parang mga agila; sila\\'y magsisitakbo, at hindi mangapapagod; sila\\'y magsisilakad, at hindi manganghihina.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -164,7 +164,7 @@ const verses = [
     reference: 'Psalm 46:10',
     reference_fil: 'Mga Awit 46:10',
     text: 'He says, “Be still, and know that I am God; I will be exalted among the nations, I will be exalted in the earth.”',
-    text_fil: 'Kayo\'y magsitigil, at kilalanin ninyo na ako ang Dios: ako\'y mabubunyi sa gitna ng mga bansa, ako\'y mabubunyi sa lupa.',
+    text_fil: 'Kayo\\'y magsitigil, at kilalanin ninyo na ako ang Dios: ako\\'y mabubunyi sa gitna ng mga bansa, ako\\'y mabubunyi sa lupa.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -172,7 +172,7 @@ const verses = [
     reference: '1 Peter 5:7',
     reference_fil: '1 Pedro 5:7',
     text: 'Cast all your anxiety on him because he cares for you.',
-    text_fil: 'Na inyong ilagak sa kaniya ang lahat ng inyong kabalisahan, sapagka\'t kayo\'y ipinagmamalasakit niya.',
+    text_fil: 'Na inyong ilagak sa kaniya ang lahat ng inyong kabalisahan, sapagka\\'t kayo\\'y ipinagmamalasakit niya.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -197,7 +197,7 @@ const verses = [
     reference: 'Psalm 119:105',
     reference_fil: 'Mga Awit 119:105',
     text: 'Your word is a lamp for my feet, a light on my path.',
-    text_fil: 'Ang salita mo\'y ilawan sa aking mga paa, at liwanag sa aking landas.',
+    text_fil: 'Ang salita mo\\'y ilawan sa aking mga paa, at liwanag sa aking landas.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -205,7 +205,7 @@ const verses = [
     reference: 'Isaiah 53:5',
     reference_fil: 'Isaias 53:5',
     text: 'But he was pierced for our transgressions, he was crushed for our iniquities; the punishment that brought us peace was on him, and by his wounds we are healed.',
-    text_fil: 'Nguni\'t siya\'y nasugatan dahil sa ating mga pagsalangsang, siya\'y nabugbog dahil sa ating mga kasamaan: ang parusa ng tungkol sa ating kapayapaan ay nasa kaniya; at sa pamamagitan ng kaniyang mga latay ay nagsigaling tayo.',
+    text_fil: 'Nguni\\'t siya\\'y nasugatan dahil sa ating mga pagsalangsang, siya\\'y nabugbog dahil sa ating mga kasamaan: ang parusa ng tungkol sa ating kapayapaan ay nasa kaniya; at sa pamamagitan ng kaniyang mga latay ay nagsigaling tayo.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -221,7 +221,7 @@ const verses = [
     reference: 'Acts 1:8',
     reference_fil: 'Mga Gawa 1:8',
     text: 'But you will receive power when the Holy Spirit comes on you; and you will be my witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth.',
-    text_fil: 'Datapuwa\'t tatanggapin ninyo ang kapangyarihan, pagdating sa inyo ng Espiritu Santo: at kayo\'y magiging mga saksi ko sa Jerusalem, at sa buong Judea at Samaria, at hanggang sa kahulihulihang hangganan ng lupa.',
+    text_fil: 'Datapuwa\\'t tatanggapin ninyo ang kapangyarihan, pagdating sa inyo ng Espiritu Santo: at kayo\\'y magiging mga saksi ko sa Jerusalem, at sa buong Judea at Samaria, at hanggang sa kahulihulihang hangganan ng lupa.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -229,7 +229,7 @@ const verses = [
     reference: '1 Corinthians 10:13',
     reference_fil: '1 Corinto 10:13',
     text: 'No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear. But when you are tempted, he will also provide a way out so that you can endure it.',
-    text_fil: 'Hindi dumating sa inyo ang anomang tukso kundi yaong karaniwan sa tao: datapuwa\'t tapat ang Dios, na hindi niya itutulot na kayo\'y tuksuhin ng higit sa inyong makakaya; kundi kalakip din ng tukso ay gagawin naman ang paraan ng pagilag, upang ito\'y inyong matiis.',
+    text_fil: 'Hindi dumating sa inyo ang anomang tukso kundi yaong karaniwan sa tao: datapuwa\\'t tapat ang Dios, na hindi niya itutulot na kayo\\'y tuksuhin ng higit sa inyong makakaya; kundi kalakip din ng tukso ay gagawin naman ang paraan ng pagilag, upang ito\\'y inyong matiis.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -237,7 +237,7 @@ const verses = [
     reference: 'Ephesians 6:11',
     reference_fil: 'Mga Taga-Efeso 6:11',
     text: 'Put on the full armor of God, so that you can take your stand against the devil’s schemes.',
-    text_fil: 'Mangagbihis kayo ng buong kagayakan ng Dios, upang kayo\'y magsitibay laban sa mga lalang ng diablo.',
+    text_fil: 'Mangagbihis kayo ng buong kagayakan ng Dios, upang kayo\\'y magsitibay laban sa mga lalang ng diablo.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -253,7 +253,7 @@ const verses = [
     reference: 'James 1:5',
     reference_fil: 'Santiago 1:5',
     text: 'If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.',
-    text_fil: 'Nguni\'t kung nagkukulang ng karunungan ang sinoman sa inyo, ay humingi sa Dios, na nagbibigay ng sagana sa lahat at hindi nanunumbat; at ito\'y ibibigay sa kaniya.',
+    text_fil: 'Nguni\\'t kung nagkukulang ng karunungan ang sinoman sa inyo, ay humingi sa Dios, na nagbibigay ng sagana sa lahat at hindi nanunumbat; at ito\\'y ibibigay sa kaniya.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -261,7 +261,7 @@ const verses = [
     reference: 'Revelation 21:4',
     reference_fil: 'Pahayag 21:4',
     text: '‘He will wipe every tear from their eyes. There will be no more death’ or mourning or crying or pain, for the old order of things has passed away.',
-    text_fil: 'At papahirin niya ang bawa\'t luha sa kanilang mga mata; at hindi na magkakaroon ng kamatayan; hindi na magkakaroon pa ng dalamhati, o ng pananambitan man, o ng hirap pa man: ang mga bagay ng una ay naparam na.',
+    text_fil: 'At papahirin niya ang bawa\\'t luha sa kanilang mga mata; at hindi na magkakaroon ng kamatayan; hindi na magkakaroon pa ng dalamhati, o ng pananambitan man, o ng hirap pa man: ang mga bagay ng una ay naparam na.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -277,7 +277,7 @@ const verses = [
     reference: 'Isaiah 9:6',
     reference_fil: 'Isaias 9:6',
     text: 'For to us a child is born, to us a son is given, and the government will be on his shoulders. And he will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.',
-    text_fil: 'Sapagka\'t sa atin ay ipinanganak ang isang bata, sa atin ay ibinigay ang isang anak na lalake; at ang pamamahala ay maaatang sa kaniyang balikat: at ang kaniyang pangalan ay tatawaging Kamanghamangha, Tagapayo, Makapangyarihang Dios, Walang hanggang Ama, Pangulo ng Kapayapaan.',
+    text_fil: 'Sapagka\\'t sa atin ay ipinanganak ang isang bata, sa atin ay ibinigay ang isang anak na lalake; at ang pamamahala ay maaatang sa kaniyang balikat: at ang kaniyang pangalan ay tatawaging Kamanghamangha, Tagapayo, Makapangyarihang Dios, Walang hanggang Ama, Pangulo ng Kapayapaan.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -285,7 +285,7 @@ const verses = [
     reference: 'Matthew 11:28-30',
     reference_fil: 'Mateo 11:28-30',
     text: 'Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls. For my yoke is easy and my burden is light.',
-    text_fil: 'Magsiparito sa akin, kayong lahat na nangapapagal at nangabibigatang lubha, at kayo\'y aking papagpapahingahin. Pasanin ninyo ang aking pamatok, at magaral kayo sa akin; sapagka\'t ako\'y maamo at mapagpakumbabang puso: at masusumpungan ninyo ang kapahingahan ng inyong mga kaluluwa. Sapagka\'t malambot ang aking pamatok, at magaan ang aking pasan.',
+    text_fil: 'Magsiparito sa akin, kayong lahat na nangapapagal at nangabibigatang lubha, at kayo\\'y aking papagpapahingahin. Pasanin ninyo ang aking pamatok, at magaral kayo sa akin; sapagka\\'t ako\\'y maamo at mapagpakumbabang puso: at masusumpungan ninyo ang kapahingahan ng inyong mga kaluluwa. Sapagka\\'t malambot ang aking pamatok, at magaan ang aking pasan.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -293,7 +293,7 @@ const verses = [
     reference: 'John 15:5',
     reference_fil: 'Juan 15:5',
     text: 'I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit; apart from me you can do nothing.',
-    text_fil: 'Ako ang puno ng ubas, kayo ang mga sanga: Ang nananatili sa akin, at ako\'y sa kaniya, ay siyang nagbubunga ng marami: sapagka\'t kung kayo\'y hiwalay sa akin ay wala kayong magagawa.',
+    text_fil: 'Ako ang puno ng ubas, kayo ang mga sanga: Ang nananatili sa akin, at ako\\'y sa kaniya, ay siyang nagbubunga ng marami: sapagka\\'t kung kayo\\'y hiwalay sa akin ay wala kayong magagawa.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -301,7 +301,7 @@ const verses = [
     reference: 'Romans 10:9',
     reference_fil: 'Mga Taga-Roma 10:9',
     text: 'If you declare with your mouth, “Jesus is Lord,” and believe in your heart that God raised him from the dead, you will be saved.',
-    text_fil: 'Sapagka\'t kung ipahahayag mo ng iyong bibig si Jesus na Panginoon, at sasampalataya ka sa iyong puso na binuhay siyang maguli ng Dios sa mga patay, ay maliligtas ka.',
+    text_fil: 'Sapagka\\'t kung ipahahayag mo ng iyong bibig si Jesus na Panginoon, at sasampalataya ka sa iyong puso na binuhay siyang maguli ng Dios sa mga patay, ay maliligtas ka.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -309,7 +309,7 @@ const verses = [
     reference: 'Galatians 2:20',
     reference_fil: 'Mga Taga-Galacia 2:20',
     text: 'I have been crucified with Christ and I no longer live, but Christ lives in me. The life I now live in the body, I live by faith in the Son of God, who loved me and gave himself for me.',
-    text_fil: 'Ako\'y napako sa krus na kasama ni Cristo; at hindi na ako ang nabubuhay, kundi si Cristo ang nabubuhay sa akin: at ang buhay na ikinabubuhay ko ngayon sa laman ay ikinabubuhay ko sa pananampalataya, ang pananampalataya na ito\'y sa Anak ng Dios, na sa akin ay umibig, at ibinigay ang kaniyang sarili dahil sa akin.',
+    text_fil: 'Ako\\'y napako sa krus na kasama ni Cristo; at hindi na ako ang nabubuhay, kundi si Cristo ang nabubuhay sa akin: at ang buhay na ikinabubuhay ko ngayon sa laman ay ikinabubuhay ko sa pananampalataya, ang pananampalataya na ito\\'y sa Anak ng Dios, na sa akin ay umibig, at ibinigay ang kaniyang sarili dahil sa akin.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -317,7 +317,7 @@ const verses = [
     reference: 'Philippians 2:3-4',
     reference_fil: 'Mga Taga-Filipos 2:3-4',
     text: 'Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves, not looking to your own interests but each of you to the interests of the others.',
-    text_fil: 'Huwag ninyong gawin ang anoman sa pagkakampi o sa pagpapalalo, kundi sa kababaan ng pagiisip, na ipalagay ng bawa\'t isa ang iba na lalong mabuti kay sa kaniyang sarili; Huwag tingnan ng bawa\'t isa sa inyo ang sa kaniyang sarili, kundi ang bawa\'t isa naman ay sa mga iba.',
+    text_fil: 'Huwag ninyong gawin ang anoman sa pagkakampi o sa pagpapalalo, kundi sa kababaan ng pagiisip, na ipalagay ng bawa\\'t isa ang iba na lalong mabuti kay sa kaniyang sarili; Huwag tingnan ng bawa\\'t isa sa inyo ang sa kaniyang sarili, kundi ang bawa\\'t isa naman ay sa mga iba.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -333,7 +333,7 @@ const verses = [
     reference: 'Hebrews 4:12',
     reference_fil: 'Mga Hebreo 4:12',
     text: 'For the word of God is alive and active. Sharper than any double-edged sword, it penetrates even to dividing soul and spirit, joints and marrow; it judges the thoughts and attitudes of the heart.',
-    text_fil: 'Sapagka\'t ang salita ng Dios ay buhay, at mabisa, at matalas kay sa alin mang tabak na may dalawang talim, at bumabaon hanggang sa paghihiwalay ng kaluluwa at espiritu, ng mga kasukasuan at ng utak, at madaling kumilala ng mga pagiisip at mga haka ng puso.',
+    text_fil: 'Sapagka\\'t ang salita ng Dios ay buhay, at mabisa, at matalas kay sa alin mang tabak na may dalawang talim, at bumabaon hanggang sa paghihiwalay ng kaluluwa at espiritu, ng mga kasukasuan at ng utak, at madaling kumilala ng mga pagiisip at mga haka ng puso.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   },
@@ -341,7 +341,7 @@ const verses = [
     reference: '1 John 1:9',
     reference_fil: '1 Juan 1:9',
     text: 'If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.',
-    text_fil: 'Kung ipinahahayag natin ang ating mga kasalanan, ay tapat at banal siya na tayo\'y patatawarin sa ating mga kasalanan, at tayo\'y lilinisin sa lahat ng kalikuan.',
+    text_fil: 'Kung ipinahahayag natin ang ating mga kasalanan, ay tapat at banal siya na tayo\\'y patatawarin sa ating mga kasalanan, at tayo\\'y lilinisin sa lahat ng kalikuan.',
     version: 'NIV',
     version_fil: 'Ang Dating Biblia (1905)'
   }
@@ -386,7 +386,7 @@ function VerseReview({ verse, verseWithBlanks, userInputs, missingWords, showCor
   const verseRef = language === 'en' ? verse.reference : verse.reference_fil;
 
   const originalWordsWithPunctuation = useMemo(() => {
-      return verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+      return verseText.split(/(\\s+|[.,;!?“”"])/).filter(p => p.length > 0);
   }, [verseText]);
 
   const reviewContent = useMemo(() => {
@@ -863,11 +863,11 @@ export default function VerseMemoryPage() {
     const verseText = lang === 'en' ? verse.text : verse.text_fil;
 
     if (isMastered || !verse) {
-        setVerseWithBlanks(verse ? verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
+        setVerseWithBlanks(verse ? verseText.split(/(\\s+|[.,;!?“”"])/).filter(p => p.length > 0) : []);
         setMissingWords([]);
         setUserInputs([]);
     } else {
-        const words = verseText.split(/(\s+|[.,;!?“”"])/).filter(p => p.length > 0);
+        const words = verseText.split(/(\\s+|[.,;!?“”"])/).filter(p => p.length > 0);
         const missing: string[] = [];
         const verseParts: VerseParts = [];
         
@@ -1243,7 +1243,7 @@ export default function VerseMemoryPage() {
     <div className="w-full max-w-4xl mx-auto space-y-6 px-4 md:px-0">
        <div className="space-y-2 text-center">
         <h1 className="font-headline text-3xl font-bold">{language === 'fil' ? 'Hamon sa Pagmemorya ng Talata' : 'Verse Memory Challenge'}</h1>
-        <p className="text-muted-foreground">{language === 'fil' ? 'Kabisaduhin ang mga talata sa iba\'t ibang laro at hamon.' : 'Master verses through different games and challenges.'}</p>
+        <p className="text-muted-foreground">{language === 'fil' ? 'Kabisaduhin ang mga talata sa iba\\'t ibang laro at hamon.' : 'Master verses through different games and challenges.'}</p>
       </div>
       
        <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as any)} className="w-full">
@@ -1411,7 +1411,7 @@ export default function VerseMemoryPage() {
                      <div className="space-y-4">
                         <div className="text-center">
                             <h2 className="font-headline text-2xl">{language === 'fil' ? 'Mga Bonus na Puzzle' : 'Bonus Puzzles'}</h2>
-                            <p className="text-muted-foreground">{language === 'fil' ? 'Kumpletuhin ang isang antas sa \'Punan ang Patlang\' para mabuksan ang bonus puzzle nito.' : 'Complete a level in \'Fill in the Blanks\' to unlock its bonus puzzle.'}</p>
+                            <p className="text-muted-foreground">{language === 'fil' ? 'Kumpletuhin ang isang antas sa \\'Punan ang Patlang\\' para mabuksan ang bonus puzzle nito.' : 'Complete a level in \\'Fill in the Blanks\\' to unlock its bonus puzzle.'}</p>
                         </div>
                         {(activeBonusLevel !== null || viewOnlyBonusLevel !== null) && bonusVerse ? (
                              <Card>
@@ -1459,7 +1459,7 @@ export default function VerseMemoryPage() {
                                                     <Button disabled className="w-full bg-green-600 hover:bg-green-600"><CheckCircle className="mr-2"/>{language === 'fil' ? 'Natapos' : 'Completed'}</Button>
                                                 ) : bonusStatus === 'attempted' ? (
                                                     <div className="flex flex-col gap-2">
-                                                        <p className="text-sm font-semibold text-destructive">{language === 'fil' ? 'Oras na!' : 'Time\'s up!'}</p>
+                                                        <p className="text-sm font-semibold text-destructive">{language === 'fil' ? 'Oras na!' : 'Time\\'s up!'}</p>
                                                         <Button onClick={() => viewBonusRound(level)} variant="secondary" className="w-full"><Eye className="mr-2"/>{language === 'fil' ? 'Tingnan ang Puzzle' : 'View Puzzle'}</Button>
                                                     </div>
                                                 ) : isUnlocked ? (
@@ -1523,7 +1523,7 @@ export default function VerseMemoryPage() {
             </div>
             <AlertDialogTitle className="font-headline text-2xl text-center">{language === 'fil' ? `Natapos ang Antas ${currentLevel}!` : `Level ${currentLevel} Complete!`}</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              {language === 'fil' ? 'Magaling! Nakuha mo na ang lahat ng talata sa antas na ito. Ang bonus puzzle ay bukas na sa tab na \'Mga Bonus na Puzzle\'.' : 'Excellent work! You\'ve mastered all the verses in this level. The bonus puzzle is now unlocked in the \'Bonus Puzzles\' tab.'}
+              {language === 'fil' ? 'Magaling! Nakuha mo na ang lahat ng talata sa antas na ito. Ang bonus puzzle ay bukas na sa tab na \\'Mga Bonus na Puzzle\\'.' : 'Excellent work! You\\'ve mastered all the verses in this level. The bonus puzzle is now unlocked in the \\'Bonus Puzzles\\' tab.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1562,13 +1562,13 @@ export default function VerseMemoryPage() {
                 <AlertDialogHeader>
                     <AlertDialogTitle>{language === 'fil' ? 'Kulang ang mga pahiwatig' : 'Not Enough Hints'}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {language === 'fil' ? 'Wala ka nang natitirang mga pahiwatig. Pumunta sa tindahan upang bumili pa.' : 'You have no hints left. Go to the store to buy more.'}
+                        {language === 'fil' ? 'Wala ka nang natitirang mga pahiwatig. Pumunta sa forge upang bumili pa.' : 'You have no hints left. Go to the forge to buy more.'}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>{language === 'fil' ? 'Mamaya na lang' : 'Maybe Later'}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => router.push('/dashboard/store')}>
-                        <ShoppingCart className="mr-2 h-4 w-4" /> {language === 'fil' ? 'Pumunta sa Tindahan' : 'Go to Store'}
+                    <AlertDialogAction onClick={() => router.push('/dashboard/forge')}>
+                        <Hammer className="mr-2 h-4 w-4" /> {language === 'fil' ? 'Pumunta sa Forge' : 'Go to Forge'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -1584,7 +1584,7 @@ export default function VerseMemoryPage() {
                 {showUnlockDialog === 'stage1' ? (language === 'fil' ? "Natapos ang Yugto 1!" : "Stage 1 Complete!") : (language === 'fil' ? "Natapos ang Yugto 2!" : "Stage 2 Complete!")}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-center">
-                {language === 'fil' ? 'Binabati kita! Na-unlock mo ang ' : 'Congratulations! You\'ve unlocked '} 
+                {language === 'fil' ? 'Binabati kita! Na-unlock mo ang ' : 'Congratulations! You\\'ve unlocked '} 
                 {showUnlockDialog === 'stage1' ? (language === 'fil' ? 'Yugto 2 at ang larong' : 'Stage 2 and the') : (language === 'fil' ? 'larong' : 'the')} 
                 <strong> {showUnlockDialog === 'stage1' ? (language === 'fil' ? "Pakikipagsapalaran ng mga Tauhan" : "Character Adventures") : (language === 'fil' ? "Kasanayan sa Bibliya" : "Bible Mastery")}</strong>.
               </AlertDialogDescription>
