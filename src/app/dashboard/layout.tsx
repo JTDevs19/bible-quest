@@ -26,6 +26,7 @@ import {
   ChevronUp,
   Heart,
   Key,
+  HeartHalf,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -109,20 +110,33 @@ function UserProgressHeader() {
     const { level, exp, expForNextLevel, lastLevelUpExp, hearts, wisdomKeys } = useUserProgress();
     const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
 
+    const HeartDisplay = () => {
+        const heartIcons = [];
+        for (let i = 1; i <= 5; i++) {
+            if (hearts >= i * 2) {
+                heartIcons.push(<Heart key={`heart-full-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
+            } else if (hearts === i * 2 - 1) {
+                heartIcons.push(<HeartHalf key={`heart-half-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
+            } else {
+                heartIcons.push(<Heart key={`heart-empty-${i}`} className="w-5 h-5 text-muted-foreground/30" />);
+            }
+        }
+        return <div className="flex items-center gap-1">{heartIcons}</div>;
+    };
+
     return (
         <div className="flex items-center gap-4">
             <Popover>
                 <PopoverTrigger asChild>
                     <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
-                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                        <span>{hearts}</span>
+                        <HeartDisplay />
                     </div>
                 </PopoverTrigger>
                 <PopoverContent className="w-64">
                      <div className="space-y-2">
                         <h4 className="font-medium leading-none">Hearts</h4>
                         <p className="text-sm text-muted-foreground">
-                            Your chances for challenging games. Hearts are fully restored when you level up, or can be refilled with Wisdom Keys.
+                            Your chances for challenging games. Hearts are fully restored when you level up, or can be refilled with Wisdom Keys. Each mistake costs half a heart.
                         </p>
                     </div>
                 </PopoverContent>

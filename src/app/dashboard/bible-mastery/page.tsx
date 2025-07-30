@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Heart, Key, HeartHalf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -198,8 +198,7 @@ export default function BibleMasteryPage() {
     if(isOrderCorrect) {
         const hasCompletedBefore = progress[currentLevel]?.[currentRound];
         if (!hasCompletedBefore) {
-            const expGained = levelConfig.expPerRound * (levelConfig.rounds > 1 ? 1 : 1);
-            addExp(expGained);
+            addExp(levelConfig.expPerRound);
         }
 
         setProgress(prev => ({
@@ -322,6 +321,20 @@ export default function BibleMasteryPage() {
   const pageTitle = language === 'en' ? "Books of the Bible Mastery" : "Kasanayan sa mga Aklat ng Bibliya";
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
+  const HeartDisplay = () => {
+    const heartIcons = [];
+    for (let i = 1; i <= 5; i++) {
+        if (hearts >= i * 2) {
+            heartIcons.push(<Heart key={`heart-full-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
+        } else if (hearts === i * 2 - 1) {
+            heartIcons.push(<HeartHalf key={`heart-half-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
+        } else {
+            heartIcons.push(<Heart key={`heart-empty-${i}`} className="w-5 h-5 text-muted-foreground/30" />);
+        }
+    }
+    return <div className="flex items-center gap-1">{heartIcons}</div>;
+  };
+
   return (
     <>
     <div className="max-w-md mx-auto">
@@ -333,9 +346,7 @@ export default function BibleMasteryPage() {
         <div className="text-center mb-4 p-2 bg-muted rounded-lg font-semibold flex justify-around items-center">
            <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
            <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
-           <div className="flex items-center gap-1">
-                <Heart className="w-5 h-5 text-red-500 fill-red-500"/> {hearts}
-           </div>
+           <HeartDisplay />
            <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
 

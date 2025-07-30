@@ -11,7 +11,7 @@ const getExpForLevel = (level: number) => {
 };
 
 const KEYS_PER_LEVEL_UP = 5;
-const MAX_HEARTS = 5;
+const MAX_HEARTS = 10; // 5 full hearts, 10 half-hearts
 
 const initialState = {
     level: 1,
