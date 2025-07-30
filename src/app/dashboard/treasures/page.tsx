@@ -9,6 +9,7 @@ import { useUserProgress } from '@/hooks/use-user-progress';
 import { Key, Shield, Lightbulb, Star, Gift, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const GoldIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500">
