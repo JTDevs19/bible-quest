@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { useUserProgress } from '@/hooks/use-user-progress';
 import { Progress } from '@/components/ui/progress';
 
 const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 20;
+const TOTAL_ADVENTURE_LEVELS = 50;
 const VERSES_PER_STAGE = 20;
 const LEVELS_PER_STAGE = 5;
 
@@ -167,7 +168,7 @@ export default function ProgressPage() {
         </Card>
 
         <Card>
-            <CardHeader>
+              <CardHeader>
               <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
                  <TrendingUp className="w-10 h-10 text-primary" />
               </div>
