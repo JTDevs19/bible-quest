@@ -650,7 +650,6 @@ export default function VerseMemoryPage() {
   const [tradeAmount, setTradeAmount] = useState(1);
   const [gameMode, setGameMode] = useState<'fillInTheBlank' | 'puzzle'>('fillInTheBlank');
   const [language, setLanguage] = useState<'en' | 'fil'>('en');
-  const [isTester, setIsTester] = useState(false);
 
   // Fill in the blank state
   const [userInputs, setUserInputs] = useState<string[]>([]);
@@ -728,13 +727,6 @@ export default function VerseMemoryPage() {
 
   useEffect(() => {
     setIsClient(true);
-    const profileStr = localStorage.getItem('bibleQuestsUser');
-    if (profileStr) {
-      const profile = JSON.parse(profileStr);
-      if (profile.username === 'Scassenger') {
-        setIsTester(true);
-      }
-    }
   }, []);
   
   useEffect(() => {
@@ -810,6 +802,9 @@ export default function VerseMemoryPage() {
             if (!newScores[currentStage][currentLevel]) {
                 newScores[currentStage][currentLevel] = {};
             }
+            if (typeof newScores[currentStage][currentLevel] === 'number') {
+                newScores[currentStage][currentLevel] = {};
+            }
             newScores[currentStage][currentLevel][currentVerseIndex] = score;
             return newScores;
         });
@@ -818,10 +813,13 @@ export default function VerseMemoryPage() {
         setHighlightNextButton(true);
 
         const updatedScores = JSON.parse(JSON.stringify(verseScores));
-         if (!updatedScores[currentStage]) {
+        if (!updatedScores[currentStage]) {
             updatedScores[currentStage] = {};
         }
         if (!updatedScores[currentStage][currentLevel]) {
+            updatedScores[currentStage][currentLevel] = {};
+        }
+        if (typeof updatedScores[currentStage][currentLevel] === 'number') {
             updatedScores[currentStage][currentLevel] = {};
         }
         updatedScores[currentStage][currentLevel][currentVerseIndex] = score;
@@ -1066,24 +1064,19 @@ export default function VerseMemoryPage() {
   };
 
   const handleLevelSelect = (stage: number, level: number) => {
-    const isUnlocked = stage === 1 || isStageComplete(stage - 1, verseScores) || isTester;
-    if (isUnlocked) {
       setCurrentStage(stage);
       setCurrentLevel(level);
       const firstUnfinished = findFirstUnfinishedVerse(stage, level, verseScores);
       setCurrentVerseIndex(firstUnfinished);
       setIsJourneyOpen(false);
-    }
   };
   
   const isLevelComplete = (stage: number, level: number, scores: VerseScores) => {
-      if (isTester) return true;
       const levelScores = scores[stage]?.[level] || {};
       return Object.keys(levelScores).length === VERSES_PER_STAGE;
   };
   
   const isStageComplete = (stage: number, scores: VerseScores) => {
-    if (isTester) return true;
     for(let level=1; level <= LEVELS_PER_STAGE; level++) {
         if(!isLevelComplete(stage, level, scores)) {
             return false;
@@ -1252,15 +1245,14 @@ export default function VerseMemoryPage() {
         const stageNum = i + 1;
         const levels = Array.from({length: LEVELS_PER_STAGE}).map((_, j) => {
             const levelNum = j + 1;
-            const isUnlocked = isTester || stageNum === 1 || isStageComplete(stageNum - 1, verseScores);
             const isCurrent = stageNum === currentStage && levelNum === currentLevel;
             const levelScoresData = verseScores[stageNum]?.[levelNum] || {};
             const masteredInLevel = Object.keys(levelScoresData).length;
             const totalVersesInLevel = VERSES_PER_STAGE;
             const isLvlComplete = masteredInLevel === totalVersesInLevel;
-            return { levelNum, isUnlocked, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete: isLvlComplete };
+            return { levelNum, isUnlocked: true, isCurrent, masteredInLevel, totalVersesInLevel, isLevelComplete: isLvlComplete };
         });
-        return { stageNum, isUnlocked: isTester || stageNum === 1 || isStageComplete(stageNum-1, verseScores), levels };
+        return { stageNum, isUnlocked: true, levels };
     });
 
   return (
@@ -1460,7 +1452,7 @@ export default function VerseMemoryPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {Array.from({ length: LEVELS_PER_STAGE }).map((_, i) => {
                                     const level = i + 1;
-                                    const isUnlocked = isLevelComplete(currentStage, level, verseScores);
+                                    const isUnlocked = true; // All bonus puzzles unlocked for now
                                     const bonusStatus = bonusProgress[currentStage]?.[level];
                                     const bonusReward = stage1BonusRewards[i] || 0;
 

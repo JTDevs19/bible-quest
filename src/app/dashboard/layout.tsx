@@ -55,22 +55,6 @@ const isStageComplete = (stageNum: number, scores: any) => {
 function DashboardNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
-  const [characterAdventuresUnlocked, setCharacterAdventuresUnlocked] = useState(false);
-  const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
-
-  useEffect(() => {
-    const profileStr = localStorage.getItem('bibleQuestsUser');
-    const profile = profileStr ? JSON.parse(profileStr) : null;
-    const isTester = profile?.username === 'Scassenger';
-
-    const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-    const stage1Completed = isStageComplete(1, verseMemoryProgress.scores);
-    const stage2Completed = isStageComplete(2, verseMemoryProgress.scores);
-
-    setCharacterAdventuresUnlocked(isTester || stage1Completed);
-    setBibleMasteryUnlocked(isTester || stage2Completed);
-
-  }, [pathname]);
 
   const navItems = [
     { id: 'nav-dashboard', href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -80,16 +64,12 @@ function DashboardNav() {
       href: '/dashboard/character-adventures',
       icon: Users,
       label: 'Character Adventures',
-      isLocked: !characterAdventuresUnlocked,
-      tooltipText: 'Complete Stage 1 of Verse Memory to unlock'
     },
     { 
       id: 'nav-bible-mastery',
       href: '/dashboard/bible-mastery', 
       icon: Milestone, 
       label: 'Bible Mastery',
-      isLocked: !bibleMasteryUnlocked,
-      tooltipText: 'Complete Stage 2 of Verse Memory to unlock'
     },
     { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
     { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
@@ -103,25 +83,19 @@ function DashboardNav() {
           <SidebarMenuButton
             id={item.id}
             isActive={pathname === item.href}
-            tooltip={item.isLocked ? `${item.label} (${item.tooltipText})` : item.label}
-            onClick={() => !item.isLocked && setOpenMobile(false)}
-            disabled={item.isLocked}
-            className={cn(item.isLocked && "text-muted-foreground/50 cursor-not-allowed")}
+            tooltip={item.label}
+            onClick={() => setOpenMobile(false)}
           >
-            {item.isLocked ? <Lock /> : <item.icon />}
+            <item.icon />
             <span>{item.label}</span>
           </SidebarMenuButton>
         );
 
         return (
           <SidebarMenuItem key={item.href}>
-            {item.isLocked ? (
-              <div>{buttonContent}</div>
-            ) : (
               <Link href={item.href} passHref>
                 {buttonContent}
               </Link>
-            )}
           </SidebarMenuItem>
         );
       })}

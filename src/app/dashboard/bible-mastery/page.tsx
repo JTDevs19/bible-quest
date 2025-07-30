@@ -79,7 +79,7 @@ type Progress = { [level: number]: { [round: number]: boolean } };
 
 export default function BibleMasteryPage() {
   const [isClient, setIsClient] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [progress, setProgress] = useState<Progress>({});
@@ -99,19 +99,6 @@ export default function BibleMasteryPage() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-
-    const profileStr = localStorage.getItem('bibleQuestsUser');
-    const profile = profileStr ? JSON.parse(profileStr) : null;
-    const isTester = profile?.username === 'Scassenger';
-
-    const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-    if (isTester || isStageComplete(2, verseMemoryProgress.scores)) {
-        setIsUnlocked(true);
-    }
-  }, [isClient]);
   
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   

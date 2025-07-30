@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -122,7 +123,7 @@ const triviaLevels = [
   // Level 9
   [
     { question: "Sino ang apo ni Saul na pinakitaan ni David ng kabaitan alang-alang kay Jonathan?", options: ["Ish-Bosheth", "Mephibosheth", "Mica", "Armoni"], answer: "Mephibosheth", trivia: "Mephibosheth was lame in both feet. David restored his family's land and gave him a permanent place at the royal table.", reference: "2 Samuel 9:7", verseText: "'Don’t be afraid,' David said to him, 'for I will surely show you kindness for the sake of your father Jonathan. I will restore to you all the land that belonged to your grandfather Saul, and you will always eat at my table.'" },
-    { question: "Sino ang mahusay magsalitang Hudyo mula sa Alejandria na nagturo nang may kapangyarihan sa Efeso ngunit alam lamang ang bautismo ni Juan?", options: ["Aquila", "Priscilla", "Apollos", "Tychicus"], answer: "Apollos", trivia: "Priscilla and Aquila took him aside and explained the way of God more accurately, and he became a great asset to the early church.", reference: "Acts 18:24", verseText: "Meanwhile a Jew named Apollos, a native of Alexandria, came to Ephesus. He was a learned man, with a thorough knowledge of the Scriptures." },
+    { question: "Sino ang mahusay magsalitang Hudyo mula sa Alejandria na nagturo nang may kapangyarihan sa Efeso ngunit alam lamang ang bautismo ni Juan?", options: ["Aquila", "Priscilla", "Apollos", "Tychicus"], answer: "Apolos", trivia: "Priscilla and Aquila took him aside and explained the way of God more accurately, and he became a great asset to the early church.", reference: "Acts 18:24", verseText: "Meanwhile a Jew named Apollos, a native of Alexandria, came to Ephesus. He was a learned man, with a thorough knowledge of the Scriptures." },
     { question: "Sino ang hari ng Juda na tinamaan ng ketong dahil sa pangahas na pag-aalay ng insenso sa templo?", options: ["Uzziah", "Jotham", "Ahaz", "Hezekiah"], answer: "Uzziah", trivia: "Though he started his reign well, King Uzziah's pride led him to usurp the role of the priests, resulting in divine judgment.", reference: "2 Chronicles 26:19", verseText: "Uzziah, who had a censer in his hand to burn incense, became angry. While he was raging at the priests in their presence before the incense altar in the LORD’s temple, leprosy broke out on his forehead." },
     { question: "Sino ang propeta na ang balumbon ay pinutol at sinunog ni Haring Jehoiakim?", options: ["Isaiah", "Ezekiel", "Habakkuk", "Jeremiah"], answer: "Jeremiah", trivia: "Despite the king's defiance, God commanded Jeremiah to write all the words again on another scroll, adding many similar words.", reference: "Jeremiah 36:23", verseText: "Whenever Jehudi had read three or four columns of the scroll, the king cut them off with a scribe’s knife and threw them into the firepot, until the entire scroll was burned in the fire." },
     { question: "Sino ang tumakas na alipin mula sa Colosas na kung kanino sumulat si Pablo ng isang apela sa kanyang amo?", options: ["Philemon", "Archippus", "Tychicus", "Onesimus"], answer: "Onesimus", trivia: "Paul converted Onesimus to Christianity and sent him back to his master Philemon, not as a slave, but as a beloved brother in Christ.", reference: "Philemon 1:16", verseText: "no longer as a slave, but better than a slave, as a dear brother. He is very dear to me but even dearer to you, both as a fellow man and as a brother in the Lord." },
@@ -246,7 +247,7 @@ const triviaLevels = [
     { question: "Who was the king of Tyre who was a great friend of David and Solomon and supplied them with cedar logs?", options: ["Abibaal", "Hiram", "Ithobaal I", "Pygmalion"], answer: "Hiram", trivia: "Hiram's skilled craftsmen and quality materials were essential for building both David's palace and Solomon's Temple.", reference: "1 Kings 5:1", verseText: "When Hiram king of Tyre heard that Solomon had been anointed king to succeed his father David, he sent his envoys to Solomon, because he had always been on friendly terms with David." },
     { question: "Who was the son of Jacob from whom the kings of Judah, including David and Jesus, were descended?", options: ["Reuben", "Levi", "Judah", "Joseph"], answer: "Judah", trivia: "In his final blessing, Jacob prophesied that the 'scepter will not depart from Judah,' indicating the royal line.", reference: "Genesis 49:10", verseText: "The scepter will not depart from Judah, nor the ruler’s staff from between his feet, until he to whom it belongs shall come and the obedience of the nations shall be his." },
     { question: "Who was the man who was healed of blindness by Jesus at the Pool of Siloam?", options: ["Bartimaeus", "The man born blind", "A man from Bethsaida", "Two men from Galilee"], answer: "The man born blind", trivia: "This miracle in John's gospel sparked a major controversy with the Pharisees, as they interrogated the man and his parents about his healing on the Sabbath.", reference: "John 9:7", verseText: "'Go,' he told him, 'wash in the Pool of Siloam' (this word means 'Sent'). So the man went and washed, and came home seeing." },
-    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla are almost always mentioned together in the New Testament. They hosted a church in their home and helped instruct Apollos.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla... Paul went to see them, and because he was a tentmaker as they were, he stayed and worked with them." },
+    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla were tentmakers, like Paul, and became important leaders and teachers in the early church, hosting a church in their home.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla... Paul went to see them, and because he was a tentmaker as they were, he stayed and worked with them." },
     { question: "Who was the wife that Jacob loved more, but who was barren for many years?", options: ["Leah", "Rachel", "Bilhah", "Zilpah"], answer: "Rachel", trivia: "After years of watching her sister Leah have children, Rachel finally gave birth to Joseph and later Benjamin, but she died during Benjamin's birth.", reference: "Genesis 30:1", verseText: "When Rachel saw that she was not bearing Jacob any children, she became jealous of her sister. So she said to Jacob, 'Give me children, or I’ll die!'" }
   ],
   // Level 19
@@ -430,7 +431,7 @@ const isStageComplete = (stageNum: number, scores: any) => {
 
 export default function CharacterAdventuresPage() {
     const [isClient, setIsClient] = useState(false);
-    const [isUnlocked, setIsUnlocked] = useState(false);
+    const [isUnlocked, setIsUnlocked] = useState(true);
     const [currentLevel, setCurrentLevel] = useState(1);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -446,34 +447,24 @@ export default function CharacterAdventuresPage() {
     const { toast } = useToast();
     const { playCorrectSound, playIncorrectSound } = useSoundEffects();
     const { addExp } = useUserProgress();
-    const [isTester, setIsTester] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
         const profileStr = localStorage.getItem('bibleQuestsUser');
         if (profileStr) {
             const profile = JSON.parse(profileStr);
-            if (profile.username === 'Scassenger') {
-                setIsTester(true);
-            }
             setLanguage(profile.language || 'en');
         }
     }, []);
 
     const loadProgress = useCallback(() => {
         if (!isClient) return;
-
-        const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-        if (isTester || isStageComplete(1, verseMemoryProgress.scores)) {
-            setIsUnlocked(true);
-        }
-
         const savedProgress = localStorage.getItem('characterAdventuresProgress');
         if (savedProgress) {
             const progress = JSON.parse(savedProgress);
             setLevelScores(progress.scores || {});
         }
-    }, [isClient, isTester]);
+    }, [isClient]);
 
     const saveProgress = useCallback(() => {
         if (!isClient) return;
@@ -500,26 +491,7 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
-        if (isTester) {
-            startLevel(level);
-            return;
-        }
-        
-        if (level === 1) {
-            startLevel(1);
-            return;
-        }
-
-        const prevLevelScore = levelScores[level - 1] || 0;
-        if (prevLevelScore >= PERFECT_SCORE_PER_LEVEL) {
-            startLevel(level);
-        } else {
-             toast({
-                title: language === 'en' ? "Level Locked" : "Nakasara ang Antas",
-                description: language === 'en' ? `You need to get a perfect score (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) on Level ${level - 1} to unlock this.` : `Kailangan mong makakuha ng perpektong iskor (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) sa Antas ${level - 1} para mabuksan ito.`,
-                variant: 'destructive',
-            })
-        }
+        startLevel(level);
     };
 
     const handleAnswerSelect = (option: string) => {
@@ -582,7 +554,7 @@ export default function CharacterAdventuresPage() {
     const nextLevel = () => {
         setShowLevelCompleteDialog(false);
         if (currentLevel < MAX_LEVEL) {
-             if (isTester || (levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL) {
+             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL) {
                 setShowAdventureMap(true);
              } else {
                 startLevel(currentLevel + 1);
@@ -635,7 +607,7 @@ export default function CharacterAdventuresPage() {
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4 max-h-[60vh] overflow-y-auto">
                             {Array.from({ length: MAX_LEVEL }).map((_, index) => {
                                 const level = index + 1;
-                                const isLocked = !isTester && level > 1 && (levelScores[level - 1] || 0) < PERFECT_SCORE_PER_LEVEL;
+                                const isLocked = false; // All levels are unlocked
                                 const bestScore = levelScores[level] || 0;
                                 const isPerfect = bestScore === PERFECT_SCORE_PER_LEVEL;
 
@@ -766,7 +738,7 @@ export default function CharacterAdventuresPage() {
                             <RotateCcw className="mr-2" />
                             {language === 'en' ? 'Play Again' : 'Ulitin'}
                         </Button>
-                        <Button onClick={nextLevel} disabled={!isTester && score < PERFECT_SCORE_PER_LEVEL && currentLevel < MAX_LEVEL}>
+                        <Button onClick={nextLevel} disabled={score < PERFECT_SCORE_PER_LEVEL && currentLevel < MAX_LEVEL}>
                            {language === 'en' ? 'Next Level' : 'Susunod na Antas'}
                         </Button>
                          <Button variant="secondary" onClick={() => setShowAdventureMap(true)}>
