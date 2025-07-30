@@ -31,7 +31,7 @@ interface UserProgressState {
     expForNextLevel: number;
     addExp: (amount: number) => void;
     setWisdomKeys: (setter: (currentKeys: number) => number) => void;
-    spendHeart: () => boolean;
+    spendChance: () => boolean;
     refillHearts: () => void;
     setProgress: (progress: Partial<UserProgressState>) => void;
     reset: () => void;
@@ -76,7 +76,7 @@ export const useUserProgress = create<UserProgressState>()(
             setWisdomKeys: (setter) => {
                  set(state => ({ wisdomKeys: setter(state.wisdomKeys) }));
             },
-            spendHeart: () => {
+            spendChance: () => {
                 const currentHearts = get().hearts;
                 if (currentHearts > 0) {
                     set({ hearts: currentHearts - 1 });

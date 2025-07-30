@@ -106,7 +106,7 @@ export default function BibleMasteryPage() {
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-  const { addExp, hearts, spendHeart, refillHearts, wisdomKeys, setWisdomKeys } = useUserProgress();
+  const { addExp, hearts, spendChance, refillHearts, wisdomKeys, setWisdomKeys } = useUserProgress();
   const REFILL_COST = 10;
 
   useEffect(() => {
@@ -210,7 +210,7 @@ export default function BibleMasteryPage() {
         }));
         setTimeout(() => setShowSuccessDialog(true), 300);
     } else {
-        if (!spendHeart()) {
+        if (!spendChance()) {
             setShowNoHeartsDialog(true);
         }
     }
@@ -322,25 +322,29 @@ export default function BibleMasteryPage() {
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
   const HeartDisplay = () => {
-    const heartIcons = [];
-    for (let i = 1; i <= 5; i++) {
-        if (hearts >= i * 2) {
-            heartIcons.push(<Heart key={`heart-full-${i}`} className="w-5 h-5 text-red-500 fill-red-500" />);
-        } else if (hearts === i * 2 - 1) {
-            heartIcons.push(
-                <div key={`heart-half-${i}`} className="relative w-5 h-5">
-                    <Heart className="w-5 h-5 text-red-500 fill-muted" />
-                    <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+        const fullHearts = Math.floor(hearts / 2);
+        const hasHalfHeart = hearts % 2 !== 0;
+
+        return (
+            <div className="flex items-center gap-1.5">
+                <div className="relative w-5 h-5">
+                    {hasHalfHeart ? (
+                        <>
+                            <Heart className="w-5 h-5 text-red-500 fill-muted" />
+                            <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+                                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                            </div>
+                        </>
+                    ) : (
                         <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                    </div>
+                    )}
                 </div>
-            );
-        } else {
-            heartIcons.push(<Heart key={`heart-empty-${i}`} className="w-5 h-5 text-muted-foreground/30" />);
-        }
-    }
-    return <div className="flex items-center gap-1">{heartIcons}</div>;
-  };
+                <span className={cn("font-semibold", hasHalfHeart ? "text-red-500" : "text-foreground")}>
+                    {fullHearts}
+                </span>
+            </div>
+        );
+    };
 
   return (
     <>
