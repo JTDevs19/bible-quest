@@ -23,6 +23,13 @@ import {
   Cog,
   Gift,
   Lock,
+  ChevronUp,
+  Shield,
+  Key,
+  Hammer,
+  NotebookText,
+  Lightbulb,
+  Coins,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -30,84 +37,203 @@ import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/app/page';
+import { useUserProgress } from '@/hooks/use-user-progress';
+import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-const STARS_TO_UNLOCK_LEVEL_4 = 90; 
-const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 20;
 
-function DashboardNav() {
-  const pathname = usePathname();
-  const { setOpenMobile } = useSidebar();
-  const [characterAdventuresCompleted, setCharacterAdventuresCompleted] = useState(false);
-  const [bibleMasteryUnlocked, setBibleMasteryUnlocked] = useState(false);
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
 
-  useEffect(() => {
-    // This effect runs on the client-side
-    const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
-    if (characterAdventuresProgress.scores) {
-        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-        if(completedLevels >= TOTAL_ADVENTURE_LEVELS) {
-            setBibleMasteryUnlocked(true);
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum]?.[level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
         }
     }
-    
-    // Check if level 1 of character adventures is passed
-    const levelOneScore = characterAdventuresProgress.scores?.[1] || 0;
-    setCharacterAdventuresCompleted(levelOneScore >= PERFECT_SCORE_PER_LEVEL);
+    return true;
+};
 
-  }, [pathname]); // Rerun on navigation to update lock status
+function DashboardNav({ isAdmin }: { isAdmin: boolean }) {
+  const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
 
   const navItems = [
-    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
+    { id: 'nav-dashboard', href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'nav-verse-memory', href: '/dashboard/verse-memory', icon: BookText, label: 'Verse Memory' },
     {
+      id: 'nav-character-adventures',
       href: '/dashboard/character-adventures',
       icon: Users,
       label: 'Character Adventures',
     },
     { 
+      id: 'nav-bible-mastery',
       href: '/dashboard/bible-mastery', 
       icon: Milestone, 
       label: 'Bible Mastery',
-      isLocked: !bibleMasteryUnlocked,
-      tooltipText: 'Master all Character Adventures first'
     },
-    { href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper' },
-    { href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
-    { href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+    { id: 'nav-ai-helper', href: '/dashboard/personalized-verse', icon: Sparkles, label: 'AI Verse Helper', adminOnly: true },
+    { id: 'nav-daily-challenge', href: '/dashboard/daily-challenge', icon: Gift, label: 'Daily Challenge' },
+    { id: 'nav-treasures', href: '/dashboard/treasures', icon: Gift, label: 'Treasures' },
+    { id: 'nav-progress', href: '/dashboard/progress', icon: TrendingUp, label: 'My Progress' },
+    { id: 'nav-forge', href: '/dashboard/forge', icon: Hammer, label: 'The Forge' },
+    { id: 'nav-notes', href: '/dashboard/notes', icon: NotebookText, label: 'My Notes', adminOnly: true },
   ];
 
   return (
      <SidebarMenu>
       {navItems.map((item) => {
+        if (item.adminOnly && !isAdmin) {
+          return null;
+        }
         const buttonContent = (
           <SidebarMenuButton
+            id={item.id}
             isActive={pathname === item.href}
-            tooltip={item.isLocked ? `${item.label} (${item.tooltipText})` : item.label}
-            onClick={() => !item.isLocked && setOpenMobile(false)}
-            disabled={item.isLocked}
-            className={cn(item.isLocked && "text-muted-foreground/50 cursor-not-allowed")}
+            tooltip={item.label}
+            onClick={() => setOpenMobile(false)}
           >
-            {item.isLocked ? <Lock /> : <item.icon />}
+            <item.icon />
             <span>{item.label}</span>
           </SidebarMenuButton>
         );
 
         return (
           <SidebarMenuItem key={item.href}>
-            {item.isLocked ? (
-              <div>{buttonContent}</div>
-            ) : (
               <Link href={item.href} passHref>
                 {buttonContent}
               </Link>
-            )}
           </SidebarMenuItem>
         );
       })}
     </SidebarMenu>
   )
 }
+
+function UserProgressHeader() {
+    const { level, exp, expForNextLevel, lastLevelUpExp, shields, wisdomKeys, hints, denarius } = useUserProgress();
+    const progressPercentage = ((exp - lastLevelUpExp) / (expForNextLevel - lastLevelUpExp)) * 100;
+
+    const ShieldDisplay = () => {
+        const hasHalfShield = shields % 2 !== 0;
+
+        return (
+            <div className="flex items-center gap-1.5">
+                <div className="relative w-5 h-5">
+                    {hasHalfShield ? (
+                        <>
+                            <Shield className="w-5 h-5 text-primary fill-muted" />
+                            <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+                                <Shield className="w-5 h-5 text-primary fill-primary" />
+                            </div>
+                        </>
+                    ) : (
+                         <Shield className={cn("w-5 h-5 text-primary", shields > 0 ? "fill-primary" : "fill-muted")} />
+                    )}
+                </div>
+                <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
+                    {Math.floor(shields / 2)}
+                </span>
+            </div>
+        );
+    };
+
+    return (
+        <div className="flex items-center gap-4">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <ShieldDisplay />
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                     <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Shields</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Your chances for challenging games. Shields protect you from mistakes and are restored when you level up or can be refilled with Wisdom Keys. Each mistake costs half a shield.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <Key className="w-5 h-5 text-yellow-500" />
+                        <span>{wisdomKeys}</span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Wisdom Keys</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Earned by leveling up. Use them for hints in games or to refill your Shields.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <Lightbulb className="w-5 h-5 text-blue-500" />
+                        <span>{hints}</span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Scholar's Lens</h4>
+                        <p className="text-sm text-muted-foreground">
+                           Charges for your lens to get hints when you're stuck in the Verse Memory game.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+             <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-2 font-semibold text-sm cursor-pointer" role="button">
+                        <Coins className="w-5 h-5 text-amber-500" />
+                        <span>{denarius}</span>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Denarius</h4>
+                        <p className="text-sm text-muted-foreground">
+                           A special currency used to power the advanced AI features once your free charges are used.
+                        </p>
+                    </div>
+                </PopoverContent>
+            </Popover>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-3 cursor-pointer">
+                        <div className="text-right">
+                            <p className="font-bold text-sm">Level {level}</p>
+                            <p className="text-xs text-muted-foreground">EXP: {exp - lastLevelUpExp}/{expForNextLevel - lastLevelUpExp}</p>
+                        </div>
+                        <Progress value={progressPercentage} className="w-24 h-2" />
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-64">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Level {level}</h4>
+                        <p className="text-sm text-muted-foreground">Your spiritual growth progress.</p>
+                        <Progress value={progressPercentage} className="w-full h-2" />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{exp - lastLevelUpExp} EXP</span>
+                            <span>{expForNextLevel - lastLevelUpExp} EXP to Level Up</span>
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+}
+
+const ADMIN_USERS = ['Kaya', 'Scassenger'];
 
 export default function DashboardLayout({
   children,
@@ -116,11 +242,16 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
-    const profile = localStorage.getItem('bibleQuestsUser');
-    if (profile) {
-      setUserProfile(JSON.parse(profile));
+    const profileStr = localStorage.getItem('bibleQuestsUser');
+    if (profileStr) {
+      const profile = JSON.parse(profileStr);
+      setUserProfile(profile);
+      if (ADMIN_USERS.includes(profile.username)) {
+        setIsAdmin(true);
+      }
     } else {
       router.push('/');
     }
@@ -133,7 +264,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>
+        <SidebarHeader id="sidebar-header">
           <div className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-2 rounded-lg">
               <Sparkles className="w-6 h-6" />
@@ -142,7 +273,7 @@ export default function DashboardLayout({
           </div>
         </SidebarHeader>
         <SidebarContent>
-         <DashboardNav />
+         <DashboardNav isAdmin={isAdmin} />
         </SidebarContent>
         <SidebarFooter>
           <div className="border-t border-border -mx-2 pt-2">
@@ -160,21 +291,18 @@ export default function DashboardLayout({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
+        <header id="main-header" className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
            <SidebarTrigger className="md:hidden" />
            <div className="flex items-center gap-2">
-            <Avatar>
+            <Avatar className={cn(isAdmin && "border-2 border-primary")}>
               <AvatarFallback>{userProfile.username?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="font-semibold">{userProfile.username}</span>
            </div>
+           <UserProgressHeader />
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main id="main-content" className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
 }
-
-    
-
-    

@@ -8,6 +8,11 @@ import { LevelStep } from '@/components/onboarding/LevelStep';
 import { FocusStep } from '@/components/onboarding/FocusStep';
 import { FinalStep } from '@/components/onboarding/FinalStep';
 import { ProfileStep } from '@/components/onboarding/ProfileStep';
+import { OverviewWelcomeStep } from '@/components/onboarding/OverviewWelcomeStep';
+import { OverviewGamesStep } from '@/components/onboarding/OverviewGamesStep';
+import { OverviewBenefitsStep } from '@/components/onboarding/OverviewBenefitsStep';
+import { OverviewFeaturesStep } from '@/components/onboarding/OverviewFeaturesStep';
+
 
 export type UserProfile = {
   username: string;
@@ -15,6 +20,7 @@ export type UserProfile = {
   ageGroup: string;
   spiritualLevel: string;
   focus: string;
+  language: 'en' | 'fil';
 };
 
 const defaultOnboardingData: UserProfile = {
@@ -23,6 +29,7 @@ const defaultOnboardingData: UserProfile = {
   ageGroup: '',
   spiritualLevel: '',
   focus: '',
+  language: 'en',
 };
 
 type OnboardingContextType = {
@@ -84,6 +91,10 @@ export default function HomePage() {
     <LevelStep />,
     <FocusStep />,
     <ProfileStep />,
+    <OverviewWelcomeStep />,
+    <OverviewGamesStep />,
+    <OverviewBenefitsStep />,
+    <OverviewFeaturesStep />,
     <FinalStep />,
   ];
 

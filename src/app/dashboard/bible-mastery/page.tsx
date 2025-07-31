@@ -1,15 +1,17 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Shuffle, Star, Trophy, Languages, Users } from 'lucide-react';
+import { GripVertical, Shuffle, Star, Trophy, Languages, Users, BookOpen, Shield, Key, Hammer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 const allBooksEnglish = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
@@ -37,36 +39,58 @@ const shuffleArray = (array: any[]) => {
 
 const generateLevelConfig = () => {
     const config = [];
-    // Levels 1-5: 4 books, 5 rounds
-    for (let i = 1; i <= 5; i++) config.push({ level: i, booksToArrange: 4, rounds: 5 });
-    // Levels 6-10: 5 books, 5 rounds
-    for (let i = 6; i <= 10; i++) config.push({ level: i, booksToArrange: 5, rounds: 5 });
-    // Levels 11-15: 7 books, 5 rounds
-    for (let i = 11; i <= 15; i++) config.push({ level: i, booksToArrange: 7, rounds: 5 });
-    // Levels 16-20: 8 books, 5 rounds
-    for (let i = 16; i <= 20; i++) config.push({ level: i, booksToArrange: 8, rounds: 5 });
-    // Levels 21-25: 9 books, 5 rounds
-    for (let i = 21; i <= 25; i++) config.push({ level: i, booksToArrange: 9, rounds: 5 });
-    // Levels 26-30: 10 books, 5 rounds
-    for (let i = 26; i <= 30; i++) config.push({ level: i, booksToArrange: 10, rounds: 5 });
+    const difficultyTiers = [
+        { books: 4, rounds: 5 }, // Levels 1-5
+        { books: 5, rounds: 5 }, // Levels 6-10
+        { books: 7, rounds: 5 }, // Levels 11-15
+        { books: 8, rounds: 5 }, // Levels 16-20
+        { books: 9, rounds: 5 }, // Levels 21-25
+        { books: 10, rounds: 5 } // Levels 26-30
+    ];
+
+    let levelCounter = 1;
+    for (const tier of difficultyTiers) {
+        for (let i = 0; i < 5; i++) {
+            config.push({
+                level: levelCounter,
+                booksToArrange: tier.books,
+                rounds: tier.rounds,
+                expPerRound: levelCounter,
+            });
+            levelCounter++;
+        }
+    }
     
     // Master Levels
-    config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks });
-    config.push({ level: 32, booksToArrange: newTestamentBooks.length, rounds: 1, title: 'Master Level 2: New Testament', books: newTestamentBooks });
-    config.push({ level: 33, booksToArrange: allBooksEnglish.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooksEnglish });
+    config.push({ level: 31, booksToArrange: oldTestamentBooks.length, rounds: 1, title: 'Master Level 1: Old Testament', books: oldTestamentBooks, expPerRound: 50 });
+    config.push({ level: 32, booksToArrange: newTestamentBooks.length, rounds: 1, title: 'Master Level 2: New Testament', books: newTestamentBooks, expPerRound: 50 });
+    config.push({ level: 33, booksToArrange: allBooksEnglish.length, rounds: 1, title: 'Master Level 3: All Books', books: allBooksEnglish, expPerRound: 100 });
     
     return config;
 };
 
 const levels = generateLevelConfig();
-const PERFECT_SCORE_PER_LEVEL = 10;
-const TOTAL_ADVENTURE_LEVELS = 20;
+
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
 
 type Progress = { [level: number]: { [round: number]: boolean } };
 
 export default function BibleMasteryPage() {
   const [isClient, setIsClient] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [progress, setProgress] = useState<Progress>({});
@@ -77,31 +101,29 @@ export default function BibleMasteryPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showNoShieldsDialog, setShowNoShieldsDialog] = useState(false);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   const router = useRouter();
-
+  const { addExp, shields, spendWisdomKeys, addShields, wisdomKeys, spendChance, training, completeTraining } = useUserProgress();
+  const REFILL_COST = 10;
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
-
+  
   useEffect(() => {
-    if (!isClient) return;
-    const characterAdventuresProgress = JSON.parse(localStorage.getItem('characterAdventuresProgress') || '{}');
-    if (characterAdventuresProgress.scores) {
-        const completedLevels = Object.values(characterAdventuresProgress.scores).filter(score => score === PERFECT_SCORE_PER_LEVEL).length;
-        if (completedLevels >= TOTAL_ADVENTURE_LEVELS) {
-            setIsUnlocked(true);
-        }
+    if (isClient && training.bibleMastery === false) {
+        // Auto-start tour logic can go here
     }
-  }, [isClient]);
+  }, [isClient, training.bibleMastery]);
   
   const levelConfig = levels.find(l => l.level === currentLevel)!;
   
   const totalStars = Object.values(progress).flatMap(levelProgress => Object.values(levelProgress)).filter(Boolean).length;
-  const totalRounds = levels.reduce((acc, l) => acc + l.rounds, 0);
+  const totalRounds = levels.slice(0, -3).reduce((acc, l) => acc + l.rounds, 0) + 3;
 
   const loadProgress = useCallback(() => {
     if(!isClient) return;
@@ -181,6 +203,11 @@ export default function BibleMasteryPage() {
     const isOrderCorrect = shuffledBooks.every((book, index) => book === correctOrder[index]);
     setIsCorrect(isOrderCorrect);
     if(isOrderCorrect) {
+        const hasCompletedBefore = progress[currentLevel]?.[currentRound];
+        if (!hasCompletedBefore) {
+            addExp(levelConfig.expPerRound);
+        }
+
         setProgress(prev => ({
             ...prev,
             [currentLevel]: {
@@ -189,6 +216,18 @@ export default function BibleMasteryPage() {
             }
         }));
         setTimeout(() => setShowSuccessDialog(true), 300);
+    } else {
+        if (!spendChance()) {
+            setShowNoShieldsDialog(true);
+        }
+    }
+  };
+
+  const handleRefillShields = () => {
+    if (wisdomKeys >= REFILL_COST) {
+        spendWisdomKeys(REFILL_COST);
+        addShields(10);
+        setShowNoShieldsDialog(false);
     }
   };
 
@@ -229,7 +268,6 @@ export default function BibleMasteryPage() {
   const bookListToShow = isBookInOldTestament(correctOrder[0]) ? oldTestamentBooks : newTestamentBooks;
   const bookListName = isBookInOldTestament(correctOrder[0]) ? "Old Testament" : "New Testament";
 
-
   if (!isClient) {
     return <div>Loading...</div>; // Or a skeleton loader
   }
@@ -244,14 +282,13 @@ export default function BibleMasteryPage() {
             </div>
             <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Bible Mastery!</AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              To unlock this ultimate challenge, you must first prove your knowledge of Bible characters.
-              Achieve a perfect score (10/10) on all {TOTAL_ADVENTURE_LEVELS} levels of Character Adventures.
+              To unlock this ultimate challenge, you must first complete <strong>Stage 2</strong> of the Verse Memory game.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogCancel onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogCancel>
-            <AlertDialogAction onClick={() => router.push('/dashboard/character-adventures')}>
-              <Users className="mr-2" /> Go to Character Adventures
+            <AlertDialogAction onClick={() => router.push('/dashboard/verse-memory')}>
+              <BookOpen className="mr-2" /> Go to Verse Memory
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -290,6 +327,31 @@ export default function BibleMasteryPage() {
   const pageTitle = language === 'en' ? "Books of the Bible Mastery" : "Kasanayan sa mga Aklat ng Bibliya";
   const pageDescription = language === 'en' ? "Drag and drop the books into the correct order." : "I-drag at i-drop ang mga aklat sa tamang pagkakasunod-sunod.";
 
+  const ShieldDisplay = () => {
+    const fullShields = Math.floor(shields / 2);
+    const hasHalfShield = shields % 2 !== 0;
+
+    return (
+        <div id="shield-display" className="flex items-center gap-1.5">
+            <div className="relative w-5 h-5">
+                {hasHalfShield ? (
+                    <>
+                        <Shield className="w-5 h-5 text-primary fill-muted" />
+                        <div className="absolute top-0 left-0 w-1/2 h-full overflow-hidden">
+                            <Shield className="w-5 h-5 text-primary fill-primary" />
+                        </div>
+                    </>
+                ) : (
+                    <Shield className={cn("w-5 h-5 text-primary", fullShields > 0 || shields > 0 ? "fill-primary" : "fill-muted")} />
+                )}
+            </div>
+            <span className={cn("font-semibold", hasHalfShield ? "text-destructive" : "text-foreground")}>
+                {fullShields}
+            </span>
+        </div>
+    );
+};
+
   return (
     <>
     <div className="max-w-md mx-auto">
@@ -301,13 +363,11 @@ export default function BibleMasteryPage() {
         <div className="text-center mb-4 p-2 bg-muted rounded-lg font-semibold flex justify-around items-center">
            <div>{language === 'en' ? 'Level' : 'Antas'}: {currentLevel} / {levels.length}</div>
            <div>{language === 'en' ? 'Round' : 'Ronda'}: {currentRound} / {levelConfig.rounds}</div>
-           <div className="flex items-center gap-1">
-                <Star className="w-5 h-5 text-yellow-500"/> {totalStars} / {totalRounds}
-           </div>
-           <Button variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
+           <ShieldDisplay />
+           <Button id="language-toggle" variant="outline" size="icon" onClick={toggleLanguage}><Languages className="w-5 h-5"/></Button>
         </div>
 
-        <Card>
+        <Card id="bible-mastery-card">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
@@ -318,7 +378,7 @@ export default function BibleMasteryPage() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="space-y-2">
+                <div id="book-list" className="space-y-2">
                     {shuffledBooks.map((book, index) => (
                          <div
                             key={book}
@@ -339,10 +399,10 @@ export default function BibleMasteryPage() {
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 flex flex-col gap-2">
-                    {isCorrect === null && <Button onClick={checkOrder}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
+                <div id="check-order-button" className="mt-6 flex flex-col gap-2">
+                    {isCorrect === null && <Button onClick={checkOrder} disabled={shields <= 0}>{language === 'en' ? 'Check Order' : 'Suriin ang Ayos'}</Button>}
                     {isCorrect === true && <Button onClick={handleNext} className="bg-green-600 hover:bg-green-700">{language === 'en' ? 'Correct! Next' : 'Tama! Susunod'}</Button>}
-                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive"><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
+                    {isCorrect === false && <Button onClick={() => startRound(currentLevel, currentRound)} variant="destructive" disabled={shields <= 0}><Shuffle className="mr-2"/>{language === 'en' ? 'Try Again' : 'Subukang Muli'}</Button>}
                 </div>
             </CardContent>
         </Card>
@@ -383,9 +443,24 @@ export default function BibleMasteryPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
+    
+    <AlertDialog open={showNoShieldsDialog} onOpenChange={setShowNoShieldsDialog}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Out of Shields!</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You've run out of chances. Go to the forge to reinforce your shields and keep playing.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+                <AlertDialogAction onClick={() => router.push('/dashboard/forge')}>
+                    <Hammer className="mr-2 h-4 w-4" /> Go to Forge
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
 
     </>
   );
 }
-
-    

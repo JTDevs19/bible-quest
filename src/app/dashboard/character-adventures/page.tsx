@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -8,10 +9,12 @@ import { Users, CheckCircle, XCircle, BrainCircuit, RotateCcw, Lock, PlayCircle,
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { useSoundEffects } from '@/hooks/use-sound-effects';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 const triviaLevels = [
   // Level 1
@@ -97,13 +100,13 @@ const triviaLevels = [
     { question: "Who was the son of Isaac that sold his birthright for a bowl of stew?", options: ["Jacob", "Reuben", "Esau", "Judah"], answer: "Esau", trivia: "Esau, a skillful hunter, despised his birthright in a moment of hunger, a decision he later regretted bitterly.", reference: "Genesis 25:34", verseText: "Then Jacob gave Esau some bread and some lentil stew. He ate and drank, and then got up and left. So Esau despised his birthright." },
     { question: "Who was the prophet that challenged the prophets of Baal on Mount Carmel?", options: ["Elisha", "Jeremiah", "Isaiah", "Elijah"], answer: "Elijah", trivia: "God sent down fire from heaven to consume Elijah's sacrifice, proving He was the one true God in a dramatic showdown.", reference: "1 Kings 18:38", verseText: "Then the fire of the LORD fell and burned up the sacrifice, the wood, the stones and the soil, and also licked up the water in the trench." },
     { question: "Who was the judge of Israel that defeated a vast Midianite army with only 300 men?", options: ["Jephthah", "Samson", "Ehud", "Gideon"], answer: "Gideon", trivia: "God reduced Gideon's army from 32,000 to 300 to show that the victory was His alone, not by human strength.", reference: "Judges 7:7", verseText: "The LORD said to Gideon, 'With the three hundred men that lapped I will save you and give the Midianites into your hands. Let all the others go home.'" },
-    { question: "Who was the disciple known as 'the Zealot'?", options: ["Simon Peter", "Simon", "Andrew", "James"], answer: "Simon", trivia: "The Zealots were a political movement that sought to incite the people of Judea to rebel against the Roman Empire.", reference: "Luke 6:15", verseText: "Matthew, Thomas, James son of Alphaeus, Simon who was called the Zealot," },
-    { question: "Who was the king of Babylon who saw the writing on the wall?", options: ["Nebuchadnezzar", "Darius", "Cyrus", "Belshazzar"], answer: "Belshazzar", trivia: "Daniel interpreted the mysterious writing, which foretold the imminent downfall of Belshazzar's kingdom to the Medes and Persians.", reference: "Daniel 5:25", verseText: "This is the inscription that was written: MENE, MENE, TEKEL, PARSIN." },
-    { question: "Who were the two spies sent by Joshua who were hidden by Rahab in Jericho?", options: ["Caleb and Phinehas", "Gershon and Merari", "Only one is named", "They are unnamed"], answer: "They are unnamed", trivia: "Though their names aren't given, their mission was crucial for the Israelite victory at Jericho, thanks to Rahab's help.", reference: "Joshua 2:1", verseText: "Then Joshua son of Nun secretly sent two spies from Shittim. 'Go, look over the land,' he said, 'especially Jericho.' So they went and entered the house of a prostitute named Rahab and stayed there." },
-    { question: "Who was the woman who was the first to see the resurrected Jesus?", options: ["Mary, the mother of Jesus", "Mary Magdalene", "Salome", "Joanna"], answer: "Mary Magdalene", trivia: "Mary Magdalene was a devoted follower of Jesus, and she was given the honor of being the first witness to His resurrection.", reference: "John 20:16", verseText: "Jesus said to her, 'Mary.' She turned toward him and cried out in Aramaic, 'Rabboni!' (which means 'Teacher')." },
-    { question: "Who was the co-worker with Paul, a doctor by profession, who wrote a Gospel and the book of Acts?", options: ["Mark", "Luke", "Silas", "Barnabas"], answer: "Luke", trivia: "Luke was a meticulous historian and a faithful companion to Paul, providing detailed accounts of Jesus' life and the early church.", reference: "Colossians 4:14", verseText: "Our dear friend Luke, the doctor, and Demas send greetings." },
-    { question: "Who was the high priest who mentored the young prophet Samuel?", options: ["Phinehas", "Ahimelech", "Eli", "Abiathar"], answer: "Eli", trivia: "Though his own sons were wicked, Eli recognized God's call on Samuel's life and guided him in his early prophetic ministry.", reference: "1 Samuel 3:9", verseText: "So Eli told Samuel, 'Go and lie down, and if he calls you, say, ‘Speak, LORD, for your servant is listening.’' So Samuel went and lay down in his place." },
-    { question: "Who was the prophet that God called 'son of man' more than 90 times?", options: ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"], answer: "Ezekiel", trivia: "This title emphasized Ezekiel's humanity in contrast to the divine glory of God, to whom he was a messenger during the Babylonian exile.", reference: "Ezekiel 2:1", verseText: "He said to me, 'Son of man, stand up on your feet and I will speak to you.'" }
+    { question: "Sino ang alagad na kilala bilang 'ang Zelote'?", options: ["Simon Peter", "Simon", "Andrew", "James"], answer: "Simon", trivia: "The Zealots were a political movement that sought to incite the people of Judea to rebel against the Roman Empire.", reference: "Luke 6:15", verseText: "Matthew, Thomas, James son of Alphaeus, Simon who was called the Zealot," },
+    { question: "Sino ang hari ng Babilonia na nakakita ng sulat sa pader?", options: ["Nabucodonosor", "Dario", "Ciro", "Belsasar"], answer: "Belsasar", trivia: "Daniel interpreted the mysterious writing, which foretold the imminent downfall of Belshazzar's kingdom to the Medes and Persians.", reference: "Daniel 5:25", verseText: "This is the inscription that was written: MENE, MENE, TEKEL, PARSIN." },
+    { question: "Sino ang dalawang espiya na ipinadala ni Josue na itinago ni Rahab sa Jerico?", options: ["Caleb at Finees", "Gerson at Merari", "Only one is named", "They are unnamed"], answer: "They are unnamed", trivia: "Though their names aren't given, their mission was crucial for the Israelite victory at Jericho, thanks to Rahab's help.", reference: "Joshua 2:1", verseText: "Then Joshua son of Nun secretly sent two spies from Shittim. 'Go, look over the land,' he said, 'especially Jericho.' So they went and entered the house of a prostitute named Rahab and stayed there." },
+    { question: "Sino ang babaeng unang nakakita sa muling nabuhay na si Hesus?", options: ["Maria, ina ni Hesus", "Maria Magdalena", "Salome", "Juana"], answer: "Maria Magdalena", trivia: "Mary Magdalene was a devoted follower of Jesus, and she was given the honor of being the first witness to His resurrection.", reference: "John 20:16", verseText: "Jesus said to her, 'Mary.' She turned toward him and cried out in Aramaic, 'Rabboni!' (which means 'Teacher')." },
+    { question: "Sino ang co-worker with Paul, isang doktor sa propesyon, na sumulat ng isang Ebanghelyo at ang aklat ng Mga Gawa?", options: ["Mark", "Luke", "Silas", "Barnabas"], answer: "Luke", trivia: "Luke was a meticulous historian and a faithful companion to Paul, providing detailed accounts of Jesus' life and the early church.", reference: "Colossians 4:14", verseText: "Our dear friend Luke, the doctor, and Demas send greetings." },
+    { question: "Sino ang punong saserdote na gumabay sa batang propeta na si Samuel?", options: ["Phinehas", "Ahimelech", "Eli", "Abiathar"], answer: "Eli", trivia: "Though his own sons were wicked, Eli recognized God's call on Samuel's life and guided him in his early prophetic ministry.", reference: "1 Samuel 3:9", verseText: "So Eli told Samuel, 'Go and lie down, and if he calls you, say, ‘Speak, LORD, for your servant is listening.’' So Samuel went and lay down in his place." },
+    { question: "Sino ang propeta na tinawag ng Diyos na 'anak ng tao' nang higit sa 90 beses?", options: ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"], answer: "Ezekiel", trivia: "This title emphasized Ezekiel's humanity in contrast to the divine glory of God, to whom he was a messenger during the Babylonian exile.", reference: "Ezekiel 2:1", verseText: "He said to me, 'Son of man, stand up on your feet and I will speak to you.'" }
   ],
   // Level 8
   [
@@ -113,35 +116,35 @@ const triviaLevels = [
     { question: "Who was the woman who anointed Jesus' feet with expensive perfume and wiped them with her hair?", options: ["Mary of Bethany", "Mary Magdalene", "The sinful woman", "Joanna"], answer: "Mary of Bethany", trivia: "This act of lavish devotion, sister of Martha and Lazarus, was commended by Jesus as a beautiful thing done in preparation for His burial.", reference: "John 12:3", verseText: "Then Mary took about a pint of pure nard, an expensive perfume; she poured it on Jesus’ feet and wiped his feet with her hair. And the house was filled with the fragrance of the perfume." },
     { question: "Who were the three friends of Daniel who were thrown into a fiery furnace?", options: ["Shadrach, Meshach, and Abednego", "Hananiah, Mishael, and Azariah", "Both A and B", "Belteshazzar, Arioch, and Ashpenaz"], answer: "Both A and B", trivia: "Shadrach, Meshach, and Abednego were their Babylonian names, while Hananiah, Mishael, and Azariah were their Hebrew names.", reference: "Daniel 3:25", verseText: "He said, 'Look! I see four men walking around in the fire, unbound and unharmed, and the fourth looks like a son of the gods.'" },
     { question: "Who was the prominent female leader in the early church at Philippi?", options: ["Phoebe", "Priscilla", "Lydia", "Euodia"], answer: "Lydia", trivia: "Lydia was a dealer in purple cloth and a worshiper of God. After her conversion, her home became a center for the church in Philippi.", reference: "Acts 16:14", verseText: "One of those listening was a woman from the city of Thyatira named Lydia, a dealer in purple cloth. She was a worshiper of God. The Lord opened her heart to respond to Paul’s message." },
-    { question: "Who was the queen who was deposed for refusing to appear before her husband, King Xerxes?", options: ["Esther", "Jezebel", "Vashti", "Athaliah"], answer: "Vashti", trivia: "Vashti's defiance led to her removal as queen, which providentially opened the way for Esther to take her place and save the Jewish people.", reference: "Esther 1:12", verseText: "But when the attendants delivered the king’s command, Queen Vashti refused to come. Then the king became furious and burned with anger." },
-    { question: "Who was the disciple that Jesus saw sitting under a fig tree before calling him?", options: ["Philip", "Nathanael", "Andrew", "Thaddaeus"], answer: "Nathanael", trivia: "Jesus' supernatural knowledge of Nathanael's location convinced him that Jesus was the Son of God and the King of Israel.", reference: "John 1:48", verseText: "'How do you know me?' Nathanael asked. Jesus answered, 'I saw you while you were still under the fig tree before Philip called you.'" },
-    { question: "Who was the proconsul of Cyprus who became a believer after Paul blinded a sorcerer?", options: ["Gallio", "Felix", "Sergius Paulus", "Publius"], answer: "Sergius Paulus", trivia: "When Sergius Paulus, an intelligent man, saw the miracle, he believed, for he was amazed at the teaching about the Lord.", reference: "Acts 13:12", verseText: "When the proconsul saw what had happened, he believed, for he was amazed at the teaching about the Lord." },
-    { question: "Who was the farmer prophet from the southern kingdom of Judah sent to prophesy against the northern kingdom of Israel?", options: ["Hosea", "Amos", "Obadiah", "Micah"], answer: "Amos", trivia: "Amos was not a professional prophet but a shepherd and a sycamore-fig farmer. He preached a powerful message of social justice and divine judgment.", reference: "Amos 7:14", verseText: "Amos answered Amaziah, 'I was neither a prophet nor the son of a prophet, but I was a shepherd, and I also took care of sycamore-fig trees.'" }
+    { question: "Sino ang reyna na inalis sa pwesto dahil sa pagtangging humarap sa kanyang asawang si Haring Xerxes?", options: ["Esther", "Jezebel", "Vashti", "Athaliah"], answer: "Vashti", trivia: "Vashti's defiance led to her removal as queen, which providentially opened the way for Esther to take her place and save the Jewish people.", reference: "Esther 1:12", verseText: "But when the attendants delivered the king’s command, Queen Vashti refused to come. Then the king became furious and burned with anger." },
+    { question: "Sino ang alagad na nakita ni Hesus na nakaupo sa ilalim ng puno ng igos bago siya tawagin?", options: ["Philip", "Nathanael", "Andrew", "Thaddaeus"], answer: "Nathanael", trivia: "Jesus' supernatural knowledge of Nathanael's location convinced him that Jesus was the Son of God and the King of Israel.", reference: "John 1:48", verseText: "'How do you know me?' Nathanael asked. Jesus answered, 'I saw you while you were still under the fig tree before Philip called you.'" },
+    { question: "Sino ang prokonsul ng Ciprus na naging mananampalataya matapos bulagin ni Pablo ang isang salamangkero?", options: ["Gallio", "Felix", "Sergius Paulus", "Publius"], answer: "Sergius Paulus", trivia: "When Sergius Paulus, an intelligent man, saw the miracle, he believed, for he was amazed at the teaching about the Lord.", reference: "Acts 13:12", verseText: "When the proconsul saw what had happened, he believed, for he was amazed at the teaching about the Lord." },
+    { question: "Sino ang magsasakang propeta mula sa timog na kaharian ng Juda na ipinadala upang magpropesiya laban sa hilagang kaharian ng Israel?", options: ["Hosea", "Amos", "Obadiah", "Micah"], answer: "Amos", trivia: "Amos was not a professional prophet but a shepherd and a sycamore-fig farmer. He preached a powerful message of social justice and divine judgment.", reference: "Amos 7:14", verseText: "Amos answered Amaziah, 'I was neither a prophet nor the son of a prophet, but I was a shepherd, and I also took care of sycamore-fig trees.'" }
   ],
   // Level 9
   [
-    { question: "Who was the grandson of Saul whom David showed kindness to for Jonathan's sake?", options: ["Ish-Bosheth", "Mephibosheth", "Mica", "Armoni"], answer: "Mephibosheth", trivia: "Mephibosheth was lame in both feet. David restored his family's land and gave him a permanent place at the royal table.", reference: "2 Samuel 9:7", verseText: "'Don’t be afraid,' David said to him, 'for I will surely show you kindness for the sake of your father Jonathan. I will restore to you all the land that belonged to your grandfather Saul, and you will always eat at my table.'" },
-    { question: "Who was the eloquent Alexandrian Jew who taught powerfully in Ephesus but knew only the baptism of John?", options: ["Aquila", "Priscilla", "Apollos", "Tychicus"], answer: "Apollos", trivia: "Priscilla and Aquila took him aside and explained the way of God more accurately, and he became a great asset to the early church.", reference: "Acts 18:24", verseText: "Meanwhile a Jew named Apollos, a native of Alexandria, came to Ephesus. He was a learned man, with a thorough knowledge of the Scriptures." },
-    { question: "Who was the king of Judah who was struck with leprosy for presumptuously offering incense in the temple?", options: ["Uzziah", "Jotham", "Ahaz", "Hezekiah"], answer: "Uzziah", trivia: "Though he started his reign well, King Uzziah's pride led him to usurp the role of the priests, resulting in divine judgment.", reference: "2 Chronicles 26:19", verseText: "Uzziah, who had a censer in his hand to burn incense, became angry. While he was raging at the priests in their presence before the incense altar in the LORD’s temple, leprosy broke out on his forehead." },
-    { question: "Who was the prophet whose scroll was cut up and burned by King Jehoiakim?", options: ["Isaiah", "Ezekiel", "Habakkuk", "Jeremiah"], answer: "Jeremiah", trivia: "Despite the king's defiance, God commanded Jeremiah to write all the words again on another scroll, adding many similar words.", reference: "Jeremiah 36:23", verseText: "Whenever Jehudi had read three or four columns of the scroll, the king cut them off with a scribe’s knife and threw them into the firepot, until the entire scroll was burned in the fire." },
-    { question: "Who was the runaway slave from Colossae for whom Paul wrote an appeal to his master?", options: ["Philemon", "Archippus", "Tychicus", "Onesimus"], answer: "Onesimus", trivia: "Paul converted Onesimus to Christianity and sent him back to his master Philemon, not as a slave, but as a beloved brother in Christ.", reference: "Philemon 1:16", verseText: "no longer as a slave, but better than a slave, as a dear brother. He is very dear to me but even dearer to you, both as a fellow man and as a brother in the Lord." },
-    { question: "Who was the man from Cyrene who was compelled to carry Jesus' cross?", options: ["Simon", "Alexander", "Rufus", "Joseph"], answer: "Simon", trivia: "Mark's gospel mentions that this Simon was the father of Alexander and Rufus, suggesting they were known to the early Christian community.", reference: "Mark 15:21", verseText: "A certain man from Cyrene, Simon, the father of Alexander and Rufus, was passing by on his way in from the country, and they forced him to carry the cross." },
-    { question: "Who was the faithful friend and fellow prisoner of Paul, mentioned in the closing of Colossians?", options: ["Epaphras", "Tychicus", "Aristarchus", "Demas"], answer: "Aristarchus", trivia: "Aristarchus, a Macedonian from Thessalonica, was a loyal companion who traveled with Paul and shared in his imprisonments.", reference: "Colossians 4:10", verseText: "My fellow prisoner Aristarchus sends you his greetings, as does Mark, the cousin of Barnabas." },
-    { question: "Who was the father of Methuselah and the great-grandfather of Noah?", options: ["Jared", "Lamech", "Mahalalel", "Enoch"], answer: "Enoch", trivia: "Enoch is one of only two men in the Bible (the other being Elijah) who did not experience death but was taken directly by God.", reference: "Genesis 5:22", verseText: "After he became the father of Methuselah, Enoch walked faithfully with God 300 years and had other sons and daughters." },
-    { question: "Who was the prophetess who confirmed the authenticity of the Book of the Law found during King Josiah's reign?", options: ["Deborah", "Miriam", "No-adiah", "Huldah"], answer: "Huldah", trivia: "Huldah's prophecy validated the found scripture and spurred on Josiah's great religious reforms in Judah.", reference: "2 Kings 22:14", verseText: "Hilkiah the priest, Ahikam, Akbor, Shaphan and Asaiah went to speak to the prophet Huldah, who was the wife of Shallum son of Tikvah, the son of Harhas, keeper of the wardrobe. She lived in Jerusalem, in the New Quarter." },
-    { question: "Who was the son of Jacob and Leah, whose descendants became the priestly tribe of Israel?", options: ["Reuben", "Simeon", "Levi", "Judah"], answer: "Levi", trivia: "Because of their zeal for the Lord, the tribe of Levi was set apart for the service of the tabernacle and temple, not receiving a territorial inheritance like the other tribes.", reference: "Numbers 3:12", verseText: "'I have taken the Levites from among the Israelites in place of the first male offspring of every Israelite woman. The Levites are mine,'" }
+    { question: "Sino ang apo ni Saul na pinakitaan ni David ng kabaitan alang-alang kay Jonathan?", options: ["Ish-Bosheth", "Mephibosheth", "Mica", "Armoni"], answer: "Mefiboset", trivia: "Mephibosheth was lame in both feet. David restored his family's land and gave him a permanent place at the royal table.", reference: "2 Samuel 9:7", verseText: "'Don’t be afraid,' David said to him, 'for I will surely show you kindness for the sake of your father Jonathan. I will restore to you all the land that belonged to your grandfather Saul, and you will always eat at my table.'" },
+    { question: "Sino ang mahusay magsalitang Hudyo mula sa Alejandria na nagturo nang may kapangyarihan sa Efeso ngunit alam lamang ang bautismo ni Juan?", options: ["Aquila", "Priscilla", "Apollos", "Tychicus"], answer: "Apolos", trivia: "Priscilla and Aquila took him aside and explained the way of God more accurately, and he became a great asset to the early church.", reference: "Acts 18:24", verseText: "Meanwhile a Jew named Apollos, a native of Alexandria, came to Ephesus. He was a learned man, with a thorough knowledge of the Scriptures." },
+    { question: "Sino ang hari ng Juda na tinamaan ng ketong dahil sa pangahas na pag-aalay ng insenso sa templo?", options: ["Uzziah", "Jotham", "Ahaz", "Hezekiah"], answer: "Uzias", trivia: "Though he started his reign well, King Uzziah's pride led him to usurp the role of the priests, resulting in divine judgment.", reference: "2 Chronicles 26:19", verseText: "Uzziah, who had a censer in his hand to burn incense, became angry. While he was raging at the priests in their presence before the incense altar in the LORD’s temple, leprosy broke out on his forehead." },
+    { question: "Sino ang propeta na ang balumbon ay pinutol at sinunog ni Haring Jehoiakim?", options: ["Isaiah", "Ezekiel", "Habakkuk", "Jeremiah"], answer: "Jeremias", trivia: "Despite the king's defiance, God commanded Jeremiah to write all the words again on another scroll, adding many similar words.", reference: "Jeremiah 36:23", verseText: "Whenever Jehudi had read three or four columns of the scroll, the king cut them off with a scribe’s knife and threw them into the firepot, until the entire scroll was burned in the fire." },
+    { question: "Sino ang tumakas na alipin mula sa Colosas na kung kanino sumulat si Pablo ng isang apela sa kanyang amo?", options: ["Philemon", "Archippus", "Tychicus", "Onesimus"], answer: "Onesimo", trivia: "Paul converted Onesimus to Christianity and sent him back to his master Philemon, not as a slave, but as a beloved brother in Christ.", reference: "Philemon 1:16", verseText: "no longer as a slave, but better than a slave, as a dear brother. He is very dear to me but even dearer to you, both as a fellow man and as a brother in the Lord." },
+    { question: "Sino ang lalaki mula sa Cirene na pinilit na pasanin ang krus ni Hesus?", options: ["Simon", "Alexander", "Rufus", "Joseph"], answer: "Simon", trivia: "Mark's gospel mentions that this Simon was the father of Alexander and Rufus, suggesting they were known to the early Christian community.", reference: "Mark 15:21", verseText: "A certain man from Cyrene, Simon, the father of Alexander and Rufus, was passing by on his way in from the country, and they forced him to carry the cross." },
+    { question: "Sino ang tapat na kaibigan at kapwa bilanggo ni Pablo, na binanggit sa pagtatapos ng Colosas?", options: ["Epaphras", "Tychicus", "Aristarchus", "Demas"], answer: "Aristarco", trivia: "Aristarchus, a Macedonian from Thessalonica, was a loyal companion who traveled with Paul and shared in his imprisonments.", reference: "Colossians 4:10", verseText: "My fellow prisoner Aristarchus sends you his greetings, as does Mark, the cousin of Barnabas." },
+    { question: "Sino ang ama ni Matusalem at lolo sa tuhod ni Noe?", options: ["Jared", "Lamech", "Mahalalel", "Enoch"], answer: "Enoch", trivia: "Enoch is one of only two men in the Bible (the other being Elijah) who did not experience death but was taken directly by God.", reference: "Genesis 5:22", verseText: "After he became the father of Methuselah, Enoch walked faithfully with God 300 years and had other sons and daughters." },
+    { question: "Sino ang propetisang nagkumpirma sa pagiging tunay ng Aklat ng Kautusan na natagpuan noong panahon ni Haring Josias?", options: ["Deborah", "Miriam", "No-adiah", "Huldah"], answer: "Hulda", trivia: "Huldah's prophecy validated the found scripture and spurred on Josiah's great religious reforms in Judah.", reference: "2 Kings 22:14", verseText: "Hilkiah the priest, Ahikam, Akbor, Shaphan and Asaiah went to speak to the prophet Huldah, who was the wife of Shallum son of Tikvah, the son of Harhas, keeper of the wardrobe. She lived in Jerusalem, in the New Quarter." },
+    { question: "Sino ang anak nina Jacob at Lea, na ang mga inapo ay naging tribong saserdote ng Israel?", options: ["Reuben", "Simeon", "Levi", "Judah"], answer: "Levi", trivia: "Because of their zeal for the Lord, the tribe of Levi was set apart for the service of the tabernacle and temple, not receiving a territorial inheritance like the other tribes.", reference: "Numbers 3:12", verseText: "'I have taken the Levites from among the Israelites in place of the first male offspring of every Israelite woman. The Levites are mine,'" }
   ],
   // Level 10
   [
-    { question: "Who was the judge who made a rash vow that resulted in sacrificing his daughter?", options: ["Gideon", "Samson", "Ibzan", "Jephthah"], answer: "Jephthah", trivia: "Jephthah vowed to sacrifice whatever came out of his house to meet him if he returned victorious. Tragically, it was his only child, his daughter.", reference: "Judges 11:34", verseText: "When Jephthah returned to his home in Mizpah, who should come out to meet him but his daughter, dancing to the sound of timbrels! She was an only child. Except for her he had neither son nor daughter." },
-    { question: "Who was the first Christian convert in Europe?", options: ["The Philippian Jailer", "Dionysius", "Lydia", "Damaris"], answer: "Lydia", trivia: "Lydia, a dealer of purple cloth in Philippi, and her household were baptized by Paul, and her home became a meeting place for believers.", reference: "Acts 16:14-15", verseText: "One of those listening was a woman from the city of Thyatira named Lydia, a dealer in purple cloth. She was a worshiper of God. The Lord opened her heart to respond to Paul’s message. When she and the members of her household were baptized, she invited us to her home." },
-    { question: "Who was the scribe and priest who led the second group of exiles back to Jerusalem from Babylon?", options: ["Nehemiah", "Zerubbabel", "Haggai", "Ezra"], answer: "Ezra", trivia: "Ezra was a skilled scribe, well-versed in the Law of Moses, and he was instrumental in teaching the people God's law and restoring worship in Jerusalem.", reference: "Ezra 7:6", verseText: "this Ezra came up from Babylon. He was a teacher well versed in the Law of Moses, which the LORD, the God of Israel, had given. The king had granted him everything he asked, for the hand of the LORD his God was on him." },
-    { question: "Who was the disciple who was a tax collector before Jesus called him?", options: ["Matthew", "Zacchaeus", "Simon the Zealot", "Joseph of Arimathea"], answer: "Matthew", trivia: "Matthew, also called Levi, promptly left his profession to follow Jesus and later became the author of the first Gospel.", reference: "Matthew 9:9", verseText: "As Jesus went on from there, he saw a man named Matthew sitting at the tax collector’s booth. 'Follow me,' he told him, and Matthew got up and followed him." },
-    { question: "Who were the two sons of Zebedee, also known as the 'Sons of Thunder'?", options: ["Peter and Andrew", "Philip and Bartholomew", "James and John", "Thomas and Matthew"], answer: "James and John", trivia: "Jesus gave them this nickname, likely due to their fiery and impetuous personalities.", reference: "Mark 3:17", verseText: "James son of Zebedee and his brother John (to them he gave the name Boanerges, which means 'sons of thunder')," },
-    { question: "Who was the woman who hid two Israelite spies in Jericho?", options: ["Deborah", "Jael", "Rahab", "Zipporah"], answer: "Rahab", trivia: "For her act of faith in hiding the spies, Rahab and her family were spared when the city of Jericho was destroyed. She is listed in the lineage of Jesus.", reference: "Joshua 2:6", verseText: "But she had taken them up to the roof and hidden them under the stalks of flax she had laid out on the roof." },
-    { question: "Who was the prophet that was married to a prostitute named Gomer?", options: ["Amos", "Hosea", "Joel", "Obadiah"], answer: "Hosea", trivia: "Hosea's marriage was a living parable of God's faithful love for the unfaithful nation of Israel.", reference: "Hosea 1:3", verseText: "So he went and married Gomer daughter of Diblaim, and she conceived and bore him a son." },
-    { question: "Who was the elderly man who blessed the infant Jesus in the temple?", options: ["Zechariah", "Simeon", "Joseph of Arimathea", "Nicodemus"], answer: "Simeon", trivia: "The Holy Spirit had revealed to Simeon that he would not die before he had seen the Lord’s Messiah.", reference: "Luke 2:29-30", verseText: "'Sovereign Lord, as you have promised, you may now dismiss your servant in peace. For my eyes have seen your salvation,'" },
-    { question: "Who was the man who owned the tomb where Jesus was buried?", options: ["Nicodemus", "Lazarus", "Simon the Cyrene", "Joseph of Arimathea"], answer: "Joseph of Arimathea", trivia: "Joseph was a wealthy member of the Sanhedrin and a secret disciple of Jesus. He bravely asked Pilate for Jesus' body for burial.", reference: "Matthew 27:59-60", verseText: "Joseph took the body, wrapped it in a clean linen cloth, and placed it in his own new tomb that he had cut out of the rock." },
+    { question: "Sino ang hukom na gumawa ng padalus-dalos na panata na nagresulta sa pag-aalay ng kanyang anak na babae?", options: ["Gideon", "Samson", "Ibzan", "Jephthah"], answer: "Jephthah", trivia: "Jephthah vowed to sacrifice whatever came out of his house to meet him if he returned victorious. Tragically, it was his only child, his daughter.", reference: "Judges 11:34", verseText: "When Jephthah returned to his home in Mizpah, who should come out to meet him but his daughter, dancing to the sound of timbrels! She was an only child. Except for her he had neither son nor daughter." },
+    { question: "Sino ang unang Kristiyanong nakumberte sa Europa?", options: ["The Philippian Jailer", "Dionysius", "Lydia", "Damaris"], answer: "Lydia", trivia: "Lydia, a dealer of purple cloth in Philippi, and her household were baptized by Paul, and her home became a meeting place for believers.", reference: "Acts 16:14-15", verseText: "One of those listening was a woman from the city of Thyatira named Lydia, a dealer in purple cloth. She was a worshiper of God. The Lord opened her heart to respond to Paul’s message. When she and the members of her household were baptized, she invited us to her home." },
+    { question: "Sino ang eskriba at pari na namuno sa ikalawang grupo ng mga bihag pabalik sa Jerusalem mula sa Babilonia?", options: ["Nehemiah", "Zerubbabel", "Haggai", "Ezra"], answer: "Ezra", trivia: "Ezra was a skilled scribe, well-versed in the Law of Moses, and he was instrumental in teaching the people God's law and restoring worship in Jerusalem.", reference: "Ezra 7:6", verseText: "this Ezra came up from Babylon. He was a teacher well versed in the Law of Moses, which the LORD, the God of Israel, had given. The king had granted him everything he asked, for the hand of the LORD his God was on him." },
+    { question: "Sino ang alagad na isang maniningil ng buwis bago siya tinawag ni Hesus?", options: ["Matthew", "Zacchaeus", "Simon the Zealot", "Joseph of Arimathea"], answer: "Matthew", trivia: "Matthew, also called Levi, promptly left his profession to follow Jesus and later became the author of the first Gospel.", reference: "Matthew 9:9", verseText: "As Jesus went on from there, he saw a man named Matthew sitting at the tax collector’s booth. 'Follow me,' he told him, and Matthew got up and followed him." },
+    { question: "Sino ang dalawang anak ni Zebedeo, na kilala rin bilang 'Mga Anak ng Kulog'?", options: ["Peter and Andrew", "Philip and Bartholomew", "James and John", "Thomas and Matthew"], answer: "James and John", trivia: "Jesus gave them this nickname, likely due to their fiery and impetuous personalities.", reference: "Mark 3:17", verseText: "James son of Zebedee and his brother John (to them he gave the name Boanerges, which means 'sons of thunder')," },
+    { question: "Sino ang babaeng nagtago sa dalawang espiyang Israelita sa Jerico?", options: ["Deborah", "Jael", "Rahab", "Zipporah"], answer: "Rahab", trivia: "For her act of faith in hiding the spies, Rahab and her family were spared when the city of Jericho was destroyed. She is listed in the lineage of Jesus.", reference: "Joshua 2:6", verseText: "But she had taken them up to the roof and hidden them under the stalks of flax she had laid out on the roof." },
+    { question: "Sino ang propeta na ikinasal sa isang patutot na nagngangalang Gomer?", options: ["Amos", "Hosea", "Joel", "Obadiah"], answer: "Hosea", trivia: "Hosea's marriage was a living parable of God's faithful love for the unfaithful nation of Israel.", reference: "Hosea 1:3", verseText: "So he went and married Gomer daughter of Diblaim, and she conceived and bore him a son." },
+    { question: "Sino ang matandang lalaki na nagbasbas sa sanggol na si Hesus sa templo?", options: ["Zechariah", "Simeon", "Joseph of Arimathea", "Nicodemus"], answer: "Simeon", trivia: "The Holy Spirit had revealed to Simeon that he would not die before he had seen the Lord’s Messiah.", reference: "Luke 2:29-30", verseText: "'Sovereign Lord, as you have promised, you may now dismiss your servant in peace. For my eyes have seen your salvation,'" },
+    { question: "Sino ang may-ari ng libingan kung saan inilibing si Hesus?", options: ["Nicodemus", "Lazarus", "Simon the Cyrene", "Joseph of Arimathea"], answer: "Joseph of Arimathea", trivia: "Joseph was a wealthy member of the Sanhedrin and a secret disciple of Jesus. He bravely asked Pilate for Jesus' body for burial.", reference: "Matthew 27:59-60", verseText: "Joseph took the body, wrapped it in a clean linen cloth, and placed it in his own new tomb that he had cut out of the rock." },
     { question: "What was the name of Abraham's wife?", options: ["Rebekah", "Leah", "Rachel", "Sarah"], answer: "Sarah", trivia: "Originally named Sarai, God changed her name to Sarah, which means 'princess', when He promised that she would bear a son in her old age.", reference: "Genesis 17:15", verseText: "God also said to Abraham, 'As for Sarai your wife, you are no longer to call her Sarai; her name will be Sarah.'" }
   ],
   // Level 11
@@ -187,7 +190,7 @@ const triviaLevels = [
   [
     { question: "Who was the wicked son of Gideon who murdered 70 of his brothers to become king?", options: ["Jotham", "Abimelech", "Gaal", "Zebul"], answer: "Abimelech", trivia: "Abimelech's tyrannical rule ended when a woman dropped an upper millstone on his head from a tower, and he had his armor-bearer finish him off.", reference: "Judges 9:5", verseText: "He went to his father’s home in Ophrah and on one stone murdered his seventy brothers, the sons of Jerub-Baal. But Jotham, Jerub-Baal’s youngest son, escaped by hiding." },
     { question: "Who was the prophet who foretold the place of Jesus' birth in Bethlehem?", options: ["Isaiah", "Jeremiah", "Hosea", "Micah"], answer: "Micah", trivia: "Centuries before Jesus was born, Micah pinpointed the small town of Bethlehem as the birthplace of Israel's future ruler.", reference: "Micah 5:2", verseText: "'But you, Bethlehem Ephrathah, though you are small among the clans of Judah, out of you will come for me one who will be ruler over Israel, whose origins are from of old, from ancient times.'" },
-    { question: "Who was the Gentile king whom God called 'my shepherd' and 'his anointed'?", options: ["Nebuchadnezzar", "Cyrus", "Darius", "Artaxerxes"], answer: "Cyrus", trivia: "Isaiah prophesied that Cyrus the Great of Persia would be God's instrument to free the Jews from Babylon and authorize the rebuilding of the temple.", reference: "Isaiah 45:1", verseText: "'This is what the LORD says to his anointed, to Cyrus, whose right hand I take hold of to subdue nations before him and to strip kings of their armor...'" },
+    { question: "Who was the Gentile king whom God called 'my shepherd' and 'his anointed'?", options: ["Nebuchadnezzar", "Cyrus", "Darius", "Artaxerxes"], answer: "Cyrus", trivia: "The prophet Isaiah prophesied that Cyrus the Great of Persia would be God's instrument to free the Jews from Babylon and authorize the rebuilding of the temple.", reference: "Isaiah 45:1", verseText: "'This is what the LORD says to his anointed, to Cyrus, whose right hand I take hold of to subdue nations before him and to strip kings of their armor...'" },
     { question: "Who was the man who helped his father-in-law Jacob deceive Isaac to receive the blessing?", options: ["Esau", "Laban", "This is a trick question; Jacob acted alone", "Rebekah's nurse, Deborah"], answer: "This is a trick question; Jacob acted alone", trivia: "It was Jacob's mother, Rebekah, who orchestrated the deception, not his father-in-law Laban, whom he had not yet met.", reference: "Genesis 27:6", verseText: "Rebekah said to her son Jacob, 'Look, I overheard your father say to your brother Esau...'" },
     { question: "Who was the high priest during the reign of King David who was a descendant of Eli?", options: ["Zadok", "Ahimelech", "Abiathar", "Jehoiada"], answer: "Abiathar", trivia: "Abiathar was the lone survivor of the massacre of the priests at Nob and served David faithfully, but was later banished by Solomon for supporting a rival claimant to the throne.", reference: "1 Samuel 22:20", verseText: "But Abiathar, a son of Ahimelech son of Ahitub, escaped and fled to join David." },
     { question: "Who was the 'chosen lady' to whom the Apostle John wrote his second epistle?", options: ["Mary", "Phoebe", "She is unnamed", "Electa"], answer: "She is unnamed", trivia: "Scholars debate whether the 'chosen lady' refers to a specific woman who hosted a house church or is a symbolic name for the church itself.", reference: "2 John 1:1", verseText: "The elder, To the lady chosen by God and to her children, whom I love in the truth..." },
@@ -245,7 +248,7 @@ const triviaLevels = [
     { question: "Who was the king of Tyre who was a great friend of David and Solomon and supplied them with cedar logs?", options: ["Abibaal", "Hiram", "Ithobaal I", "Pygmalion"], answer: "Hiram", trivia: "Hiram's skilled craftsmen and quality materials were essential for building both David's palace and Solomon's Temple.", reference: "1 Kings 5:1", verseText: "When Hiram king of Tyre heard that Solomon had been anointed king to succeed his father David, he sent his envoys to Solomon, because he had always been on friendly terms with David." },
     { question: "Who was the son of Jacob from whom the kings of Judah, including David and Jesus, were descended?", options: ["Reuben", "Levi", "Judah", "Joseph"], answer: "Judah", trivia: "In his final blessing, Jacob prophesied that the 'scepter will not depart from Judah,' indicating the royal line.", reference: "Genesis 49:10", verseText: "The scepter will not depart from Judah, nor the ruler’s staff from between his feet, until he to whom it belongs shall come and the obedience of the nations shall be his." },
     { question: "Who was the man who was healed of blindness by Jesus at the Pool of Siloam?", options: ["Bartimaeus", "The man born blind", "A man from Bethsaida", "Two men from Galilee"], answer: "The man born blind", trivia: "This miracle in John's gospel sparked a major controversy with the Pharisees, as they interrogated the man and his parents about his healing on the Sabbath.", reference: "John 9:7", verseText: "'Go,' he told him, 'wash in the Pool of Siloam' (this word means 'Sent'). So the man went and washed, and came home seeing." },
-    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla are almost always mentioned together in the New Testament. They hosted a church in their home and helped instruct Apollos.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla, because Claudius had ordered all Jews to leave Rome. Paul went to see them," },
+    { question: "Who was the tentmaker who, with his wife Priscilla, was a close companion and co-worker of Paul?", options: ["Apollos", "Aquila", "Tychicus", "Titus"], answer: "Aquila", trivia: "Aquila and Priscilla were tentmakers, like Paul, and became important leaders and teachers in the early church, hosting a church in their home.", reference: "Acts 18:2", verseText: "There he met a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla... Paul went to see them, and because he was a tentmaker as they were, he stayed and worked with them." },
     { question: "Who was the wife that Jacob loved more, but who was barren for many years?", options: ["Leah", "Rachel", "Bilhah", "Zilpah"], answer: "Rachel", trivia: "After years of watching her sister Leah have children, Rachel finally gave birth to Joseph and later Benjamin, but she died during Benjamin's birth.", reference: "Genesis 30:1", verseText: "When Rachel saw that she was not bearing Jacob any children, she became jealous of her sister. So she said to Jacob, 'Give me children, or I’ll die!'" }
   ],
   // Level 19
@@ -410,51 +413,85 @@ const triviaLevelsFilipino = [
 ];
 
 const PERFECT_SCORE_PER_LEVEL = 10;
-const MAX_LEVEL = 20; 
-const STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2 = 30; // 10 verses * 3 stars
+const MAX_LEVEL = 50;
+
+const VERSES_PER_STAGE = 20;
+const LEVELS_PER_STAGE = 5;
+
+// Function to check if a stage is complete
+const isStageComplete = (stageNum: number, scores: any) => {
+    if (!scores || !scores[stageNum]) return false;
+    for (let level = 1; level <= LEVELS_PER_STAGE; level++) {
+        const levelScores = scores[stageNum][level];
+        if (!levelScores || Object.keys(levelScores).length < VERSES_PER_STAGE) {
+            return false;
+        }
+    }
+    return true;
+};
 
 export default function CharacterAdventuresPage() {
     const [isClient, setIsClient] = useState(false);
-    const [isUnlocked, setIsUnlocked] = useState(false);
+    const [isUnlocked, setIsUnlocked] = useState(true);
     const [currentLevel, setCurrentLevel] = useState(1);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isAnswered, setIsAnswered] = useState(false);
     const [levelScores, setLevelScores] = useState<{ [key: number]: number }>({});
-    const [totalScore, setTotalScore] = useState(0);
     const [language, setLanguage] = useState<'en' | 'fil'>('en');
     const [showAdventureMap, setShowAdventureMap] = useState(true);
     const [showUnlockDialog, setShowUnlockDialog] = useState(false);
     const [showLevelCompleteDialog, setShowLevelCompleteDialog] = useState(false);
+    const [showTriviaDialog, setShowTriviaDialog] = useState(false);
     const router = useRouter();
     const { toast } = useToast();
+    const { playCorrectSound, playIncorrectSound } = useSoundEffects();
+    const { addExp, training, completeTraining, characterAdventuresMaxLevel, setProgress, lastPlayedDate } = useUserProgress();
 
     useEffect(() => {
         setIsClient(true);
+        const profileStr = localStorage.getItem('bibleQuestsUser');
+        if (profileStr) {
+            const profile = JSON.parse(profileStr);
+            setLanguage(profile.language || 'en');
+        }
     }, []);
+
+    useEffect(() => {
+        if (isClient) {
+            const today = new Date().toISOString().split('T')[0];
+            if (lastPlayedDate !== today) {
+                const completedLevels = Object.keys(levelScores).filter(level => levelScores[parseInt(level)] === PERFECT_SCORE_PER_LEVEL).length;
+                if (characterAdventuresMaxLevel <= completedLevels) {
+                    setProgress({ 
+                        lastPlayedDate: today, 
+                        characterAdventuresMaxLevel: Math.min(MAX_LEVEL, characterAdventuresMaxLevel + 2) 
+                    });
+                }
+            }
+
+            if (training.characterAdventures === false) {
+                setShowAdventureMap(false);
+                // Auto-start tour logic can go here
+            }
+        }
+    }, [isClient, training.characterAdventures, lastPlayedDate, setProgress, characterAdventuresMaxLevel, levelScores]);
 
     const loadProgress = useCallback(() => {
         if (!isClient) return;
-
-        const verseMemoryProgress = JSON.parse(localStorage.getItem('verseMemoryProgress') || '{}');
-        if ((verseMemoryProgress.stars || 0) >= STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2) {
-            setIsUnlocked(true);
-        }
-
         const savedProgress = localStorage.getItem('characterAdventuresProgress');
         if (savedProgress) {
             const progress = JSON.parse(savedProgress);
             setLevelScores(progress.scores || {});
-            setTotalScore(progress.total || 0);
         }
     }, [isClient]);
 
     const saveProgress = useCallback(() => {
         if (!isClient) return;
-        const progress = { scores: levelScores, total: totalScore };
+        const progress = { scores: levelScores };
         localStorage.setItem('characterAdventuresProgress', JSON.stringify(progress));
-    }, [isClient, levelScores, totalScore]);
+    }, [isClient, levelScores]);
 
 
     useEffect(() => {
@@ -463,7 +500,7 @@ export default function CharacterAdventuresPage() {
 
     useEffect(() => {
         saveProgress();
-    }, [levelScores, totalScore, saveProgress]);
+    }, [levelScores, saveProgress]);
 
     const startLevel = (level: number) => {
         setCurrentLevel(level);
@@ -475,21 +512,15 @@ export default function CharacterAdventuresPage() {
     };
 
     const handleLevelSelect = (level: number) => {
-        if (level === 1) {
-            startLevel(1);
+        if (level > characterAdventuresMaxLevel) {
+            toast({
+                title: "Level Locked",
+                description: "Come back tomorrow to unlock more levels!",
+                variant: 'default',
+            });
             return;
         }
-
-        const prevLevelScore = levelScores[level - 1] || 0;
-        if (prevLevelScore >= PERFECT_SCORE_PER_LEVEL) {
-            startLevel(level);
-        } else {
-             toast({
-                title: "Level Locked",
-                description: `You need to get a perfect score (${PERFECT_SCORE_PER_LEVEL}/${PERFECT_SCORE_PER_LEVEL}) on Level ${level - 1} to unlock this.`,
-                variant: 'destructive',
-            })
-        }
+        startLevel(level);
     };
 
     const handleAnswerSelect = (option: string) => {
@@ -503,21 +534,34 @@ export default function CharacterAdventuresPage() {
 
         if (option === correctAnswer) {
             setScore(s => s + 1);
+            addExp(1); // Add 1 EXP for each correct answer
+            playCorrectSound();
+        } else {
+            playIncorrectSound();
+        }
+
+        if(language === 'en' && triviaLevels[currentLevel - 1][questionIndex].trivia) {
+            setTimeout(() => {
+                setShowTriviaDialog(true);
+            }, 500);
+        } else {
+             setTimeout(() => {
+                handleNextQuestion();
+            }, 1000);
         }
     };
 
     const handleNextQuestion = () => {
+        setShowTriviaDialog(false);
         if (questionIndex < 9) {
             setQuestionIndex(q => q + 1);
             setSelectedAnswer(null);
             setIsAnswered(false);
         } else {
-            const finalScore = score;
+            const finalScore = score + (selectedAnswer === triviaLevels[currentLevel - 1][questionIndex].answer ? 1 : 0);
             const oldLevelScore = levelScores[currentLevel] || 0;
 
             if (finalScore > oldLevelScore) {
-                const scoreDifference = finalScore - oldLevelScore;
-                setTotalScore(ts => ts + scoreDifference);
                 setLevelScores(ls => ({ ...ls, [currentLevel]: finalScore }));
             }
 
@@ -539,7 +583,7 @@ export default function CharacterAdventuresPage() {
     const nextLevel = () => {
         setShowLevelCompleteDialog(false);
         if (currentLevel < MAX_LEVEL) {
-             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL) {
+             if ((levelScores[currentLevel] || 0) < PERFECT_SCORE_PER_LEVEL || currentLevel + 1 > characterAdventuresMaxLevel) {
                 setShowAdventureMap(true);
              } else {
                 startLevel(currentLevel + 1);
@@ -561,16 +605,15 @@ export default function CharacterAdventuresPage() {
                          <div className="mx-auto bg-primary/10 p-4 rounded-full mb-4">
                             <Lock className="w-10 h-10 text-primary" />
                         </div>
-                        <AlertDialogTitle className="font-headline text-2xl text-center">Unlock Character Adventures!</AlertDialogTitle>
+                        <AlertDialogTitle className="font-headline text-2xl text-center">{language === 'en' ? 'Unlock Character Adventures!' : 'I-unlock ang Pakikipagsapalaran ng mga Tauhan!'}</AlertDialogTitle>
                         <AlertDialogDescription className="text-center">
-                            To begin your adventure into the lives of Bible characters, you must first prove your foundational knowledge.
-                            Achieve at least <strong>{STARS_TO_UNLOCK_VERSE_MEMORY_LEVEL_2} stars</strong> in the Verse Memory game.
+                            {language === 'en' ? "To begin your adventure into the lives of Bible characters, you must first complete <strong>Stage 1</strong> of the Verse Memory game." : "Para simulan ang iyong pakikipagsapalaran sa buhay ng mga tauhan sa Bibliya, kailangan mo munang kumpletuhin ang <strong>Stage 1</strong> ng larong Verse Memory."}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="sm:justify-center">
-                         <AlertDialogCancel onClick={() => router.push('/dashboard')}>Back to Dashboard</AlertDialogCancel>
+                         <AlertDialogAction onClick={() => router.push('/dashboard')}>{language === 'en' ? 'Back to Dashboard' : 'Balik sa Dashboard'}</AlertDialogAction>
                         <AlertDialogAction onClick={() => router.push('/dashboard/verse-memory')}>
-                           <BookOpen className="mr-2" /> Go to Verse Memory
+                           <BookOpen className="mr-2" /> {language === 'en' ? 'Go to Verse Memory' : 'Pumunta sa Verse Memory'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -593,7 +636,7 @@ export default function CharacterAdventuresPage() {
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 py-4 max-h-[60vh] overflow-y-auto">
                             {Array.from({ length: MAX_LEVEL }).map((_, index) => {
                                 const level = index + 1;
-                                const isLocked = level > 1 && (levelScores[level - 1] || 0) < PERFECT_SCORE_PER_LEVEL;
+                                const isLocked = level > characterAdventuresMaxLevel;
                                 const bestScore = levelScores[level] || 0;
                                 const isPerfect = bestScore === PERFECT_SCORE_PER_LEVEL;
 
@@ -603,7 +646,7 @@ export default function CharacterAdventuresPage() {
                                         onClick={() => !isLocked && handleLevelSelect(level)}
                                         className={cn(
                                             "flex flex-col items-center justify-center p-4 rounded-lg border-2 text-center aspect-square",
-                                            isLocked ? "bg-muted text-muted-foreground cursor-not-allowed" : "cursor-pointer hover:bg-secondary",
+                                            isLocked ? "bg-muted text-muted-foreground cursor-not-allowed border-dashed" : "cursor-pointer hover:bg-secondary",
                                             isPerfect && "border-yellow-400 bg-yellow-50"
                                         )}
                                     >
@@ -643,18 +686,18 @@ export default function CharacterAdventuresPage() {
                     <p className="text-muted-foreground">{pageDescription}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={() => setShowAdventureMap(true)}><Map className="w-5 h-5"/></Button>
+                    <Button id="adventure-map-button" variant="outline" size="icon" onClick={() => setShowAdventureMap(true)}><Map className="w-5 h-5"/></Button>
                     <Button variant="outline" size="icon" onClick={() => setLanguage(l => l === 'en' ? 'fil' : 'en')}><Languages className="w-5 h-5"/></Button>
                 </div>
             </div>
 
-            <Card>
+            <Card id="character-adventures-card">
                 <CardHeader>
                     <div className="flex justify-between items-center">
                         <CardTitle className="font-headline text-2xl">
                            {language === 'en' ? `Level ${currentLevel}` : `Antas ${currentLevel}`}
                         </CardTitle>
-                        <div className="text-lg font-bold">
+                        <div id="score-display" className="text-lg font-bold">
                            {language === 'en' ? 'Score' : 'Puntos'}: {score}
                         </div>
                     </div>
@@ -670,8 +713,8 @@ export default function CharacterAdventuresPage() {
                             transition={{ duration: 0.3 }}
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold text-center">{currentTrivia.question}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h3 id="question-text" className="text-xl font-semibold text-center">{currentTrivia.question}</h3>
+                            <div id="answer-options" className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {currentTrivia.options.map((option, index) => {
                                     const isCorrect = option === currentTrivia.answer;
                                     const isSelected = selectedAnswer === option;
@@ -700,41 +743,6 @@ export default function CharacterAdventuresPage() {
                                     );
                                 })}
                             </div>
-                             {isAnswered && (
-                                <div className="space-y-4">
-                                    <Popover open={isAnswered}>
-                                        <PopoverContent className="w-full max-w-md mx-auto" align="center">
-                                        <div className="grid gap-4">
-                                            <div className="space-y-2">
-                                                {selectedAnswer === currentTrivia.answer ? (
-                                                    <p className="text-sm font-semibold text-green-600">Correct!</p>
-                                                ) : (
-                                                     <p className="text-sm font-semibold text-destructive">
-                                                         {language === 'en' ? 'The correct answer was:' : 'Ang tamang sagot ay:'} {currentTrivia.answer}
-                                                     </p>
-                                                )}
-                                                {currentTrivia.trivia && (
-                                                    <>
-                                                        <h4 className="font-medium leading-none">{language === 'en' ? 'Extra Trivia' : 'Dagdag Kaalaman'}</h4>
-                                                        <p className="text-sm text-muted-foreground">{currentTrivia.trivia}</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                            {currentTrivia.reference && (
-                                                <div className="space-y-2">
-                                                    <h4 className="font-medium leading-none">{language === 'en' ? 'Reference' : 'Sanggunian'}</h4>
-                                                    <p className="text-sm font-bold">{currentTrivia.reference}</p>
-                                                    <p className="text-sm text-muted-foreground italic">"{currentTrivia.verseText}"</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <Button onClick={handleNextQuestion} className="w-full">
-                                        {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
-                                    </Button>
-                                </div>
-                             )}
                         </motion.div>
                     </AnimatePresence>
                 </CardContent>
@@ -751,7 +759,7 @@ export default function CharacterAdventuresPage() {
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-center">
                             {language === 'en' ? `You scored ${score} out of 10.` : `Nakuha mo ang ${score} sa 10.`}
-                            {score === PERFECT_SCORE_PER_LEVEL && " Perfect score!"}
+                            {score === PERFECT_SCORE_PER_LEVEL && (language === 'en' ? " Perfect score!" : " Perpektong iskor!")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -759,7 +767,7 @@ export default function CharacterAdventuresPage() {
                             <RotateCcw className="mr-2" />
                             {language === 'en' ? 'Play Again' : 'Ulitin'}
                         </Button>
-                        <Button onClick={nextLevel} disabled={score < PERFECT_SCORE_PER_LEVEL && currentLevel < MAX_LEVEL}>
+                        <Button onClick={nextLevel} disabled={(score < PERFECT_SCORE_PER_LEVEL || currentLevel >= characterAdventuresMaxLevel) && currentLevel < MAX_LEVEL}>
                            {language === 'en' ? 'Next Level' : 'Susunod na Antas'}
                         </Button>
                          <Button variant="secondary" onClick={() => setShowAdventureMap(true)}>
@@ -781,20 +789,56 @@ export default function CharacterAdventuresPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                      <AlertDialogFooter className="sm:justify-center">
-                        <AlertDialogCancel onClick={() => {
+                        <AlertDialogAction onClick={() => {
                             setShowUnlockDialog(false);
                             nextLevel();
                         }}>
                              {language === 'en' ? 'Continue Adventures' : 'Ipagpatuloy ang Pakikipagsapalaran'}
-                        </AlertDialogCancel>
+                        </AlertDialogAction>
                         <AlertDialogAction onClick={() => router.push('/dashboard/bible-mastery')}>
                             <Users className="mr-2" /> {language === 'en' ? 'Explore New Game' : 'Tuklasin ang Bagong Laro'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={showTriviaDialog} onOpenChange={setShowTriviaDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="font-headline text-2xl text-center">
+                            Did you know?
+                        </DialogTitle>
+                        <DialogDescription className="text-center font-bold text-lg text-primary">
+                            {language === 'en' ? triviaLevels[currentLevel - 1][questionIndex].answer : triviaLevelsFilipino[currentLevel-1][questionIndex].answer}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                         {selectedAnswer !== (language === 'en' ? triviaLevels[currentLevel - 1][questionIndex].answer : triviaLevelsFilipino[currentLevel-1][questionIndex].answer) && (
+                            <div className="text-center text-destructive font-semibold">
+                                Your answer was {selectedAnswer}. Keep trying!
+                            </div>
+                        )}
+                        <div className="space-y-1">
+                            <h4 className="font-semibold">Extra Trivia</h4>
+                            <p className="text-sm text-muted-foreground">{language === 'en' ? triviaLevels[currentLevel - 1][questionIndex].trivia : ''}</p>
+                        </div>
+                        {language === 'en' && triviaLevels[currentLevel - 1][questionIndex].reference && (
+                            <div className="space-y-1">
+                                <h4 className="font-semibold">Reference</h4>
+                                <p className="text-sm font-bold">{triviaLevels[currentLevel - 1][questionIndex].reference}</p>
+                                <blockquote className="border-l-2 pl-4 italic text-muted-foreground">
+                                    "{triviaLevels[currentLevel - 1][questionIndex].verseText}"
+                                </blockquote>
+                            </div>
+                        )}
+                    </div>
+                     <DialogClose asChild>
+                        <Button onClick={handleNextQuestion}>
+                           {questionIndex < 9 ? (language === 'en' ? 'Next Question' : 'Susunod na Tanong') : (language === 'en' ? 'Finish Level' : 'Tapusin ang Antas')}
+                        </Button>
+                    </DialogClose>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
-
-    

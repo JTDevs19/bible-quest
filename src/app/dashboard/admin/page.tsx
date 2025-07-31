@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useUserProgress } from '@/hooks/use-user-progress';
+import { useRouter } from 'next/navigation';
 
 function Fab({ onReset }: { onReset: () => void }) {
     const [showConfirm, setShowConfirm] = useState(false);
@@ -32,7 +35,7 @@ function Fab({ onReset }: { onReset: () => void }) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete all your progress data from your browser's local storage.
+                            This action cannot be undone. This will permanently delete all your progress data, log you out, and require you to set up a new profile.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -50,19 +53,32 @@ function Fab({ onReset }: { onReset: () => void }) {
 
 export default function AdminPage() {
     const { toast } = useToast();
+    const router = useRouter();
+    const { reset: resetUserProgress } = useUserProgress();
+
 
     const resetAllData = () => {
         try {
-            localStorage.removeItem('bibleQuestsUser');
+            // Clear all game progress from local storage
             localStorage.removeItem('verseMemoryProgress');
             localStorage.removeItem('characterAdventuresProgress');
             localStorage.removeItem('bibleMasteryProgress');
+            
+            // Clear the Zustand-persisted user progress (Level, EXP, Keys)
+            resetUserProgress();
+            
+            // Clear the user profile, effectively logging them out
+            localStorage.removeItem('bibleQuestsUser');
 
             toast({
-                title: "Progress Reset",
-                description: "All user and game data has been cleared from local storage. Please refresh the page.",
+                title: "Progress Reset Successfully",
+                description: "All data has been cleared. Redirecting to the homepage.",
                 variant: 'default',
             });
+            
+            // Redirect to the homepage to start over
+            router.push('/');
+
         } catch (error) {
             toast({
                 title: "Error",
@@ -84,7 +100,7 @@ export default function AdminPage() {
                     <CardDescription>Use these tools with caution.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>The buttons here perform irreversible actions. The "Reset All Progress" FAB will clear all your progress data from this browser.</p>
+                    <p>The buttons here perform irreversible actions. The "Reset All Progress" button will clear all your progress data from this browser and log you out.</p>
                 </CardContent>
             </Card>
             <Fab onReset={resetAllData} />
