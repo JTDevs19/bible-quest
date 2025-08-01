@@ -639,7 +639,9 @@ export default function VerseMemoryPage() {
             return (
               <Input
                 key={`input-${currentIndex}`}
-                ref={(el) => (inputRefs.current[currentIndex] = el)}
+                ref={(el) => {
+                  inputRefs.current[currentIndex] = el;
+                }}
                 type="text"
                 value={userInputs[currentIndex] || ''}
                 onClick={() => setEditingIndex(currentIndex)}

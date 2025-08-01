@@ -20,14 +20,14 @@ const SermonGuideInputSchema = z.object({
 });
 export type SermonGuideInput = z.infer<typeof SermonGuideInputSchema>;
 
-const SermonPointSchema = z.object({
+export const SermonPointSchema = z.object({
     pointTitle: z.string().describe("The title for this specific point of the sermon."),
     pointDetails: z.string().describe("The detailed explanation or elaboration for this point."),
     verseReference: z.string().describe("A relevant Bible verse reference for this point (e.g., 'John 3:16')."),
     verseText: z.string().describe("The full text of the Bible verse."),
 });
 
-const SermonGuideOutputSchema = z.object({
+export const SermonGuideOutputSchema = z.object({
   title: z.string().describe('An engaging title for the sermon.'),
   introduction: z.string().describe('A brief introduction to the topic.'),
   points: z.array(SermonPointSchema).length(3).describe("An array of exactly three main points for the sermon."),

@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import type { SermonGuideOutput } from './sermon-guide-generator';
+import { SermonGuideOutputSchema } from './sermon-guide-generator';
 import { createPresentation } from '@/services/presentation-service';
 
 const SlideSchema = z.object({
@@ -53,7 +54,7 @@ const SlideContentSchema = z.object({
 
 const contentPrompt = ai.definePrompt({
     name: 'sermonSlideContentPrompt',
-    input: { schema: z.any() },
+    input: { schema: SermonGuideOutputSchema },
     output: { schema: SlideContentSchema }, // Use the stricter schema here
     prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
 
@@ -98,7 +99,7 @@ async function generateImage(prompt: string): Promise<string> {
 const sermonPresentationFlow = ai.defineFlow(
   {
     name: 'sermonPresentationFlow',
-    inputSchema: z.any(), // SermonGuideOutput type from another file
+    inputSchema: SermonGuideOutputSchema, // SermonGuideOutput type from another file
     outputSchema: SermonPresentationOutputSchema,
   },
   async (guide: SermonGuideOutput) => {
