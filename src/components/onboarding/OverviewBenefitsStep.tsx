@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useOnboarding } from '@/app/page';
+import { useOnboarding } from '@/hooks/use-onboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';

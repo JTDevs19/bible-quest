@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, createContext, useContext, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { AgeStep } from '@/components/onboarding/AgeStep';
@@ -13,6 +13,7 @@ import { OverviewWelcomeStep } from '@/components/onboarding/OverviewWelcomeStep
 import { OverviewGamesStep } from '@/components/onboarding/OverviewGamesStep';
 import { OverviewBenefitsStep } from '@/components/onboarding/OverviewBenefitsStep';
 import { OverviewFeaturesStep } from '@/components/onboarding/OverviewFeaturesStep';
+import { OnboardingContext, type OnboardingContextType } from '@/hooks/use-onboarding';
 
 
 export type UserProfile = {
@@ -33,27 +34,6 @@ const defaultOnboardingData: UserProfile = {
   language: 'en',
 };
 
-type OnboardingContextType = {
-  step: number;
-  nextStep: () => void;
-  prevStep: () => void;
-  data: UserProfile;
-  setData: React.Dispatch<React.SetStateAction<UserProfile>>;
-  finishOnboardingAsGuest: (profile: Pick<UserProfile, 'username' | 'avatar'>) => Promise<void>;
-  loading: boolean;
-  error: string | null;
-  audioRef: React.RefObject<HTMLAudioElement>;
-};
-
-const OnboardingContext = createContext<OnboardingContextType | null>(null);
-
-export const useOnboarding = () => {
-  const context = useContext(OnboardingContext);
-  if (!context) {
-    throw new Error('useOnboarding must be used within an OnboardingProvider');
-  }
-  return context;
-};
 
 export default function HomePage() {
   const [step, setStep] = useState(0);
@@ -100,9 +80,21 @@ export default function HomePage() {
     <OverviewFeaturesStep />,
     <FinalStep />,
   ];
+  
+  const contextValue: OnboardingContextType = { 
+      step, 
+      nextStep, 
+      prevStep, 
+      data, 
+      setData, 
+      finishOnboardingAsGuest, 
+      loading, 
+      error,
+      audioRef
+  };
 
   return (
-    <OnboardingContext.Provider value={{ step, nextStep, prevStep, data, setData, finishOnboardingAsGuest, loading, error, audioRef }}>
+    <OnboardingContext.Provider value={contextValue}>
        <audio ref={audioRef} loop>
           <source src="/bg-game-opening.mp3" type="audio/mpeg" />
         </audio>
