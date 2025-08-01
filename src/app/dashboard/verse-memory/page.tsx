@@ -425,17 +425,8 @@ export default function VerseMemoryPage() {
         setIsVerseMastered(true);
 
         toast({
-            title: (
-                <div className="flex items-center gap-2 font-headline">
-                    <Trophy className="text-primary" />
-                    {language === 'fil' ? 'Nakuha ang Puntos!' : 'Verse Attempt Scored!'}
-                </div>
-            ),
-            description: (
-                 <div className="flex items-center gap-2">
-                    {language === 'fil' ? `Binabati kita! Nakakuha ka ng ${score} EXP!` : `Congratulations! You earned ${score} EXP!`}
-                 </div>
-            ),
+            title: language === 'fil' ? 'Nakuha ang Puntos!' : 'Verse Attempt Scored!',
+            description: language === 'fil' ? `Binabati kita! Nakakuha ka ng ${score} EXP!` : `Congratulations! You earned ${score} EXP!`,
         });
     } else if (score <= 0 && !isVerseMastered) {
         playIncorrectSound();

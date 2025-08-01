@@ -51,6 +51,24 @@ const SlideContentSchema = z.object({
     }),
 });
 
+const contentPrompt = ai.definePrompt({
+    name: 'sermonSlideContentPrompt',
+    input: { schema: z.any() },
+    output: { schema: SlideContentSchema }, // Use the stricter schema here
+    prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
+
+Sermon Guide:
+Title: {{{title}}}
+Introduction: {{{introduction}}}
+Points:
+{{#each points}}
+- {{{pointTitle}}}: {{{pointDetails}}}
+{{/each}}
+Conclusion: {{{conclusion}}}
+`,
+});
+
+
 export async function generateSermonPresentation(input: SermonGuideOutput): Promise<{ presentationDataUri: string }> {
   const presentationContent = await sermonPresentationFlow(input);
   if (!presentationContent) {
@@ -85,29 +103,11 @@ const sermonPresentationFlow = ai.defineFlow(
   },
   async (guide: SermonGuideOutput) => {
     // 1. Generate slide content structure
-    const contentPrompt = ai.definePrompt({
-        name: 'sermonSlideContentPrompt',
-        input: { schema: z.any() },
-        output: { schema: SlideContentSchema }, // Use the stricter schema here
-        prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
-
-Sermon Guide:
-Title: {{{title}}}
-Introduction: {{{introduction}}}
-Points:
-{{#each points}}
-- {{{pointTitle}}}: {{{pointDetails}}}
-{{/each}}
-Conclusion: {{{conclusion}}}
-`,
-    });
-
     const { output: structuredContent } = await contentPrompt(guide);
     
     if (!structuredContent?.contentSlides) {
         throw new Error("AI failed to generate the 'contentSlides' array.");
     }
-
 
     // 2. Generate images for each slide in parallel
     const [titleImage, conclusionImage, ...contentImages] = await Promise.all([
