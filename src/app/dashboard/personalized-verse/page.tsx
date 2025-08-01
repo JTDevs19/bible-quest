@@ -65,7 +65,7 @@ export default function PersonalizedVersePage() {
     if (profileStr) {
       const parsedProfile: UserProfile = JSON.parse(profileStr);
       setUserProfile(parsedProfile);
-      setLanguage(parsedProfile.language || 'English');
+      setLanguage(parsedProfile.language === 'fil' ? 'Tagalog' : 'English');
       if (ADMIN_USERS.includes(parsedProfile.username)) {
         setIsAdmin(true);
       } else {
