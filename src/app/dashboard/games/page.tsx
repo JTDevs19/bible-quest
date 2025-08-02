@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookText, Users, Milestone, Puzzle, Swords, FileSearch, Hammer, Gift, CheckCircle, Play, Star, Lightbulb, Brain, Flame, Award, Key, Info } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -82,6 +82,8 @@ const STREAK_MILESTONES = {
 
 export default function GamesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'games';
 
   return (
     <div className="container mx-auto max-w-6xl space-y-8">
@@ -99,7 +101,7 @@ export default function GamesPage() {
         </div>
       </div>
       
-      <Tabs defaultValue="games" className="w-full">
+      <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="games" className="gap-2"><Puzzle />All Games</TabsTrigger>
             <TabsTrigger value="daily-challenge" className="gap-2"><Gift />Daily Challenge</TabsTrigger>

@@ -46,7 +46,7 @@ function DailyStreakModal() {
   
   const handleGoToChallenge = () => {
     handleClose();
-    router.push('/dashboard/games');
+    router.push('/dashboard/games?tab=daily-challenge');
   };
   
   const lastDate = lastStreakDate ? new Date(lastStreakDate) : null;
