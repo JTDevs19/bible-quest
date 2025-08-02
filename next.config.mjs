@@ -1,16 +1,15 @@
-
 /** @type {import('next').NextConfig} */
-import withPWA from '@ducanh2912/next-pwa';
-
 const nextConfig = {
-  // Your Next.js config
+  webpack: (config, { isServer }) => {
+    // This is a workaround for a warning in the console:
+    // "require.extensions is not supported by webpack. Use a loader instead."
+    // It's caused by the handlebars library, which is a dependency of genkit.
+    config.externals.push({
+      'handlebars': 'commonjs handlebars',
+    });
+
+    return config;
+  },
 };
 
-const pwaConfig = withPWA({
-  dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
-  register: true,
-  skipWaiting: true,
-});
-
-export default pwaConfig(nextConfig);
+export default nextConfig;
