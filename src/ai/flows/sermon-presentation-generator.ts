@@ -38,20 +38,20 @@ export type SermonPresentationOutput = z.infer<typeof SermonPresentationOutputSc
 
 const contentPrompt = ai.definePrompt({
     name: 'sermonSlideContentPrompt',
-    input: { schema: SermonGuideOutputSchema },
-    output: { schema: SermonPresentationOutputSchema }, // Use the richer schema here
+    input: { schema: z.object({ guide: SermonGuideOutputSchema }) },
+    output: { schema: SermonPresentationOutputSchema },
     prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
 
 Do not generate images yet. For all imageDataUri fields, use the placeholder "https://placehold.co/1280x720.png".
 
 Sermon Guide:
-Title: {{{title}}}
-Introduction: {{{introduction}}}
+Title: {{{guide.title}}}
+Introduction: {{{guide.introduction}}}
 Points:
-{{#each points}}
+{{#each guide.points}}
 - {{{pointTitle}}}: {{{pointDetails}}}
 {{/each}}
-Conclusion: {{{conclusion}}}
+Conclusion: {{{guide.conclusion}}}
 `,
 });
 
@@ -85,12 +85,12 @@ async function generateImage(prompt: string): Promise<string> {
 const sermonPresentationFlow = ai.defineFlow(
   {
     name: 'sermonPresentationFlow',
-    inputSchema: SermonGuideOutputSchema, // SermonGuideOutput type from another file
+    inputSchema: SermonGuideOutputSchema,
     outputSchema: SermonPresentationOutputSchema,
   },
   async (guide: SermonGuideOutput) => {
     // 1. Generate slide content structure
-    const { output: structuredContent } = await contentPrompt(guide);
+    const { output: structuredContent } = await contentPrompt({ guide });
     
     if (!structuredContent?.contentSlides) {
         throw new Error("AI failed to generate the 'contentSlides' array.");

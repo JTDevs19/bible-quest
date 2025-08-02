@@ -1,4 +1,6 @@
 
+'use client';
+
 import pptxgen from "pptxgenjs";
 import type { SermonPresentationOutput } from "@/ai/flows/sermon-presentation-generator";
 
