@@ -92,7 +92,10 @@ const sermonPresentationFlow = ai.defineFlow(
     // 1. Generate slide content structure
     const { output: structuredContent } = await contentPrompt({ guide });
     
-    if (!structuredContent?.contentSlides) {
+    if (!structuredContent) {
+        throw new Error("AI failed to generate the structured content for the presentation.");
+    }
+    if (!structuredContent.contentSlides || !Array.isArray(structuredContent.contentSlides)) {
         throw new Error("AI failed to generate the 'contentSlides' array.");
     }
 
@@ -100,7 +103,7 @@ const sermonPresentationFlow = ai.defineFlow(
     const [titleImage, conclusionImage, ...contentImages] = await Promise.all([
         generateImage(`An abstract, inspiring image representing the sermon title: "${guide.title}"`),
         generateImage(`An abstract, reflective image for the sermon conclusion: "${guide.conclusion}"`),
-        ...guide.points.map(p => generateImage(`An abstract image representing the sermon point: "${p.pointTitle}"`))
+        ...structuredContent.contentSlides.map(p => generateImage(`An abstract image representing the sermon point: "${p.title}"`))
     ]);
 
     // 3. Combine content and images
