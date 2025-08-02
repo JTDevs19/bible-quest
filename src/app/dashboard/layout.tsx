@@ -243,6 +243,21 @@ export default function DashboardLayout({
   }, [router]);
   
   useEffect(() => {
+    // This effect runs when the component mounts on the client.
+    // It checks for and unregisters any active service workers.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        if (registrations.length > 0) {
+          console.log('Found old service workers, unregistering...');
+          for (const registration of registrations) {
+            registration.unregister();
+          }
+           // Reload the page to ensure the new content is fetched.
+          window.location.reload();
+        }
+      });
+    }
+
     const musicShouldPlay = localStorage.getItem('playMusic') === 'true';
     if (musicShouldPlay && audioRef.current) {
       audioRef.current.play().catch(console.error);
