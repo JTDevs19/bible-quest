@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { BookOpen, Languages, Loader2, Save, Download, FilePenLine, Presentation } from 'lucide-react';
+import { BookOpen, Languages, Loader2, Save, Download, FilePenLine } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getTranslatedSermonGuide, getSermonPresentation } from './actions';
+import { getTranslatedSermonGuide } from './actions';
 import { useUserProgress } from '@/hooks/use-user-progress';
 import type { SavedSermonNote } from '@/hooks/use-user-progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,9 +26,8 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
     const [guide, setGuide] = useState<SavedSermonNote>(initialGuide);
     const [language, setLanguage] = useState(initialLanguage);
     const [isTranslating, setIsTranslating] = useState(false);
-    const [isGeneratingPpt, setIsGeneratingPpt] = useState(false);
     const { toast } = useToast();
-    const { saveNote, savedNotes, updateNote, aiVerseCharges, denarius, setProgress } = useUserProgress();
+    const { saveNote, savedNotes, updateNote } = useUserProgress();
 
     useEffect(() => {
         const savedNote = savedNotes.find(n => n.title.toLowerCase() === initialGuide.title.toLowerCase());
@@ -135,35 +134,6 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
         URL.revokeObjectURL(url);
     };
 
-    const handleGeneratePresentation = async () => {
-        setIsGeneratingPpt(true);
-        toast({ title: 'Generating Presentation...', description: 'Your PowerPoint file is being created by the AI. This may take a moment.' });
-        try {
-            const result = await getSermonPresentation(guide, { aiVerseCharges, denarius });
-            if (result.success && result.dataUri) {
-                setProgress({ aiVerseCharges: result.newCharges, denarius: result.newDenarius });
-                const a = document.createElement('a');
-                a.href = result.dataUri;
-                const safeTitle = guide.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                a.download = `${safeTitle}_presentation.pptx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                toast({ title: 'Presentation Downloaded!', description: 'Your PowerPoint file has been successfully generated and downloaded.' });
-            } else {
-                throw new Error(result.message || 'An unknown error occurred');
-            }
-        } catch(error: any) {
-             toast({
-                variant: 'destructive',
-                title: 'Presentation Failed',
-                description: `Could not generate the presentation: ${error.message}`,
-            });
-        } finally {
-            setIsGeneratingPpt(false);
-        }
-    };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl flex flex-col max-h-[90vh]">
@@ -241,10 +211,6 @@ export function SermonGuideDialog({ isOpen, setIsOpen, initialGuide, initialLang
                     <Button variant="outline" onClick={handleTranslate} disabled={isTranslating}>
                         {isTranslating ? <Loader2 className="mr-2 animate-spin" /> : <Languages className="mr-2" />}
                         {language === 'English' ? 'To Tagalog' : 'To English'}
-                    </Button>
-                    <Button variant="outline" onClick={handleGeneratePresentation} disabled={isGeneratingPpt || (aiVerseCharges <= 0 && denarius <= 0)}>
-                        {isGeneratingPpt ? <Loader2 className="mr-2 animate-spin" /> : <Presentation className="mr-2" />}
-                        PPT
                     </Button>
                 </div>
                 <div className="flex gap-2">

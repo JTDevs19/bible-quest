@@ -30,7 +30,7 @@ export const SermonPointSchema = z.object({
 export const SermonGuideOutputSchema = z.object({
   title: z.string().describe('An engaging title for the sermon.'),
   introduction: z.string().describe('A brief introduction to the topic.'),
-  points: z.array(SermonPointSchema).length(3).describe("An array of exactly three main points for the sermon."),
+  points: z.array(SermonPointSchema).describe("An array of main points for the sermon."),
   conclusion: z.string().describe('A concluding summary and call to action.'),
 });
 export type SermonGuideOutput = z.infer<typeof SermonGuideOutputSchema>;
@@ -50,7 +50,7 @@ const prompt = ai.definePrompt({
   The user will provide a topic. Your task is to generate a sermon guide that includes:
   1.  A compelling title.
   2.  A brief introduction to the topic.
-  3.  Exactly three main points. Each point must have a title, a short explanation, and a directly relevant Bible verse with its full text.
+  3.  Three main points. Each point must have a title, a short explanation, and a directly relevant Bible verse with its full text.
   4.  A concise conclusion that summarizes the message and provides a gentle call to action or reflection.
   
   IMPORTANT: The entire response, including titles, points, and verses, MUST be in the following language: {{{language}}}.

@@ -3,7 +3,6 @@
 
 import { personalizedVerseRecommendations, type PersonalizedVerseRecommendationsInput } from '@/ai/flows/personalized-verse-recommendations';
 import { generateSermonGuide, type SermonGuideInput, type SermonGuideOutput } from '@/ai/flows/sermon-guide-generator';
-import { generateSermonPresentation } from '@/ai/flows/sermon-presentation-generator';
 import { translateText, type TranslateTextInput, type TranslateTextOutput } from '@/ai/flows/translate-text';
 import { z } from 'zod';
 
@@ -127,31 +126,4 @@ export async function getTranslatedSermonGuide(guide: SermonGuideOutput, targetL
         points: newPoints,
         conclusion: translatedConclusion
     };
-}
-
-
-export async function getSermonPresentation(guide: SermonGuideOutput, charges: AiActionInput): Promise<{ success: boolean; dataUri?: string; message?: string, newCharges?: number, newDenarius?: number }> {
-  const { aiVerseCharges, denarius } = charges;
-
-  if (aiVerseCharges <= 0 && denarius <= 0) {
-    return { success: false, message: "You are out of charges for the AI Helper. Visit the Forge to get more." };
-  }
-  
-  try {
-    const result = await generateSermonPresentation(guide);
-    
-    let newCharges = aiVerseCharges;
-    let newDenarius = denarius;
-
-    if (aiVerseCharges > 0) {
-        newCharges = aiVerseCharges - 1;
-    } else {
-        newDenarius = denarius - 1;
-    }
-
-    return { success: true, dataUri: result.presentationDataUri, newCharges, newDenarius };
-  } catch (error: any) {
-    console.error("Error generating presentation:", error);
-    return { success: false, message: error.message || "Failed to generate presentation." };
-  }
 }
