@@ -10,8 +10,9 @@ export async function createPresentation(data: SermonPresentationOutput): Promis
     
     // --- Title Slide ---
     const titleSlide = pptx.addSlide();
-    titleSlide.background = { data: data.titleSlide.imageDataUri,
-      sizing: { type: 'cover', w: '100%', h: '100%' } 
+    titleSlide.background = { 
+        data: data.titleSlide.imageDataUri,
+        sizing: { type: 'cover', w: '100%', h: '100%' }
     };
     titleSlide.addShape(pptx.shapes.RECTANGLE, {
         x: 0, y: 0, w: '100%', h: '100%', fill: { color: '000000', transparency: 50 }
@@ -27,7 +28,10 @@ export async function createPresentation(data: SermonPresentationOutput): Promis
     // --- Content Slides ---
     data.contentSlides.forEach(slideData => {
         const slide = pptx.addSlide();
-        slide.background = { data: slideData.imageDataUri, sizing: { type: 'cover', w: '100%', h: '100%' } };
+        slide.background = { 
+            data: slideData.imageDataUri, 
+            sizing: { type: 'cover', w: '100%', h: '100%' } 
+        };
         slide.addShape(pptx.shapes.RECTANGLE, {
             x: 0, y: 0, w: '100%', h: '100%', fill: { color: '000000', transparency: 60 }
         });
@@ -41,7 +45,10 @@ export async function createPresentation(data: SermonPresentationOutput): Promis
 
     // --- Conclusion Slide ---
     const conclusionSlide = pptx.addSlide();
-    conclusionSlide.background = { data: data.conclusionSlide.imageDataUri, sizing: { type: 'cover', w: '100%', h: '100%' } };
+    conclusionSlide.background = { 
+        data: data.conclusionSlide.imageDataUri, 
+        sizing: { type: 'cover', w: '100%', h: '100%' } 
+    };
     conclusionSlide.addShape(pptx.shapes.RECTANGLE, {
         x: 0, y: 0, w: '100%', h: '100%', fill: { color: '000000', transparency: 60 }
     });

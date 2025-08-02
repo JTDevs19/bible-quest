@@ -36,27 +36,13 @@ const SermonPresentationOutputSchema = z.object({
 });
 export type SermonPresentationOutput = z.infer<typeof SermonPresentationOutputSchema>;
 
-// Stricter schema for the intermediate content generation step
-const SlideContentSchema = z.object({
-    titleSlide: z.object({
-        title: z.string(),
-        subtitle: z.string(),
-    }),
-    contentSlides: z.array(z.object({
-        title: z.string(),
-        points: z.array(z.string()),
-    })),
-    conclusionSlide: z.object({
-        title: z.string(),
-        summaryPoints: z.array(z.string()),
-    }),
-});
-
 const contentPrompt = ai.definePrompt({
     name: 'sermonSlideContentPrompt',
     input: { schema: SermonGuideOutputSchema },
-    output: { schema: SlideContentSchema }, // Use the stricter schema here
+    output: { schema: SermonPresentationOutputSchema }, // Use the richer schema here
     prompt: `You are a presentation designer. Based on the following sermon guide, create the content for a slide presentation. For each point, create a slide with a title and 2-4 bullet points. Also create a title slide and a conclusion slide.
+
+Do not generate images yet. For all imageDataUri fields, use the placeholder "https://placehold.co/1280x720.png".
 
 Sermon Guide:
 Title: {{{title}}}
