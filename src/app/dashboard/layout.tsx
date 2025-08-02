@@ -1,4 +1,3 @@
-
 'use client';
 import {
   SidebarProvider,
@@ -263,7 +262,7 @@ export default function DashboardLayout({
       audioRef.current.play().catch(console.error);
       localStorage.removeItem('playMusic'); 
     }
-  }, [isClient]);
+  }, []);
 
   const togglePlayPause = () => {
     if (audioRef.current) {
